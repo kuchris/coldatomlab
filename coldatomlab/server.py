@@ -43,6 +43,8 @@ class Handler(BaseHTTPRequestHandler):
         files = {
             "/": ("index.html", "text/html; charset=utf-8"),
             "/physical.js": ("physical.js", "text/javascript; charset=utf-8"),
+            "/dashboard.js": ("dashboard.js", "text/javascript; charset=utf-8"),
+            "/dashboard.css": ("dashboard.css", "text/css; charset=utf-8"),
             "/physical-units": ("physical-units.html", "text/html; charset=utf-8"),
             "/app.js": ("app.js", "text/javascript; charset=utf-8"),
             "/camera.js": ("camera.js", "text/javascript; charset=utf-8"),

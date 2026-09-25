@@ -21,7 +21,7 @@ def main():
         page = browser.new_page(viewport={"width": 1440, "height": 1100})
         errors = []
         page.on("pageerror", lambda e: errors.append(str(e)))
-        page.goto(args.url)
+        page.goto(args.url + "#workspace")
         page.wait_for_load_state("networkidle")
         expect(page.locator("#status")).to_have_text("Ready", timeout=30000)
         expect(page.locator("#capture")).to_be_disabled()
@@ -54,6 +54,11 @@ def main():
         page.locator("#camera-pin").click()
         expect(page.locator("#camera-clear")).to_be_visible()
         pinned = page.locator("#camera-measurements tr td:last-child").all_text_contents()
+        saved_images = page.evaluate("JSON.stringify({cameraRecord, pinnedImage})")
+        page.locator('[data-route="experiments"]').click()
+        page.locator('[data-route="camera-lab"]').click()
+        expect(page.locator("#camera-result")).to_be_visible()
+        assert page.evaluate("JSON.stringify({cameraRecord, pinnedImage})") == saved_images
         page.locator("#cam-fwhm_um").fill("4")
         expect(page.locator("#camera-caption")).to_contain_text("edits pending")
         blurred = capture()

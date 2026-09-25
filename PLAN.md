@@ -77,4 +77,6 @@ Status: implemented and verified. See `docs/IMAGING.md` for model/provenance and
 
 ## Later extensions
 
+Dashboard interface: implemented with a light navigation shell, searchable experiment cards, grid/list views and direct workspace/measurement/camera links. Template illustrations are explicitly labeled; selecting a template stages its experiment type for preparation. Navigation preserves the solver session, pending settings and pinned comparisons. Desktop and mobile browser evidence is recorded in `docs/VALIDATION.md`. This interface change retains the effective 2D model; three-dimensional evolution is a separate future milestone.
+
 vortices and stirring; additional experiment protocols. These are separate from the first-release acceptance criteria.

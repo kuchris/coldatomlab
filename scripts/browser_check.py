@@ -22,7 +22,7 @@ def main():
         page = browser.new_page(viewport={"width": 1440, "height": 1100}, device_scale_factor=1)
         errors = []
         page.on("pageerror", lambda error: errors.append(str(error)))
-        page.goto(args.url)
+        page.goto(args.url + "#workspace")
         page.wait_for_load_state("networkidle")
         expect(page.locator("#status")).to_have_text("Ready", timeout=30000)
         page.screenshot(path=str(out / "desktop-initial.png"), full_page=True)

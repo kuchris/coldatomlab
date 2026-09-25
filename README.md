@@ -2,7 +2,7 @@
 
 An interactive virtual laboratory for exploring Bose–Einstein condensate (BEC) expansion and matter-wave interference.
 
-![Dynamic splitting with a sequence timeline and applied-potential contours](docs/preview.png)
+![Experiment dashboard with navigation and an experiment library](docs/dashboard-preview.png)
 
 ## Run locally
 
@@ -16,6 +16,10 @@ uv run python -m coldatomlab.server
 Open **http://127.0.0.1:8765**. Stop the server with `Ctrl+C`. Use `--port 8766` if the default port is already occupied. The application runs locally without an account, API key, frontend build, or remote assets.
 
 ## Try an experiment
+
+The home page is an **Experiments** dashboard. Search the three experiment templates, switch between grid and list views, or choose **Set up expansion / interference / sequence**. Choosing a card stages the experiment type in the existing controls; review the settings and click **Prepare experiment** to apply them. It keeps the other current parameters. **Open workspace** resumes the current experiment without changing settings.
+
+The left navigation opens the workspace, measurements, virtual camera and reference guides. On narrow screens, use the menu button. Navigation keeps the current solver session, pending settings and pinned run/image comparisons; it does not pause a running experiment. Reloading still starts a new session and clears pinned records. Template diagrams are labeled illustrations, while workspace plots come from the numerical state. Direct links to `/#workspace`, `/#measurements` and `/#camera-lab` are supported.
 
 **Expansion:** the initial screen prepares a trapped condensate. Click **Release trap**, then **Run**. Watch the density spread and the RMS widths grow. **Pause** holds the state after the current batch finishes; **Step** advances one numerical step. **Reset** returns to the prepared initial state and restores its settings.
 
@@ -79,6 +83,7 @@ uv run python -X utf8 -m scripts.browser_check
 uv run python -X utf8 -m scripts.sequence_browser_check
 uv run python -X utf8 -m scripts.physical_browser_check
 uv run python -X utf8 -m scripts.camera_browser_check
+uv run python -X utf8 -m scripts.dashboard_browser_check
 ```
 
 Browser checks exercise the actual controls, download and replay a run, compare interference phases, verify invalid-setting recovery and boundary stopping, and capture desktop/mobile screenshots. Reports and generated experiment files go to ignored `artifacts/`. See [validation evidence](docs/VALIDATION.md) for tested cases and limits.

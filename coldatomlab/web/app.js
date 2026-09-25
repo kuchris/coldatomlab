@@ -39,6 +39,7 @@ function config() {
 }
 
 function controls() {
+  window.updateDashboard?.();
   cameraControls();
   $("parameters").disabled = busy || running;
   $("prepare").disabled = busy || running;

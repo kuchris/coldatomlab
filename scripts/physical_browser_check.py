@@ -21,7 +21,7 @@ def main():
         page = browser.new_page(viewport={"width": 1440, "height": 1100})
         errors = []
         page.on("pageerror", lambda e: errors.append(str(e)))
-        page.goto(args.url)
+        page.goto(args.url + "#workspace")
         page.wait_for_load_state("networkidle")
         expect(page.locator("#status")).to_have_text("Ready", timeout=30000)
         page.evaluate("""() => {

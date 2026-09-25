@@ -82,6 +82,12 @@ The actual Positive bias physical sequence gives ROI N=197.555, RMS x=8.7952 um 
 
 Evidence is in ignored `artifacts/camera-browser-report.json`, `camera-comparison.json`, `camera-single.json`, and screenshots. `docs/camera-preview.png` shows the actual 4 um FWHM comparison. The original single/two-cloud, sequence and physical-unit browser workflows also pass. Numerical evidence and browser evidence are separate; none validates omitted recoil, pumping, multilevel scattering or coherent optical propagation.
 
+## Dashboard interface
+
+The dashboard browser check covers all three template selections, staged settings without replacing the source state, search and no-results recovery, grid/list switching, model dialog, direct workspace links, browser Back, measurements/camera navigation, running-state guards, and 390px/320px layouts. Navigation preserves the complete solver state and pinned run. The camera browser check additionally verifies that both captured and pinned image records survive library/camera navigation unchanged. Re-selecting the current navigation item closes the mobile menu; Escape returns focus to its toggle.
+
+All five browser workflows pass against the dashboard: library/navigation, original single/two-cloud, sequence, physical units and camera. The original workflow initially exceeded its five-second assertion timeout when all four numerical browser suites competed for the server lock; its isolated rerun passed. These are browser checks using the existing solver, not new 3D physics validation. Screenshots were inspected for desktop and mobile layout. Evidence is saved to ignored `artifacts/dashboard-browser-report.json` and `dashboard-*.png`; `docs/dashboard-preview.png` is the homepage capture.
+
 ## Additional checks and limits
 
 Ruff lint and formatting checks, JavaScript syntax checking, and `git diff --check` pass. The standalone replay command has also been run against a browser-downloaded export.
