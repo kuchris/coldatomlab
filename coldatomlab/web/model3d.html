@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>3D model · Cold Atom Lab</title>
-    <link rel="stylesheet" href="/style.css" />
+    <link rel="stylesheet" href="style.css" />
     <style>
       body {
         max-width: 900px;
@@ -37,7 +37,7 @@
     </style>
   </head>
   <body>
-    <a href="/#lab3d">← Back to 3D expansion</a>
+    <a href="./#lab3d">← Back to 3D expansion</a>
     <p class="eyebrow">MODEL / CONVENTIONS / SOURCES</p>
     <h1>A numerical condensate in three dimensions</h1>
     <p>
@@ -119,6 +119,23 @@ Absolute TF RMS: σᵢ(τ) = σᵢ(0)bᵢ(τ)</pre
       finite-kinetic-energy corrections. The repository's docs/3D_REFERENCE.md
       maps the equations to these sources; docs/MODEL3D.md records measured
       implementation checks. Neither paper validates this software.
+    </p>
+    <h2>WebGPU execution</h2>
+    <p>
+      The browser GPU backend uses complex float32 and workgroup radix-two FFTs
+      on 32³, 64³ or 128³ grids. Preparation stops at a 3e-6 L2 iterate-change
+      threshold; its stationary residual is measured separately. Real-time
+      evolution is never renormalized. A 0.1% norm-drift guard stops the run.
+      More, smaller time steps can accumulate more floating-point round-off, so
+      a smaller step is not automatically more accurate in float32. Use the
+      float64 CPU reference for precision work.
+    </p>
+    <p>
+      The standalone <a href="gpu.html">WebGPU lab</a> requires hardware WebGPU
+      over HTTPS or localhost. It performs all preparation and evolution in the
+      browser, with no simulation API. GPU exports have their own schema; the
+      replay command compares them against the independent CPU reference with
+      explicit tolerances, not exact GPU replay.
     </p>
     <h2>Reproduce a run</h2>
     <p>

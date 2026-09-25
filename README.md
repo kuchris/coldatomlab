@@ -70,6 +70,10 @@ Both write to ignored `artifacts/`. The report has its own `coldatomlab-shin-ben
 
 ## Interacting 3D expansion (v0.5)
 
+**v0.6 adds WebGPU acceleration.** The 3D page now defaults to **WebGPU · browser GPU · float32**; select **CPU reference · float64** to use the original local solver. On the measured RTX 5070 Ti, fresh interacting 64³ preparation fell from about 28 s to 0.4–0.5 s, with matching-case width differences below 0.0015%. Precision and stopping tolerances differ; see [GPU performance, accuracy and limits](docs/WEBGPU.md). Hardware Chrome and Edge were tested; an embedded browser may not expose WebGPU.
+
+For a **browser-only, shareable version**, open **http://127.0.0.1:8765/gpu.html**. All 3D preparation/evolution runs in the browser without simulation API calls. `uv run python -m scripts.package_webgpu` creates `artifacts/coldatomlab-webgpu.zip` for an ordinary static HTTPS host. No site is published automatically. WebGPU supports 32³/64³/128³; loading its TF preset explicitly uses 128³ instead of the CPU preset's 96³.
+
 Open **3D expansion** in the sidebar, or visit **http://127.0.0.1:8765/#lab3d**. Choose a reference example, **Load settings**, then **Prepare 3D experiment**. Preparation can take tens of seconds or several minutes on the largest grids. **Release all axes**, then **Run**. **Pause**, **Step**, and **Reset** act on this independent 3D session; navigation preserves both it and the original 2D workspace.
 
 Drag the numerical density surface or use arrow keys to rotate it. Zoom and isodensity change only the view. Switch between **Central slices** (atoms/µm³) and **Column density** (atoms/µm²); all three planes use the full solver grid, while the surface states its rendering-grid coarsening. These projections have no absorption-camera model.
@@ -114,9 +118,12 @@ uv run python -X utf8 -m scripts.dashboard_browser_check
 uv run python -X utf8 -m scripts.benchmark_browser_check
 uv run python -X utf8 -m scripts.three_browser_check
 uv run python -X utf8 -m scripts.three_tf_browser_check
+uv run python -X utf8 -m scripts.webgpu_check
 ```
 
 Browser checks exercise the actual controls, download and replay a run, compare interference phases, verify invalid-setting recovery and boundary stopping, and capture desktop/mobile screenshots. Reports and generated experiment files go to ignored `artifacts/`. See [validation evidence](docs/VALIDATION.md) for tested cases and limits.
+
+The WebGPU check requires installed Chrome with a hardware adapter. GPU exports use a separate schema; the replay command performs a toleranced CPU reference comparison rather than claiming exact float32 GPU replay. The GPU norm-drift guard is 0.1%, with no real-time renormalization.
 
 ## Model scope
 

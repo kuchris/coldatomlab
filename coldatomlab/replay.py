@@ -23,6 +23,53 @@ def verify_run(data):
 
 
 def verify_export(data):
+    if data.get("schema") == "coldatomlab-webgpu-3d-v1":
+        # Float32 GPU work is compared with an independent float64 reference;
+        # it is deliberately not advertised as bitwise GPU replay.
+        sim = replay3d({**data, "schema": "coldatomlab-3d-v1"})
+        real, imag = np.asarray(data["psi_real"]), np.asarray(data["psi_imag"])
+        if real.shape != sim.psi.shape or imag.shape != sim.psi.shape:
+            raise ValueError("Saved GPU wavefunction shape does not match the grid.")
+        saved = real + 1j * imag
+        if not np.isfinite(saved).all():
+            raise ValueError("Saved GPU field contains non-finite values.")
+        if data.get("array_order") != "x,y,z" or not np.allclose(
+            data["x"], sim.x, rtol=0, atol=1e-12
+        ):
+            raise ValueError("Saved GPU coordinate convention does not match.")
+        if any(
+            not np.isclose(data["scales"].get(k, float("nan")), v, rtol=2e-12, atol=0)
+            for k, v in sim.config.scales.items()
+        ):
+            raise ValueError("Saved GPU physical scales do not match.")
+        reference = sim.diagnostics()
+        error = float(np.linalg.norm((saved - sim.psi).ravel()) * sim.dx**1.5)
+        sim.psi = saved
+        observed = sim.diagnostics()
+        width_errors = (np.array(observed["widths"]) / reference["widths"] - 1).tolist()
+        aspect_errors = [observed[k] / reference[k] - 1 for k in ("aspect_xz", "aspect_yz")]
+        if (
+            error > 0.005
+            or abs(observed["norm"] - 1) > 0.001
+            or max(abs(v) for v in width_errors + aspect_errors) > 0.005
+        ):
+            raise ValueError(
+                "WebGPU field exceeds the float32 CPU-reference comparison tolerances."
+            )
+        return {
+            "verified_against_cpu_reference": True,
+            "exact_gpu_replay": False,
+            "wavefunction_l2_difference": error,
+            "relative_width_differences": width_errors,
+            "relative_aspect_differences": aspect_errors,
+            "gpu_field_diagnostics": observed,
+            "cpu_reference_diagnostics": reference,
+            "tolerances": {
+                "wavefunction_l2": 0.005,
+                "norm_drift": 0.001,
+                "relative_width_and_aspect": 0.005,
+            },
+        }
     if data.get("schema") == "coldatomlab-3d-v1":
         sim = replay3d(data)
         real, imag = np.asarray(data["psi_real"]), np.asarray(data["psi_imag"])

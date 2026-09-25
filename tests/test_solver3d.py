@@ -107,3 +107,23 @@ def test_3d_boundary_stop_and_invalid_inputs():
     ):
         with pytest.raises(ValueError):
             Config3D(**kwargs)
+
+
+def test_gpu_export_is_a_toleranced_reference_comparison_not_exact_replay():
+    s = Solver3D(Config3D(n=32, length=16, scattering_nm=0, duration=0.1))
+    s.release()
+    finish(s)
+    data = s.export()
+    data["schema"] = "coldatomlab-webgpu-3d-v1"
+    data["psi_real"] = s.psi.real.astype(np.float32).tolist()
+    data["psi_imag"] = s.psi.imag.astype(np.float32).tolist()
+    result = verify_export(data)
+    assert result["verified_against_cpu_reference"]
+    assert result["exact_gpu_replay"] is False
+    data["scales"]["length_um"] *= 1.1
+    with pytest.raises(ValueError, match="physical scales"):
+        verify_export(data)
+    data["scales"] = s.config.scales
+    data["psi_real"] = (s.psi.real * 1.01).tolist()
+    with pytest.raises(ValueError, match="tolerances"):
+        verify_export(data)

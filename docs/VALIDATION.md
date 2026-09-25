@@ -4,7 +4,7 @@ Validated locally on Windows with Python 3.12, NumPy 2.5.3, and Playwright Chrom
 
 ## Numerical and HTTP checks
 
-`uv run pytest -q`: **72 passed** (including five 3D numerical tests and one 3D HTTP workflow added in v0.5). The preceding 2D/imaging/benchmark suite contained 66 tests. The original 42 checks remain in place alongside 18 camera checks, one camera HTTP workflow check, and five reduced-ballistic benchmark test cases, described below.
+`uv run pytest -q`: **73 passed** (including five 3D numerical tests and one 3D HTTP workflow added in v0.5, plus the v0.6 GPU-export comparison check). The preceding 2D/imaging/benchmark suite contained 66 tests. The original 42 checks remain in place alongside 18 camera checks, one camera HTTP workflow check, and five reduced-ballistic benchmark test cases, described below.
 
 | Check | Acceptance criterion |
 | --- | --- |
@@ -100,10 +100,15 @@ The live benchmark browser workflow verifies the calculated values, five-row sou
 
 Ruff lint and formatting checks, JavaScript syntax checking, and `git diff --check` pass. The standalone replay command has also been run against a browser-downloaded export.
 
-There is no lab-device validation, physical-unit calibration, GPU backend, experimental camera calibration, or performance guarantee across machines. Browser testing used Chromium on this machine. The imaginary-time stopping criterion measures iteration convergence at a fixed preparation step; it does not replace preparation-step refinement for high-precision research.
+There is no lab-device validation, physical-unit calibration, experimental camera calibration, or performance guarantee across machines. Browser testing used Chromium on this machine. The imaginary-time stopping criterion measures iteration convergence at a fixed preparation step; it does not replace preparation-step refinement for high-precision research.
 
 ## Three-dimensional milestone (v0.5)
 
 The independent 3D single-cloud model is covered in [MODEL3D.md](MODEL3D.md): analytic Gaussian density/energy/expansion, projection normalization, stationary residuals, norm and energy, time/grid/domain/preparation-step refinement, boundary stopping, Castin–Dum comparison, complete-field replay and measured CPU/array-memory costs. This is a theoretical numerical validation, not a reproduction of experimental images.
 
 The current Python suite passes 72 tests. Separate Chromium checks pass the 3D Gaussian and interacting workflows, mouse/keyboard rotation, threshold/zoom, slices/projections, pause/step/reset, invalid-input recovery, export/replay, independent 2D state, and 390/320 px layouts. The full 96³ TF preset passes through 15.9155 ms release and aspect-ratio inversion. Dashboard, original 2D experiment and Shin benchmark browser regression scripts also pass. Raw reports and generated screenshots remain in ignored `artifacts/`.
+
+
+## WebGPU execution (v0.6)
+
+See [WEBGPU.md](WEBGPU.md) for actual hardware-browser FFT, Gaussian, interacting and TF comparisons, single-precision norm/energy drift, smaller time/preparation-step checks, first-step boundary stopping, device loss, and fresh-computation timings. The static entry point completes preparation/evolution with no simulation API requests. GPU/CPU/GPU switching preserves the separate 2D session. The CPU 3D browser workflow still passes; the full Python suite passes 73 tests. A GPU export is verified against a float64 reference with stated tolerances, not reported as an exact GPU replay.

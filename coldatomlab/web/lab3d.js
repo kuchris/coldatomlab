@@ -33,6 +33,7 @@
     tf: { ...base, n: 96, length: 48, atoms: 150000, duration: 3 },
   };
   let snapshot = null,
+    gpuRun = null,
     session = null,
     busy = false,
     running = false,
@@ -80,6 +81,26 @@
                   : "Ready";
   }
   async function request(action, extra = {}) {
+    const engine =
+      action === "prepare"
+        ? el("engine").value
+        : snapshot?.backend?.type || "cpu";
+    if (engine === "webgpu") {
+      if (action === "prepare") {
+        const next = await window.GPUCloud3D.create(extra.config, (message) => {
+          el("prepare-note").textContent = message;
+        });
+        gpuRun?.destroy();
+        gpuRun = next;
+      } else {
+        if (!gpuRun) throw new Error("Prepare a WebGPU experiment first.");
+        if (action === "export") return gpuRun.export();
+        if (action === "step") await gpuRun.advance(extra.count ?? 8);
+        if (action === "release") await gpuRun.release();
+        if (action === "reset") await gpuRun.reset();
+      }
+      return gpuRun.snapshot();
+    }
     const response = await fetch("/api3d", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -88,6 +109,10 @@
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || "3D request failed.");
     session = data.session;
+    if (action === "prepare") {
+      gpuRun?.destroy();
+      gpuRun = null;
+    }
     return data.result;
   }
   function error(err) {
@@ -107,12 +132,15 @@
     controls();
     if (name === "prepare")
       el("prepare-note").textContent =
-        "Preparing the 3D ground state… Large grids can take over a minute. Other pages remain available.";
+        el("engine").value === "webgpu"
+          ? "Preparing on your GPU… Setting up FFTs and the ground state."
+          : "Preparing the 3D ground state… Large grids can take over a minute. Other pages remain available.";
     try {
       snapshot = await request(name, extra);
       if (name === "prepare" || name === "reset") {
         dirty = false;
         setConfig(snapshot.config);
+        el("engine").value = snapshot.backend?.type || "cpu";
       }
       render();
       if (snapshot.complete || snapshot.warning) running = false;
@@ -257,6 +285,10 @@
       c = s.config,
       a = s.scales.length_um,
       p = s.preparation;
+    const gpu = s.backend?.type === "webgpu";
+    el("engine-note").textContent = gpu
+      ? `Running in this browser · ${s.backend.adapter.vendor} ${s.backend.adapter.architecture} · complex float32. Real-time norm is not renormalized. No simulation server is used.`
+      : "Running on the local CPU server · complex float64 reference.";
     el("surface-empty").hidden = true;
     el("results").hidden = false;
     if (!renderer) renderer = new window.DensitySurface3D(el("surface"));
@@ -301,6 +333,9 @@
       ` Reference aspect ratios: x/z ${f(last[0] / last[2])}, y/z ${f(last[1] / last[2])}. Numerical deviations: ${f(100 * (d.aspect_xz / (last[0] / last[2]) - 1), 2)}%, ${f(100 * (d.aspect_yz / (last[1] / last[2]) - 1), 2)}%.`;
     el("performance").textContent =
       `${p.kind}; ${p.iterations} iterations at Δτ=${p.dt}; relative stationary residual ${p.relative_stationary_residual.toExponential(2)}. Preparation ${f(p.elapsed_seconds, 2)} s; last evolution batch ${f(s.last_batch_seconds, 3)} s. Persistent numerical arrays ${f(p.persistent_array_bytes / 1024 ** 2, 1)} MiB; excludes temporary FFT arrays, Python/JSON and browser memory. Rendering uses ${renderer.triangles.length} triangles.`;
+    if (gpu)
+      el("performance").textContent =
+        `${p.kind}; ${p.iterations} iterations; preparation step ${p.dt}; stationary residual ${p.relative_stationary_residual.toExponential(2)}. Fresh setup + preparation ${f(p.elapsed_seconds, 3)} s (setup ${f(p.setup_seconds, 3)} s); last evolution batch ${f(s.last_batch_seconds, 3)} s. Explicit GPU/readback buffers ${f(p.persistent_array_bytes / 1024 ** 2, 1)} MiB; browser and driver memory excluded. Float32 stopping tolerance is 3e-6 iterate change; compare with the float64 CPU reference for quantitative work.`;
     const gas = d.peak_density * c.atoms * ((c.scattering_nm * 0.001) / a) ** 3;
     el("physical").textContent =
       `Norm-one convention; g₃D=${f(s.scales.interaction, 3)}; a₀=${f(a, 4)} µm; 1/ω₀=${f(s.scales.time_ms, 4)} ms. Current peak gas parameter n aₛ³=${gas.toExponential(2)}. Zero-temperature mean field with contact repulsion; no thermal cloud, losses or calibrated imaging. No transverse trap remains after release.`;
@@ -321,7 +356,10 @@
   );
   el("load").addEventListener("click", () => {
     const preset = el("preset").value;
-    setConfig(presets[preset]);
+    const selected = { ...presets[preset] };
+    if (el("engine").value === "webgpu" && [48, 96].includes(selected.n))
+      selected.n = selected.n === 48 ? 64 : 128;
+    setConfig(selected);
     dirty = true;
     controls();
     el("preset-note").textContent =
@@ -330,6 +368,17 @@
         : preset === "gaussian"
           ? "Interactions set to zero. Compare all three numerical widths with the exact free Gaussian solution."
           : "Repulsive Rb-87 gas. The three-axis field evolves numerically.";
+    if (el("engine").value === "webgpu")
+      el("preset-note").textContent =
+        `WebGPU preset: ${selected.n}³, complex float32. All preparation and evolution run in your browser. TF is an approximate theory comparison, not a paper reproduction.`;
+  });
+  el("engine").addEventListener("change", () => {
+    dirty = true;
+    controls();
+    el("engine-note").textContent =
+      el("engine").value === "webgpu"
+        ? "WebGPU uses float32 and supports 32³ / 64³ / 128³. Load a preset or choose a supported grid, then Prepare. Hardware support is checked during preparation."
+        : "CPU reference uses float64 on the local Python server. Prepare to apply this engine.";
   });
   el("release").addEventListener("click", () => action("release"));
   el("step").addEventListener("click", () => action("step", { count: 1 }));

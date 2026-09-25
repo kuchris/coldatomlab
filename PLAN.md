@@ -96,6 +96,14 @@ Status: implemented and verified. See `docs/BENCHMARK.md` for method, values and
 
 Status: implemented and verified. See `docs/MODEL3D.md` for numerical convergence, TF comparison, performance, replay and browser evidence, and `docs/3D_REFERENCE.md` for the primary-source audit.
 
+## Browser GPU execution
+
+Implement an optional WebGPU backend for the existing 3D single-cloud experiment, with all preparation and real-time field evolution in the browser. Preserve the double-precision CPU reference. Keep physical conventions, full release and no real-time renormalization; label WebGPU complex-f32 explicitly. A radix-two FFT supports 32/64/128 grids; loading a GPU preset must explicitly select its supported grid. Do not silently reinterpret 96 as another grid.
+
+Acceptance: independently test GPU FFT against a complex-field oracle and round-trip fields; fresh Gaussian and interacting calculations against CPU reference at identical settings; target RMS/aspect differences below 0.5% and norm drift below 0.1% for demonstrated runs. Verify time/preparation-step refinement, boundary stopping, real browser controls, backend switching, device/unavailable errors, GPU export and documented CPU reference verification. Report actual adapter identity, cold setup and fresh computation separately, with no cache-based speedup claims. WebGPU must need no simulation API calls; provide a static-shareable 3D entry page. Do not deploy publicly without an explicit request.
+
+Status: implemented and verified on hardware Chrome/Edge. See `docs/WEBGPU.md` for precision, fresh-computation timing, independent CPU/FFT comparisons, browser checks, and standalone packaging.
+
 ## Later extensions
 
 Dashboard interface: implemented with a light navigation shell, searchable experiment cards, grid/list views and direct workspace/measurement/camera links. Template illustrations are explicitly labeled; selecting a template stages its experiment type for preparation. Navigation preserves the solver session, pending settings and pinned comparisons. Desktop and mobile browser evidence is recorded in `docs/VALIDATION.md`. The dashboard now also links to the independent three-dimensional single-cloud experiment.

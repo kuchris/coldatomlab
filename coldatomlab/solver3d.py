@@ -5,7 +5,7 @@ import time
 from dataclasses import asdict, dataclass
 
 import numpy as np
-from scipy.fft import fftn, ifftn
+from scipy.fft import fftn, ifftn, irfftn, rfftn
 from scipy.integrate import solve_ivp
 
 from . import __version__
@@ -179,8 +179,11 @@ class Solver3D:
                 ),
             }
             return
-        kinetic = np.exp(-0.5 * tau * self.k2)
-        previous = self.psi.copy()
+        # This nonrotating ground state stays real under imaginary-time flow.
+        # Use a Hermitian half-spectrum while preserving float64 precision.
+        field = self.psi.real.copy()
+        kinetic = np.exp(-0.5 * tau * self.k2[:, :, : self.config.n // 2 + 1])
+        previous = field.copy()
         mu_shift = tf_reference(self.config, [0])["chemical_potential"]
         residual = float("inf")
         for iteration in range(1, 6001):
@@ -190,19 +193,20 @@ class Solver3D:
             ex = np.exp(-tau * v)
             ratio = np.full_like(v, tau)
             np.divide(-np.expm1(-tau * v), v, out=ratio, where=abs(v) > 1e-12)
-            self.psi *= np.sqrt(ex / (1 + self.g * abs(self.psi) ** 2 * ratio))
-            self.psi = ifftn(fftn(self.psi) * kinetic)
-            self.psi *= np.sqrt(ex / (1 + self.g * abs(self.psi) ** 2 * ratio))
-            amplitude_norm = math.sqrt(float(np.sum(abs(self.psi) ** 2) * self.dx**3))
-            self.psi /= amplitude_norm  # Imaginary time only, never real-time evolution.
+            field *= np.sqrt(ex / (1 + self.g * field**2 * ratio))
+            field = irfftn(rfftn(field) * kinetic, s=field.shape)
+            field *= np.sqrt(ex / (1 + self.g * field**2 * ratio))
+            amplitude_norm = math.sqrt(float(np.sum(field**2) * self.dx**3))
+            field /= amplitude_norm  # Imaginary time only, never real-time evolution.
             mu_shift -= math.log(amplitude_norm) / tau
             if iteration % 50 == 0:
-                residual = float(np.linalg.norm((self.psi - previous).ravel()) * self.dx**1.5)
+                residual = float(np.linalg.norm((field - previous).ravel()) * self.dx**1.5)
                 if residual < 2e-7:
                     break
-                previous = self.psi.copy()
+                previous = field.copy()
         if residual >= 2e-7:
             raise ValueError("3D preparation did not converge; adjust trap or preparation step.")
+        self.psi = field.astype(complex)
         hpsi = self.hamiltonian()
         mu = float(np.vdot(self.psi, hpsi).real * self.dx**3)
         self.preparation = {

@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>WebGPU 3D Lab · Cold Atom Lab</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="dashboard.css" />
+    <link rel="stylesheet" href="lab3d.css" />
+    <script src="surface3d.js" defer></script>
+    <script src="gpu3d.js" defer></script>
+    <script src="lab3d.js" defer></script>
+    <script src="gpu-page.js" defer></script>
+    <style>
+      .weblab.gpu-standalone main {
+        margin: 58px auto 0;
+        max-width: 1450px;
+        padding: 35px 24px;
+      }
+      .gpu-standalone .app-header {
+        justify-content: space-between;
+      }
+      .gpu-standalone .app-header small {
+        font-size: 11px;
+        color: #637588;
+      }
+      @media (max-width: 600px) {
+        .weblab.gpu-standalone main {
+          padding: 25px 14px;
+        }
+        .gpu-standalone .app-header small {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body class="weblab gpu-standalone">
+    <header class="app-header">
+      <a class="wordmark" href="gpu.html">✳ Cold Atom <b>Lab</b></a
+      ><small>Browser GPU · no simulation server</small>
+    </header>
+    <main>
+      <section id="lab3d-page" aria-labelledby="lab3d-title">
+        <div class="library-heading">
+          <div>
+            <p class="eyebrow">EXPERIMENT 04 / THREE DIMENSIONS</p>
+            <h1 id="lab3d-title">A cloud, released in space.</h1>
+            <p>
+              Prepare an interacting condensate. Release all three axes. Measure
+              its expansion.
+            </p>
+          </div>
+          <a
+            class="button-link"
+            href="model3d.html"
+            target="_blank"
+            rel="noopener"
+            >3D model & papers ↗</a
+          >
+        </div>
+        <div class="three-layout">
+          <section class="three-observation" aria-label="3D observation">
+            <div class="panel-heading">
+              <div>
+                <span class="eyebrow">NUMERICAL DENSITY / ISOSURFACE</span>
+                <h2>Condensate in 3D</h2>
+              </div>
+              <span id="three-trap">Not prepared</span>
+            </div>
+            <div class="three-scene">
+              <canvas
+                id="three-surface"
+                width="900"
+                height="600"
+                tabindex="0"
+                role="img"
+                aria-label="Rotatable three-dimensional condensate density isosurface. Drag or use arrow keys to rotate."
+              ></canvas>
+              <p id="three-surface-empty">
+                Choose a preset and prepare the cloud.
+              </p>
+              <div class="three-scene-label">
+                <span id="three-scene-units">x / y / z · µm</span
+                ><span>Drag to orbit · arrows to rotate</span>
+              </div>
+            </div>
+            <div class="three-view-controls">
+              <label
+                >Isodensity
+                <input
+                  id="three-iso"
+                  type="range"
+                  min="5"
+                  max="70"
+                  value="20"
+                  step="5"
+                /><output id="three-iso-value">20% of peak</output></label
+              ><label
+                >Zoom
+                <input
+                  id="three-zoom"
+                  type="range"
+                  min="1"
+                  max="5"
+                  value="1"
+                  step="0.25"
+                  aria-label="3D view zoom" /></label
+              ><button id="three-home">Reset view</button>
+            </div>
+            <p id="three-render-note" class="three-note">
+              The surface will be extracted from the computed density. It is not
+              a particle trajectory or an absorption image.
+            </p>
+            <div class="transport">
+              <span
+                class="status"
+                id="three-status"
+                role="status"
+                aria-live="polite"
+                >Not prepared</span
+              >
+              <div class="transport-buttons">
+                <button id="three-reset" disabled>↺ Reset</button
+                ><button id="three-step" disabled>Step</button
+                ><button id="three-release" disabled>Release all axes</button
+                ><button id="three-run" class="primary" disabled>▶ Run</button>
+              </div>
+            </div>
+            <div class="three-metrics">
+              <div>
+                <span>TIME / ms</span><strong id="three-time">—</strong>
+              </div>
+              <div>
+                <span>RMS x / µm</span><strong id="three-width-x">—</strong>
+              </div>
+              <div>
+                <span>RMS y / µm</span><strong id="three-width-y">—</strong>
+              </div>
+              <div>
+                <span>RMS z / µm</span><strong id="three-width-z">—</strong>
+              </div>
+            </div>
+            <p id="three-warning" class="warning" role="alert" hidden></p>
+          </section>
+          <aside
+            class="controls three-controls"
+            aria-label="3D experiment controls"
+          >
+            <p class="eyebrow">PREPARATION / RB-87</p>
+            <h2>Set the conditions</h2>
+            <form id="three-form">
+              <fieldset id="three-parameters">
+                <label
+                  >Compute engine<select id="three-engine">
+                    <option value="webgpu">
+                      WebGPU · browser GPU · float32
+                    </option>
+                    <option value="cpu">CPU reference · float64</option>
+                  </select></label
+                >
+                <p id="three-engine-note" class="three-note">
+                  GPU preparation and evolution run in this browser. Requires
+                  hardware WebGPU in a secure context.
+                </p>
+                <label
+                  >Reference example<select id="three-preset">
+                    <option value="interacting">Interacting cloud</option>
+                    <option value="gaussian">
+                      Noninteracting analytic check
+                    </option>
+                    <option value="tf">Thomas–Fermi expansion</option>
+                  </select></label
+                ><button type="button" id="three-load">Load settings</button>
+                <p class="three-note" id="three-preset-note">
+                  Repulsive Rb-87 gas. The three-axis field evolves numerically.
+                </p>
+                <div class="pair">
+                  <label
+                    >Atoms N<input
+                      id="three-atoms"
+                      type="number"
+                      value="20000"
+                      min="10"
+                      max="300000"
+                      step="1"
+                      required /></label
+                  ><label
+                    >aₛ / nm<input
+                      id="three-scattering_nm"
+                      type="number"
+                      value="5.3"
+                      min="0"
+                      max="10"
+                      step="any"
+                      required
+                  /></label>
+                </div>
+                <div class="pair">
+                  <label
+                    >f₀ / Hz<input
+                      id="three-reference_hz"
+                      type="number"
+                      value="30"
+                      min="10"
+                      max="100"
+                      step="any"
+                      required /></label
+                  ><label
+                    >fₓ / Hz<input
+                      id="three-fx_hz"
+                      type="number"
+                      value="30"
+                      min="5"
+                      max="200"
+                      step="any"
+                      required
+                  /></label>
+                </div>
+                <div class="pair">
+                  <label
+                    >fᵧ / Hz<input
+                      id="three-fy_hz"
+                      type="number"
+                      value="42"
+                      min="5"
+                      max="200"
+                      step="any"
+                      required /></label
+                  ><label
+                    >f_z / Hz<input
+                      id="three-fz_hz"
+                      type="number"
+                      value="21"
+                      min="5"
+                      max="200"
+                      step="any"
+                      required
+                  /></label>
+                </div>
+                <label
+                  >Evolution duration / ω₀⁻¹<input
+                    id="three-duration"
+                    type="number"
+                    value="2"
+                    min="0.1"
+                    max="4"
+                    step="any"
+                    required
+                /></label>
+                <details class="numerics">
+                  <summary>3D numerical resolution</summary>
+                  <div class="pair">
+                    <label
+                      >Grid<select id="three-n">
+                        <option>32</option>
+                        <option>48</option>
+                        <option selected>64</option>
+                        <option>96</option>
+                        <option>128</option>
+                      </select></label
+                    ><label
+                      >Box side / a₀<select id="three-length">
+                        <option>16</option>
+                        <option selected>24</option>
+                        <option>32</option>
+                        <option>48</option>
+                        <option>64</option>
+                      </select></label
+                    >
+                  </div>
+                  <div class="pair">
+                    <label
+                      >Time step<input
+                        id="three-dt"
+                        type="number"
+                        value="0.004"
+                        min="0.0005"
+                        max="0.01"
+                        step="any"
+                        required /></label
+                    ><label
+                      >Preparation step<input
+                        id="three-preparation_dt"
+                        type="number"
+                        value="0.002"
+                        min="0.0005"
+                        max="0.004"
+                        step="any"
+                        required
+                    /></label>
+                  </div>
+                </details>
+              </fieldset>
+              <button id="three-prepare" class="prepare" type="submit">
+                Prepare 3D experiment ↗
+              </button>
+              <p class="prepare-note" id="three-prepare-note">
+                3D preparation can take tens of seconds. This replaces only the
+                3D run.
+              </p>
+              <p id="three-error" class="error" role="alert" hidden></p>
+            </form>
+            <div class="model-note">
+              <p>
+                <b>Full 3D GPE · zero temperature</b><br />Norm-one
+                wavefunction; g = 4πNaₛ/a₀. Repulsive contact interactions, no
+                thermal cloud, losses or quantum depletion. aₛ = 0 is an ideal
+                reference.
+              </p>
+            </div>
+          </aside>
+        </div>
+        <div id="three-results" hidden>
+          <div class="three-section-heading">
+            <div>
+              <p class="eyebrow">LOOK INSIDE / PROJECT THROUGH</p>
+              <h2>Three views of the same state</h2>
+            </div>
+            <div class="view-switch" aria-label="3D image type">
+              <button id="three-slices" class="selected" aria-pressed="true">
+                Central slices</button
+              ><button id="three-columns" aria-pressed="false">
+                Column density
+              </button>
+            </div>
+          </div>
+          <p id="three-image-note" class="three-note"></p>
+          <div class="three-image-grid">
+            <figure>
+              <figcaption id="three-xy-label">XY · z = 0</figcaption>
+              <canvas
+                id="three-xy"
+                width="360"
+                height="360"
+                role="img"
+                aria-label="XY numerical density view"
+              ></canvas>
+            </figure>
+            <figure>
+              <figcaption id="three-xz-label">XZ · y = 0</figcaption>
+              <canvas
+                id="three-xz"
+                width="360"
+                height="360"
+                role="img"
+                aria-label="XZ numerical density view"
+              ></canvas>
+            </figure>
+            <figure>
+              <figcaption id="three-yz-label">YZ · x = 0</figcaption>
+              <canvas
+                id="three-yz"
+                width="360"
+                height="360"
+                role="img"
+                aria-label="YZ numerical density view"
+              ></canvas>
+            </figure>
+          </div>
+          <div class="three-section-heading">
+            <div>
+              <p class="eyebrow">MEASURE / COMPARE WITH THEORY</p>
+              <h2>Widths and shape</h2>
+            </div>
+            <button id="three-export">Export 3D run ↓</button>
+          </div>
+          <div class="three-diagnostics">
+            <span id="three-norm"></span><span id="three-energy"></span
+            ><span id="three-aspect"></span><span id="three-boundary"></span>
+          </div>
+          <p id="three-theory-note" class="three-note"></p>
+          <canvas
+            id="three-width-history"
+            width="1100"
+            height="310"
+            role="img"
+            aria-label="Three-dimensional RMS widths versus time, with applicable theory curves"
+          ></canvas>
+          <div class="table-scroll">
+            <table class="benchmark-table">
+              <thead>
+                <tr>
+                  <th>Axis</th>
+                  <th>Numerical RMS / µm</th>
+                  <th id="three-theory-title">Theory RMS / µm</th>
+                  <th>Difference</th>
+                  <th>Initial-width scaling / µm</th>
+                </tr>
+              </thead>
+              <tbody id="three-theory-table"></tbody>
+            </table>
+          </div>
+          <p class="three-note">
+            Blue x · Teal y · Amber z. Solid curves: numerical field. Dashed
+            curves: absolute theory. The table also shows TF scaling anchored to
+            the prepared numerical widths, separately from the absolute TF
+            prediction.
+          </p>
+          <details class="benchmark-checks">
+            <summary>Preparation, numerical limits & performance</summary>
+            <p id="three-performance"></p>
+            <p id="three-physical"></p>
+            <p>
+              Periodic FFT boundaries are monitored. A boundary warning stops
+              the run at the first step exceeding 0.1% probability in the outer
+              band. A conserved norm alone does not establish spatial or time
+              accuracy. Refine grid, domain, time step and preparation step for
+              quantitative use.
+            </p>
+            <p>
+              <a href="model3d.html" target="_blank" rel="noopener"
+                >Conventions, validation cases and Castin–Dum references ↗</a
+              >
+            </p>
+          </details>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

@@ -20,6 +20,7 @@ def main():
         page.on("pageerror", lambda error: errors.append(str(error)))
         page.goto(args.url + "/#lab3d")
         page.wait_for_load_state("networkidle")
+        page.locator("#three-engine").select_option("cpu")
         page.evaluate("""() => {
           const original=window.fetch;
           window.fetch=async (...args) => {

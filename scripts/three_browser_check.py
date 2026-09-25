@@ -23,6 +23,7 @@ def main():
         page.goto(args.url + "/#lab3d")
         page.wait_for_load_state("networkidle")
         expect(page.locator("#three-status")).to_have_text("Not prepared")
+        page.locator("#three-engine").select_option("cpu")
         expect(page.locator("#status")).to_have_text("Ready", timeout=30000)
         old = page.evaluate("JSON.stringify({session,state})")
         page.evaluate("""() => {
