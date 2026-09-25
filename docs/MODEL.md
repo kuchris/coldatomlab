@@ -63,7 +63,7 @@ Energy is conserved only while the Hamiltonian is time independent. Releasing th
 
 ## Display and export
 
-Density uses a linear, frame-relative color scale whose maximum is shown in the legend. Axis extents remain fixed throughout a run. Phase uses a cyclic color map and is masked wherever density is less than 0.1% of the current peak. Plots adapt their ranges to the data. These are model diagnostics, not a virtual camera or absorption image.
+Density uses a linear, frame-relative color scale whose maximum is shown in the legend. Axis extents remain fixed throughout a run. Phase uses a cyclic color map and is masked wherever density is less than 0.1% of the current peak. Plots adapt their ranges to the data. These main views are model diagnostics. The separate virtual-camera panel implements the explicitly simplified absorption model in [IMAGING.md](IMAGING.md), acquiring an immutable physical Rb-87 snapshot without changing the GPE state.
 
 JSON exports include configuration, solver and NumPy versions, preparation details, total step count, release step, sampled diagnostic history, grid coordinates, and the final complex wavefunction. Replay recreates the initial state and release protocol; it compares the recomputed field with the saved one. History sampling depends on playback batches, so replay targets the final physical state rather than identical history timestamps. Same-version replay should agree to rounding error; different solver or library versions may differ.
 

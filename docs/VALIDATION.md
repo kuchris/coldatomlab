@@ -4,7 +4,7 @@ Validated locally on Windows with Python 3.12, NumPy 2.5.3, and Playwright Chrom
 
 ## Numerical and HTTP checks
 
-`uv run pytest -q`: **42 passed**. The original 28 checks remain in place alongside 14 physical-unit checks, described below.
+`uv run pytest -q`: **61 passed**. The original 42 checks remain in place alongside 18 camera checks and one camera HTTP workflow check, described below.
 
 | Check | Acceptance criterion |
 | --- | --- |
@@ -68,8 +68,22 @@ For the full positive-bias example (split 4, hold 1, expand 2), relative density
 
 Desktop and 390px/320px views, the linked reference page and browser console checks pass. A final visual pass checks the physical contour energies, millisecond comparison caption and narrow layout. Evidence is in ignored `artifacts/physical-browser-report.json`, `physical-comparison.json`, and screenshots. `docs/preview.png` shows the actual physical sequence during Hold. The original expansion/interference browser suite and the v0.2 sequence comparison suite also pass.
 
+## Absorption camera milestone (v0.4)
+
+Numerical tests cover the saturated Beer–Lambert inversion for optical depths 0–100 and saturation 0.001–10, exact ideal-camera recovery of column density/ROI moments/fringes, Gaussian-PSF broadening and absorption-deficit conservation, nonperiodic optical boundaries, and loss of resolved fringes under optical blur/coarse pixels. Native-grid noiseless inversion agrees to absolute density tolerance 1e-12 and measured moments to 1e-10.
+
+Photon-only reference frames have mean and variance consistent with the expected Poisson rate over 16,384 pixels (3% mean / 5% variance tolerances). Atom/reference exposures have negligible sampled correlation before dark subtraction. Read-noise tests recover the dark variance, the additional two read-noise contributions after subtraction, and the shared-dark covariance. Identical seed/settings/source reproduce all frames; a new seed changes counts; doubling exposure doubles expected counts and improves normalized counting noise.
+
+Invalid counts, small ROIs, unresolved strips, invalid camera parameters and unsupported species/modes have explicit tests. Capture preserves the entire source export. Raw-frame or coordinate tampering fails camera replay; an ordinary and a paired camera export both reproduce the source and camera. The HTTP capture route preserves the session through errors and successful acquisitions.
+
+The actual Positive bias physical sequence gives ROI N=197.555, RMS x=8.7952 um and fine-grid fringe spacing=10.2486 um at the selected aperture. For FWHM 0, 2, 4 and 8 um without noise at native pixel pitch, profile contrast is about 0.841, 0.713, 0.473 and unavailable respectively. The 4 um image estimates N=195.181 and RMS x=8.8719 um, exposing blur/inversion bias rather than correcting it with known truth. These are controlled simulation values, not laboratory measurements or a universal resolution criterion.
+
+`scripts/camera_browser_check.py` completes that sequence through the UI, acquires ideal/blurred/coarse/noisy exposures, checks fixed source time, pins an immutable image, verifies repeatable and changed seeds, and downloads a comparison. Both source replay errors are 0.0 and both complete camera records regenerate exactly. Low-count masks and ROI errors recover without losing the source; reset preserves the captured snapshot and displays a stale notice. Clearing the reference restores single-image export. Desktop and 390px/320px layouts, the imaging-paper page and console checks pass.
+
+Evidence is in ignored `artifacts/camera-browser-report.json`, `camera-comparison.json`, `camera-single.json`, and screenshots. `docs/camera-preview.png` shows the actual 4 um FWHM comparison. The original single/two-cloud, sequence and physical-unit browser workflows also pass. Numerical evidence and browser evidence are separate; none validates omitted recoil, pumping, multilevel scattering or coherent optical propagation.
+
 ## Additional checks and limits
 
 Ruff lint and formatting checks, JavaScript syntax checking, and `git diff --check` pass. The standalone replay command has also been run against a browser-downloaded export.
 
-There is no lab-device validation, physical-unit calibration, 3D model validation, GPU backend, camera-image synthesis, or performance guarantee across machines. Browser testing used Chromium on this machine. The imaginary-time stopping criterion measures iteration convergence at a fixed preparation step; it does not replace preparation-step refinement for high-precision research.
+There is no lab-device validation, physical-unit calibration, 3D model validation, GPU backend, experimental camera calibration, or performance guarantee across machines. Browser testing used Chromium on this machine. The imaginary-time stopping criterion measures iteration convergence at a fixed preparation step; it does not replace preparation-step refinement for high-precision research.

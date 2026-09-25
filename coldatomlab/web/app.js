@@ -39,6 +39,7 @@ function config() {
 }
 
 function controls() {
+  cameraControls();
   $("parameters").disabled = busy || running;
   $("prepare").disabled = busy || running;
   for (const id of ["step", "reset", "release", "export", "pin"]) {
@@ -94,7 +95,7 @@ async function request(action, extra = {}) {
     session = data.session;
     disconnected = false;
     $("connection").textContent = "Local solver connected";
-    if (action !== "export") {
+    if (action !== "export" && action !== "capture") {
       state = data.result;
       if (action === "prepare" || action === "reset") dirty = false;
       if (state.warning || state.complete) running = false;
@@ -759,6 +760,7 @@ window.addEventListener("resize", () => {
     if (state) render();
   }, 100);
 });
+setupCamera();
 setupDemos();
 labels();
 controls();

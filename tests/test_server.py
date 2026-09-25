@@ -54,3 +54,24 @@ def test_http_rejects_foreign_origin_and_path_traversal(endpoint):
     with pytest.raises(HTTPError) as exc:
         urlopen(endpoint + "/../pyproject.toml")
     assert exc.value.code == 404
+
+
+def test_camera_endpoint_keeps_state_and_recovers_after_invalid_settings(endpoint):
+    run = post(
+        endpoint,
+        {
+            "action": "prepare",
+            "config": {"experiment": "double", "n": 64, "physical": {"species": "Rb87"}},
+        },
+    )
+    key = run["session"]
+    before = post(endpoint, {"action": "export", "session": key})["result"]
+    with pytest.raises(HTTPError) as error:
+        post(endpoint, {"action": "capture", "session": key, "camera": {"binning": 3}})
+    assert error.value.code == 400
+    shot = post(
+        endpoint, {"action": "capture", "session": key, "camera": {"noise": False, "strip_um": 5}}
+    )
+    assert shot["result"]["schema"] == "coldatomlab-camera-v1"
+    assert shot["result"]["source"] == before
+    assert post(endpoint, {"action": "export", "session": key})["result"] == before

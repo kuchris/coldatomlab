@@ -39,6 +39,16 @@ For a guided comparison, open **Guided experiments**, choose **Symmetric referen
 
 See [laboratory formulas, thresholds and the reference map](docs/PHYSICAL_UNITS.md), also available through **Equations, thresholds & papers** in the app. The foundation is Dalfovo et al.'s BEC review, Petrov et al.'s quasi-2D theory, Hadzibabic–Dalibard's 2D-gas review, and Shin et al.'s double-well interferometer. Each reference is linked to the assumption or behavior it informs.
 
+## Virtual absorption camera (v0.4)
+
+Prepare a physical Rb-87 run and pause or finish it. In **Virtual camera**, use **Ideal optics · noise off**, then **Capture image** to compare model truth with density reconstructed from atom/reference/dark exposures. **Pin image**, change optical FWHM, object pixel size or noise, and capture the same cloud again. The ROI count, RMS widths and strip fringe estimates show the measurement bias directly. No source-state evolution occurs during capture.
+
+For a resolution example, complete the **Positive bias** guided sequence, capture ideal optics, then try FWHM 2, 4 and 8 μm without noise. At 8 μm this example's fringes become unavailable under the stated estimator criteria. Enable photon noise, vary pulse duration or noise seed, and inspect raw-count profiles. Nonpositive counts are masked; low-signal or unresolved measurements are marked unavailable. A pinned exposure survives source changes with its original time/settings.
+
+The camera uses an ideal resonant Rb-87 D2 transition, saturation-corrected absorption, Gaussian intensity blur and pixel integration. Recoil and motion during the pulse are not simulated. See [the imaging model and classic papers](docs/IMAGING.md), also linked from the camera panel, for exact conventions, estimator limits and the role of Ketterle–Durfee–Stamper-Kurn and Reinaudi et al.
+
+![Virtual camera comparison](docs/camera-preview.png)
+
 ## Save and reproduce
 
 Pause and click **Export run** to download a JSON record containing parameters, preparation metadata, the release protocol, diagnostics, and the final complex wavefunction.
@@ -48,6 +58,8 @@ uv run python -m coldatomlab.replay "path/to/coldatomlab-single-100.json"
 ```
 
 Replay computes the experiment again and reports the maximum difference from the saved wavefunction. It exits with an error for a discrepancy above `1e-8`.
+
+**Export image** saves the source simulation, full camera settings, seed, raw frames and measurements. With an image pinned it exports both acquisitions. The same replay command verifies source evolution and exact camera regeneration, including noise.
 
 With a reference pinned, **Export comparison** saves both complete experiments. The same replay command verifies both records. Sequence timing and bias are included; no manual release action needs to be recreated.
 
@@ -66,6 +78,7 @@ uv run playwright install chromium
 uv run python -X utf8 -m scripts.browser_check
 uv run python -X utf8 -m scripts.sequence_browser_check
 uv run python -X utf8 -m scripts.physical_browser_check
+uv run python -X utf8 -m scripts.camera_browser_check
 ```
 
 Browser checks exercise the actual controls, download and replay a run, compare interference phases, verify invalid-setting recovery and boundary stopping, and capture desktop/mobile screenshots. Reports and generated experiment files go to ignored `artifacts/`. See [validation evidence](docs/VALIDATION.md) for tested cases and limits.
@@ -74,7 +87,7 @@ Browser checks exercise the actual controls, download and replay a run, compare 
 
 This is an effective two-dimensional Gross–Pitaevskii model of an already prepared, dilute, weakly interacting condensate. In-plane release retains tight transverse confinement. The two-cloud initial state is an ideal coherent Gaussian pair. Dimensionless mode leaves physical scales unspecified. Laboratory mode derives coupling from physical parameters and reports conservative frozen-axial applicability checks.
 
-Laser cooling, condensation formation, a thermal component, full 3D expansion, and camera imaging are outside this release. Density and phase are model diagnostics, not laboratory images. Numerical accuracy depends on the chosen grid, step, and domain; passing reference cases does not validate every parameter combination.
+Laser cooling, condensation formation, a thermal component, full 3D expansion, and full optical/atomic imaging dynamics are outside this release. The main density/phase views are model diagnostics; the separate camera panel produces explicitly simplified synthetic images. Numerical accuracy depends on the chosen grid, step, and domain; passing reference cases does not validate every parameter combination.
 
 See [the model and conventions](docs/MODEL.md), [implementation plan](PLAN.md), and [agent guidance](AGENTS.md).
 

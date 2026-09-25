@@ -64,6 +64,17 @@ Status: implemented; see `docs/VALIDATION.md` for measured evidence and limitati
 
 Status: implemented and verified. Numerical and browser evidence is recorded in `docs/VALIDATION.md`; physical derivation and paper provenance are in `docs/PHYSICAL_UNITS.md`.
 
+## Fourth milestone: virtual absorption imaging
+
+- Acquire immutable camera snapshots from a prepared Rb-87 physical run, looking along the retained axial direction. Do not modify the GPE state.
+- Apply the ideal two-level saturation-corrected transmission law, Gaussian intensity PSF, pixel-area integration, independent photon noise and detector read noise in that order. Preserve raw atom/reference/dark frames and deterministic seeds.
+- Recover column density from frames; compare ROI atom number, RMS widths and strip fringe spacing/contrast against model truth. Report invalid pixels, insufficient signal, recoil/model limits and unresolved fringes explicitly. Do not use model density to mask or fit the camera estimates.
+- Let users vary pixel size, PSF FWHM, pulse/intensity and noise, pin a captured reference and export/replay both camera and source simulation.
+- Reference Ketterle–Durfee–Stamper-Kurn and Reinaudi et al.; distinguish adopted equations from simplified optics and omitted experimental effects.
+- Validate ideal inversion, blur/pixel response, noise statistics, ROI/invalid-data behavior, replay, preservation of solver state, actual browser operations and mobile layouts.
+
+Status: implemented and verified. See `docs/IMAGING.md` for model/provenance and `docs/VALIDATION.md` for numerical and browser evidence.
+
 ## Later extensions
 
-Virtual absorption imaging with an explicitly defined projection and camera model, finite resolution and noise; vortices and stirring; additional experiment protocols. These are separate from the first-release acceptance criteria.
+vortices and stirring; additional experiment protocols. These are separate from the first-release acceptance criteria.

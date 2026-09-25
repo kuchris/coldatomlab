@@ -1,3 +1,3 @@
 """Cold Atom Lab: dimensionless condensate experiments."""
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"

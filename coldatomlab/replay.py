@@ -6,7 +6,8 @@ from pathlib import Path
 
 import numpy as np
 
-from .solver import replay
+from .imaging import Camera, form_image
+from .solver import Config, replay
 
 
 def verify_run(data):
@@ -21,6 +22,29 @@ def verify_run(data):
 
 
 def verify_export(data):
+    if data.get("schema") == "coldatomlab-camera-comparison-v1":
+        return {key: verify_export(data[key]) for key in ("reference", "current")}
+    if data.get("schema") == "coldatomlab-camera-v1":
+        source = data["source"]
+        result = verify_run(source)
+        config = Config(**source["config"])
+        coordinates = np.arange(config.n) * (config.length / config.n) - config.length / 2
+        if not np.array_equal(source["x"], coordinates):
+            raise ValueError(
+                "Saved camera source coordinates disagree with its grid configuration."
+            )
+        psi = np.asarray(source["psi_real"]) + 1j * np.asarray(source["psi_imag"])
+        regenerated = form_image(
+            abs(psi) ** 2,
+            coordinates,
+            config.physical,
+            Camera(**data["image"]["camera"]),
+        )
+        if regenerated != data["image"]:
+            raise ValueError(
+                "Camera replay differs: check settings, frames, seed and NumPy version."
+            )
+        return {**result, "camera_replayed": True, "measured": regenerated["measured"]}
     if data.get("schema") == "coldatomlab-comparison-v1":
         return {key: verify_run(data[key]) for key in ("reference", "current")}
     return verify_run(data)

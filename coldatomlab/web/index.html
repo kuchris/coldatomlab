@@ -10,6 +10,7 @@
     <title>Cold Atom Lab — Matter in motion</title>
     <link rel="stylesheet" href="/style.css" />
     <script src="/physical.js" defer></script>
+    <script src="/camera.js" defer></script>
     <script src="/app.js" defer></script>
   </head>
   <body>
@@ -413,6 +414,7 @@
               <h2>Read the experiment</h2>
             </div>
             <div class="measurement-actions">
+              <a class="camera-jump" href="#camera-lab">Virtual camera ↓</a>
               <button id="pin">Pin reference</button
               ><button id="clear-reference" hidden>Clear reference</button
               ><button id="export" class="quiet">Export run ↓</button>
@@ -543,8 +545,217 @@
           </div>
         </section>
       </div>
+      <section
+        id="camera-lab"
+        class="camera-lab"
+        aria-label="Virtual absorption camera"
+      >
+        <div class="panel-heading">
+          <div>
+            <span class="eyebrow">04 / VIRTUAL CAMERA</span>
+            <h2>From atoms to an image</h2>
+          </div>
+          <span class="camera-badge">ABSORPTION · ALONG z</span>
+        </div>
+        <p class="camera-intro">
+          Capture a paused Rb-87 laboratory run. Change the optics and
+          photograph the same cloud again. This is a simulated destructive
+          measurement on a frozen copy; it does not evolve or disturb your
+          running model.
+        </p>
+        <p id="camera-availability" class="camera-intro"></p>
+        <form id="camera-form">
+          <fieldset id="camera-parameters">
+            <legend class="sr-only">Imaging conditions</legend>
+            <div class="camera-inputs">
+              <label
+                >Object pixel size<select id="cam-binning">
+                  <option value="1">1 solver cell</option>
+                  <option value="2" selected>2 solver cells</option>
+                  <option value="4">4 solver cells</option>
+                  <option value="8">8 solver cells</option>
+                  <option value="16">16 solver cells</option>
+                </select></label
+              >
+              <label
+                >Optical FWHM · μm<input
+                  id="cam-fwhm_um"
+                  type="number"
+                  min="0"
+                  max="20"
+                  step="any"
+                  value="1.5"
+              /></label>
+              <label
+                >Probe intensity · I / Isat<input
+                  id="cam-saturation"
+                  type="number"
+                  min="0.001"
+                  max="10"
+                  step="any"
+                  value="0.1"
+              /></label>
+              <label
+                >Pulse duration · μs<input
+                  id="cam-exposure_us"
+                  type="number"
+                  min="0.1"
+                  max="100"
+                  step="any"
+                  value="5"
+              /></label>
+              <label
+                >ROI half-width · μm<input
+                  id="cam-roi_um"
+                  type="number"
+                  min="1"
+                  max="100"
+                  step="any"
+                  value="20"
+              /></label>
+              <label
+                >Profile strip width · μm<input
+                  id="cam-strip_um"
+                  type="number"
+                  min="0.2"
+                  max="20"
+                  step="any"
+                  value="4"
+              /></label>
+            </div>
+            <details class="camera-detector">
+              <summary>Detector & repeatability</summary>
+              <div class="camera-inputs">
+                <label
+                  >Quantum efficiency<input
+                    id="cam-efficiency"
+                    type="number"
+                    min="0.05"
+                    max="1"
+                    step="any"
+                    value="0.8"
+                /></label>
+                <label
+                  >Read noise · electrons RMS<input
+                    id="cam-read_noise"
+                    type="number"
+                    min="0"
+                    max="20"
+                    step="any"
+                    value="0"
+                /></label>
+                <label
+                  >Noise seed<input
+                    id="cam-seed"
+                    type="number"
+                    min="0"
+                    max="4294967295"
+                    step="1"
+                    value="17"
+                /></label>
+              </div>
+            </details>
+            <label class="camera-noise"
+              ><input id="cam-noise" type="checkbox" checked /> Photon shot
+              noise & detector noise</label
+            >
+          </fieldset>
+          <div class="camera-actions">
+            <button type="submit" id="capture">Capture image</button
+            ><button type="button" id="camera-ideal">
+              Ideal optics · noise off</button
+            ><button type="button" id="camera-pin" disabled>Pin image</button
+            ><button type="button" id="camera-clear" hidden>
+              Clear pinned image</button
+            ><button type="button" id="camera-export" disabled>
+              Export image ↓
+            </button>
+          </div>
+        </form>
+        <p id="camera-caption" class="camera-intro">
+          No exposure yet. Start with ideal optics, then increase FWHM or pixel
+          size to investigate lost fringes.
+        </p>
+        <div id="camera-result" hidden>
+          <div class="camera-images">
+            <div>
+              <div class="plot-title">
+                Model column density <span>atoms / μm²</span>
+              </div>
+              <canvas
+                id="camera-truth"
+                aria-label="Model column density on camera pixels"
+                role="img"
+              ></canvas>
+            </div>
+            <div>
+              <div class="plot-title">
+                Reconstructed camera density <span>atoms / μm²</span>
+              </div>
+              <canvas
+                id="camera-image"
+                aria-label="Reconstructed absorption image"
+                role="img"
+              ></canvas>
+            </div>
+          </div>
+          <p id="camera-legend" class="camera-intro"></p>
+          <p class="camera-table-hint camera-intro">
+            Scroll the table sideways to compare all columns.
+          </p>
+          <div class="table-scroll camera-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Measurement</th>
+                  <th>Model truth · same ROI</th>
+                  <th>Camera estimate</th>
+                  <th>Estimate − truth</th>
+                  <th id="camera-ref-heading">Pinned image</th>
+                </tr>
+              </thead>
+              <tbody id="camera-measurements"></tbody>
+            </table>
+          </div>
+          <p id="camera-statistics" class="camera-intro"></p>
+          <div class="plots">
+            <div>
+              <div class="plot-title">
+                Strip-averaged density <span>Model / camera / pinned</span>
+              </div>
+              <canvas
+                id="camera-profile"
+                role="img"
+                aria-label="Model and camera strip profiles"
+              ></canvas>
+            </div>
+            <div>
+              <div class="plot-title">
+                Detected light <span>Atoms / reference / dark</span>
+              </div>
+              <canvas
+                id="camera-counts"
+                role="img"
+                aria-label="Dark-subtracted electron counts along central camera row"
+              ></canvas>
+            </div>
+          </div>
+          <p id="camera-reference-note" class="camera-intro"></p>
+          <ul id="camera-warnings"></ul>
+        </div>
+        <p class="camera-model-note">
+          Ideal closed two-level Rb-87 D2 transition; calibrated cross-section
+          and saturation response are assumed. Gaussian intensity PSF, pixel
+          integration and independent exposures. Recoil, motion during the
+          pulse, optical pumping, multiple scattering, defocus and finite well
+          capacity are omitted.
+          <a href="/imaging" target="_blank" rel="noopener"
+            >Imaging model, estimators & classic papers ↗</a
+          >
+        </p>
+      </section>
       <footer>
-        <span>COLD ATOM LAB <span class="muted">/ 0.3</span></span>
+        <span>COLD ATOM LAB <span class="muted">/ 0.4</span></span>
         <span>A small window into coherent matter.</span
         ><a
           href="https://arxiv.org/abs/cond-mat/0303239"

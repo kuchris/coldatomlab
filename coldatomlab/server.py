@@ -8,6 +8,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from uuid import uuid4
 
+from .imaging import Camera, capture
 from .solver import Config, Solver
 
 WEB = Path(__file__).parent / "web"
@@ -44,6 +45,8 @@ class Handler(BaseHTTPRequestHandler):
             "/physical.js": ("physical.js", "text/javascript; charset=utf-8"),
             "/physical-units": ("physical-units.html", "text/html; charset=utf-8"),
             "/app.js": ("app.js", "text/javascript; charset=utf-8"),
+            "/camera.js": ("camera.js", "text/javascript; charset=utf-8"),
+            "/imaging": ("imaging.html", "text/html; charset=utf-8"),
             "/style.css": ("style.css", "text/css; charset=utf-8"),
         }
         if self.path == "/health":
@@ -93,10 +96,13 @@ class Handler(BaseHTTPRequestHandler):
                         sim.release()
                     elif action == "reset":
                         sim.reset()
-                    elif action not in ("export", "state"):
+                    elif action not in ("export", "state", "capture"):
                         raise ValueError("Unknown experiment action.")
                 self.server.sessions[key] = (sim, now)
-                result = sim.export() if action == "export" else sim.snapshot()
+                if action == "capture":
+                    result = capture(sim, Camera(**data.get("camera", {})))
+                else:
+                    result = sim.export() if action == "export" else sim.snapshot()
                 self.respond(200, {"session": key, "result": result})
         except (ValueError, TypeError, KeyError) as exc:
             self.respond(400, {"error": str(exc)})
