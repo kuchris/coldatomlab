@@ -112,3 +112,11 @@ The current Python suite passes 72 tests. Separate Chromium checks pass the 3D G
 ## WebGPU execution (v0.6)
 
 See [WEBGPU.md](WEBGPU.md) for actual hardware-browser FFT, Gaussian, interacting and TF comparisons, single-precision norm/energy drift, smaller time/preparation-step checks, first-step boundary stopping, device loss, and fresh-computation timings. The static entry point completes preparation/evolution with no simulation API requests. GPU/CPU/GPU switching preserves the separate 2D session. The CPU 3D browser workflow still passes; the full Python suite passes 73 tests. A GPU export is verified against a float64 reference with stated tolerances, not reported as an exact GPU replay.
+
+## 3D coherent interferometer (v0.7)
+
+The full current Python suite passes **81 tests** (113.59 s on the measured run). New coverage includes independent complex Gaussian fields at three phases, pi-state central cancellation, exact pair/partial-sequence/full-sequence replay, rounded stage boundaries, zero hold, automatic-release enforcement, reset, malformed protocols, fringe resolution and phase masking. Ruff checks and JavaScript syntax checks pass.
+
+[INTERFEROMETER3D.md](INTERFEROMETER3D.md) records separate hardware GPU/CPU field comparisons, physical splitting, reversed-bias phase signs, time/grid/domain/preparation-step refinements and actual browser evidence. The largest demonstrated GPU/CPU width difference is below 0.005%; the positive-bias sequence's norm drift is 0.0212%. The 64³ contrast estimate changes by 0.0174 and final mirror phase by 0.00839 rad on a 96³ grid; these limits are disclosed rather than inferred from norm conservation.
+
+Hardware Chrome passes the complete interferometer workflow and comparison export on both the local GPU page and the extracted static package, with no simulation API requests. CPU browser sequence/replay and existing CPU single-cloud browser regression checks also pass. The standalone replay CLI verifies the downloaded sequence and both records in the comparison. Desktop and 390px/320px layouts were exercised. Raw evidence remains in ignored `artifacts/interferometer/`; the package remains local, with no public deployment.

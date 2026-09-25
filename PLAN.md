@@ -104,6 +104,17 @@ Acceptance: independently test GPU FFT against a complex-field oracle and round-
 
 Status: implemented and verified on hardware Chrome/Edge. See `docs/WEBGPU.md` for precision, fresh-computation timing, independent CPU/FFT comparisons, browser checks, and standalone packaging.
 
+## v0.7: three-dimensional coherent interferometer
+
+Implement two distinct WebGPU and float64 CPU modes: a normalized, noninteracting coherent Gaussian pair with a controlled right-minus-left phase, and a single interacting condensate dynamically split by a Gaussian barrier, held with a smooth left/right bias, then released on all axes. Use the existing norm-one units and g convention. This is a Shin et al. (PRL 92, 050405, 2004)-inspired teaching protocol, not an apparatus reconstruction or a model of independently formed condensates.
+
+- Round each stage duration to an integer step count, expose the actual timeline, evaluate the driven potential at step midpoints, and stop at the exact sequence end. Manual release is available only for the original single-cloud mode. Reset and exports must preserve the whole protocol.
+- Display the actual applied axial potential, x line density, left/right populations, mirror-weighted phase and coherence, and conservative resolved fringe spacing/contrast. Unavailable measurements must remain unavailable, not be filled from theory. Compare immutable pinned runs on shared physical axes.
+- Verify Gaussian fields against their finite-width analytic free solution, zero/pi central interference, phase-controlled fringe displacement, bias sign, physical splitting, time/grid/domain refinement and CPU/GPU field/observable comparisons. Preserve real-time norm without normalization; retain boundary and float32 drift stops.
+- Exercise actual browser preparation, timeline, pause/step/reset, controls, projections, pin/export/replay, error recovery and mobile layout. Update static packaging and English model/provenance documentation. Report numerical and browser evidence separately.
+
+Status: implemented; numerical and browser evidence is recorded in `docs/INTERFEROMETER3D.md`. The default 64³ contrast and mirror-phase estimates remain more grid-sensitive than RMS widths, with measured refinement differences and acceptance thresholds disclosed there.
+
 ## Later extensions
 
 Dashboard interface: implemented with a light navigation shell, searchable experiment cards, grid/list views and direct workspace/measurement/camera links. Template illustrations are explicitly labeled; selecting a template stages its experiment type for preparation. Navigation preserves the solver session, pending settings and pinned comparisons. Desktop and mobile browser evidence is recorded in `docs/VALIDATION.md`. The dashboard now also links to the independent three-dimensional single-cloud experiment.

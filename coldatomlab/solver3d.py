@@ -9,6 +9,7 @@ from scipy.fft import fftn, ifftn, irfftn, rfftn
 from scipy.integrate import solve_ivp
 
 from . import __version__
+from .interferometry3d import drive, gaussian_pair, measurements, stages
 from .physical import HBAR, RB87_MASS
 
 
@@ -25,8 +26,20 @@ class Config3D:
     fz_hz: float = 21.0
     duration: float = 2.0
     preparation_dt: float = 0.002
+    experiment: str = "single"
+    separation: float = 6.0
+    relative_phase: float = 0.0
+    barrier_height: float = 12.0
+    barrier_width: float = 0.8
+    split_time: float = 3.0
+    hold_time: float = 0.6
+    hold_bias: float = 1.0
 
     def __post_init__(self):
+        if self.experiment not in ("single", "pair", "sequence"):
+            raise ValueError("Unknown 3D experiment.")
+        if self.experiment == "pair" and self.scattering_nm != 0:
+            raise ValueError("The analytic coherent pair requires zero scattering length.")
         if type(self.n) is not int or self.n not in (32, 48, 64, 96, 128):
             raise ValueError("3D grid must be 32, 48, 64, 96 or 128.")
         if type(self.atoms) is not int or not 10 <= self.atoms <= 300000:
@@ -41,6 +54,13 @@ class Config3D:
             ("fz_hz", 5, 200),
             ("duration", 0.1, 4),
             ("preparation_dt", 0.0005, 0.004),
+            ("separation", 2, 10),
+            ("relative_phase", -math.pi, math.pi),
+            ("barrier_height", 0, 40),
+            ("barrier_width", 0.5, 2),
+            ("split_time", 0.1, 6),
+            ("hold_time", 0, 3),
+            ("hold_bias", -5, 5),
         ):
             v = getattr(self, name)
             if (
@@ -54,6 +74,8 @@ class Config3D:
             raise ValueError(
                 "Resolve the cloud with grid spacing <= 0.5 a0; use a finer grid or smaller box."
             )
+        if self.experiment == "sequence" and self.barrier_width < 2 * self.length / self.n:
+            raise ValueError("Resolve the barrier with at least two grid cells per width.")
         if any(not 0.5 <= w <= 2 for w in self.omegas):
             raise ValueError(
                 "Each trap frequency must be between 0.5 and 2 times the reference frequency."
@@ -142,6 +164,12 @@ class Solver3D:
             self.psi = np.exp(-0.5 * (w[0] * x * x + w[1] * y * y + w[2] * z * z)).astype(complex)
         self.normalize()
         self.prepare()
+        if c.experiment == "pair":
+            self.psi = gaussian_pair(c, self.x)
+            self.normalize()
+            self.preparation.update(
+                kind="normalized coherent Gaussian pair", relative_stationary_residual=None
+            )
         self.initial = self.psi.copy()
         self.preparation["elapsed_seconds"] = time.perf_counter() - started
         self.preparation["persistent_array_bytes"] = sum(
@@ -227,7 +255,7 @@ class Solver3D:
     def reset(self):
         self.psi = self.initial.copy()
         self.steps = 0
-        self.release_step = None
+        self.release_step = 0 if self.config.experiment == "pair" else None
         self.warning = ""
         self.complete = False
         self.history = []
@@ -235,6 +263,8 @@ class Solver3D:
         self.record()
 
     def release(self):
+        if self.config.experiment != "single":
+            raise ValueError("Release is automatic for this experiment.")
         if self.release_step is None:
             self.release_step = self.steps
             self.complete = False
@@ -245,6 +275,18 @@ class Solver3D:
         b = max(2, self.config.n // 16)
         return float((p.sum() - p[b:-b, b:-b, b:-b].sum()) * self.dx**3)
 
+    def applied_potential(self, step):
+        c = self.config
+        if self.release_step is not None or (c.experiment == "sequence" and step >= stages(c)[1]):
+            return 0.0
+        height, bias = drive(c, step)
+        x = self.x[:, None, None]
+        return (
+            self.trap
+            + height * np.exp(-0.5 * (x / c.barrier_width) ** 2)
+            + 0.5 * bias * np.tanh(x / c.barrier_width)
+        )
+
     def advance(self, count=4):
         if type(count) is not int or not 1 <= count <= 20:
             raise ValueError("3D step count must be an integer from 1 to 20.")
@@ -252,19 +294,25 @@ class Solver3D:
             return
         started = time.perf_counter()
         c = self.config
-        potential = self.trap if self.release_step is None else 0
         for _ in range(count):
+            potential = self.applied_potential(self.steps + 0.5)
             self.psi *= np.exp(-0.5j * c.dt * (potential + self.g * abs(self.psi) ** 2))
             self.psi = ifftn(fftn(self.psi) * self.kinetic_step)
             self.psi *= np.exp(-0.5j * c.dt * (potential + self.g * abs(self.psi) ** 2))
             self.steps += 1
+            if c.experiment == "sequence" and self.steps >= stages(c)[1]:
+                self.release_step = stages(c)[1]
             if self.edge_mass() > 0.001:
                 self.warning = (
                     "Cloud reached the periodic boundary region. Increase the box and grid."
                 )
                 break
-            origin = self.release_step or 0
-            if self.steps - origin >= round(c.duration / c.dt):
+            end = (
+                stages(c)[2]
+                if c.experiment == "sequence"
+                else (self.release_step or 0) + int(c.duration / c.dt + 0.5)
+            )
+            if self.steps >= end:
                 self.complete = True
                 break
         self.last_batch_seconds = time.perf_counter() - started
@@ -280,7 +328,7 @@ class Solver3D:
             mean = float(np.dot(marginal, self.x))
             widths.append(math.sqrt(float(np.dot(marginal, (self.x - mean) ** 2))))
         kinetic = float(np.sum(self.k2 * abs(fftn(self.psi)) ** 2) * dv / (2 * self.config.n**3))
-        potential = float(np.sum(p * self.trap) * dv) if self.release_step is None else 0.0
+        potential = float(np.sum(p * self.applied_potential(self.steps)) * dv)
         interaction = float(0.5 * self.g * np.sum(p * p) * dv)
         return {
             "time": self.time,
@@ -316,7 +364,7 @@ class Solver3D:
             else max(0, (d["steps"] - self.release_step) * self.config.dt)
             for d in self.history
         ]
-        ref = tf_reference(self.config, times)
+        ref = tf_reference(self.config, times) if self.config.experiment == "single" else None
         d0 = self.history[0]
         ratio = d0["kinetic"] / max(d0["interaction_energy"], 1e-30)
         return {
@@ -337,6 +385,9 @@ class Solver3D:
             "warning": self.warning,
             "complete": self.complete,
             "last_batch_seconds": self.last_batch_seconds,
+            "interferometry": measurements(
+                self.config, self.x, self.psi, self.steps, self.release_step is not None
+            ),
         }
 
     def export(self):
@@ -364,10 +415,24 @@ def replay3d(data):
     steps, release = data["steps"], data["release_step"]
     if (
         type(steps) is not int
-        or not 0 <= steps <= 16000
+        or not 0 <= steps <= 30000
         or (release is not None and (type(release) is not int or not 0 <= release <= steps))
     ):
         raise ValueError("Invalid saved step/release protocol.")
+    if sim.config.experiment != "single":
+        expected = (
+            0
+            if sim.config.experiment == "pair"
+            else (stages(sim.config)[1] if steps >= stages(sim.config)[1] else None)
+        )
+        if release != expected:
+            raise ValueError("Saved release does not match the automatic sequence.")
+        while sim.steps < steps:
+            before = sim.steps
+            sim.advance(min(20, steps - sim.steps))
+            if sim.steps == before:
+                raise ValueError("Replay stopped before the exported time.")
+        return sim
     for target in [release, steps] if release is not None else [steps]:
         while sim.steps < target:
             before = sim.steps

@@ -23,6 +23,8 @@ def verify_run(data):
 
 
 def verify_export(data):
+    if data.get("schema") == "coldatomlab-3d-comparison-v1":
+        return {key: verify_export(data[key]) for key in ("reference", "current")}
     if data.get("schema") == "coldatomlab-webgpu-3d-v1":
         # Float32 GPU work is compared with an independent float64 reference;
         # it is deliberately not advertised as bitwise GPU replay.

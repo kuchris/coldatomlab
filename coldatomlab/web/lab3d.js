@@ -13,8 +13,10 @@
     "fz_hz",
     "duration",
     "preparation_dt",
+    ...Object.keys(Interferometry3D.defaults),
   ];
   const base = {
+    ...Interferometry3D.defaults,
     n: 64,
     length: 24,
     dt: 0.004,
@@ -31,6 +33,29 @@
     interacting: base,
     gaussian: { ...base, n: 48, scattering_nm: 0 },
     tf: { ...base, n: 96, length: 48, atoms: 150000, duration: 3 },
+    pair: {
+      ...base,
+      length: 32,
+      experiment: "pair",
+      scattering_nm: 0,
+      duration: 3,
+    },
+    opposite: {
+      ...base,
+      length: 32,
+      experiment: "pair",
+      scattering_nm: 0,
+      duration: 3,
+      relative_phase: Math.PI,
+    },
+    sequence: { ...base, experiment: "sequence", atoms: 2000, dt: 0.006 },
+    reverse: {
+      ...base,
+      experiment: "sequence",
+      atoms: 2000,
+      dt: 0.006,
+      hold_bias: -1,
+    },
   };
   let snapshot = null,
     gpuRun = null,
@@ -40,8 +65,27 @@
     dirty = false,
     renderer = null,
     view = "slices";
+  let pinned = null;
   const f = (x, n = 3) => Number(x).toFixed(n);
   function controls() {
+    const experiment = el("experiment").value;
+    for (const node of el("duration").closest("label").childNodes) {
+      if (
+        node.nodeType === Node.TEXT_NODE &&
+        node.textContent.includes("duration")
+      )
+        node.textContent = `${experiment === "sequence" ? "Expansion" : "Evolution"} duration / ω₀⁻¹`;
+    }
+    const detail = el("separation").closest("details");
+    detail.hidden = experiment === "single";
+    detail.querySelector("summary").textContent =
+      experiment === "pair"
+        ? "Coherent pair settings"
+        : "Split and hold settings";
+    el("separation").closest(".pair").hidden = experiment !== "pair";
+    for (const key of ["barrier_height", "split_time"])
+      el(key).closest(".pair").hidden = experiment !== "sequence";
+    el("hold_bias").closest("label").hidden = experiment !== "sequence";
     el("parameters").disabled = busy || running;
     el("prepare").disabled = busy || running;
     el("reset").disabled = !snapshot || busy || running;
@@ -58,11 +102,15 @@
       running ||
       dirty ||
       snapshot.diagnostics.released ||
+      snapshot.config.experiment !== "single" ||
       !!snapshot.warning;
     el("run").disabled =
       !snapshot ||
       (!running && (busy || dirty || snapshot.complete || !!snapshot.warning));
     el("export").disabled = !snapshot || busy || running;
+    el("pin").disabled = !snapshot || busy || running;
+    el("clear-pin").disabled = !pinned || busy || running;
+    el("export-pair").disabled = !pinned || !snapshot || busy || running;
     el("run").textContent = running ? "Ⅱ Pause" : "▶ Run";
     el("status").textContent = running
       ? "Running"
@@ -216,6 +264,7 @@
     const s = snapshot,
       c = s.config,
       w = [c.fx_hz, c.fy_hz, c.fz_hz].map((v) => v / c.reference_hz);
+    if (c.experiment !== "single") return [];
     const released = s.history.find((h) => h.released)?.steps;
     return s.tf
       ? s.tf.widths
@@ -260,6 +309,7 @@
     const colors = ["#3672dd", "#178e87", "#b58227"];
     for (let axis = 0; axis < 3; axis++)
       for (const theoretical of [false, true]) {
+        if (theoretical && !ref.length) continue;
         ctx.strokeStyle = colors[axis];
         ctx.lineWidth = theoretical ? 1.8 : 2.4;
         ctx.setLineDash(theoretical ? [7, 5] : []);
@@ -295,7 +345,9 @@
     renderer.update(s, Number(el("iso").value) / 100);
     el("trap").textContent = d.released
       ? "All axes released"
-      : "Harmonic trap on · x / y / z";
+      : c.experiment === "sequence"
+        ? `${s.interferometry.stage} · trap + driven double well`
+        : "Harmonic trap on · x / y / z";
     el("scene-units").textContent =
       `Box side ${f(c.length * a, 1)} µm · x / y / z`;
     el("render-note").textContent =
@@ -317,35 +369,140 @@
       `Prepared in ${f(p.elapsed_seconds, 1)} s. Parameter edits take effect on Prepare. Duration is measured from release, or from preparation while trapped.`;
     const ref = theory(),
       last = ref.at(-1);
-    el("theory-title").textContent = s.tf
-      ? "Absolute TF RMS / µm"
-      : "Exact Gaussian RMS / µm";
-    el("theory-table").innerHTML = ["x", "y", "z"]
-      .map(
-        (axis, i) =>
-          `<tr><td>${axis}</td><td>${f(d.widths[i] * a, 4)}</td><td>${f(last[i] * a, 4)}</td><td>${f(100 * (d.widths[i] / last[i] - 1), 3)}%</td><td>${s.tf ? f(s.history[0].widths[i] * s.tf.scales.at(-1)[i] * a, 4) : "—"}</td></tr>`,
-      )
-      .join("");
-    el("theory-note").textContent = s.tf
-      ? `Castin–Dum Thomas–Fermi approximation: initial Ekin/Eint = ${f(s.tf_kinetic_ratio, 3)}, minimum µTF/(ℏωᵢ) = ${f((s.tf.chemical_potential / Math.max(c.fx_hz, c.fy_hz, c.fz_hz)) * c.reference_hz, 1)}. ${s.tf_kinetic_ratio > 0.1 ? "Kinetic energy is appreciable; TF is only a rough comparison here." : "Finite kinetic energy still causes physical differences from TF scaling."} Percentages compare with theory, not experimental data. Before release the reference stays at its initial width.`
-      : "Exact noninteracting Gaussian reference (aₛ = 0). Width agreement tests free evolution; it is not experimental validation.";
-    el("theory-note").textContent +=
-      ` Reference aspect ratios: x/z ${f(last[0] / last[2])}, y/z ${f(last[1] / last[2])}. Numerical deviations: ${f(100 * (d.aspect_xz / (last[0] / last[2]) - 1), 2)}%, ${f(100 * (d.aspect_yz / (last[1] / last[2]) - 1), 2)}%.`;
+    if (c.experiment === "single") {
+      el("theory-title").textContent = s.tf
+        ? "Absolute TF RMS / µm"
+        : "Exact Gaussian RMS / µm";
+      el("theory-table").innerHTML = ["x", "y", "z"]
+        .map(
+          (axis, i) =>
+            `<tr><td>${axis}</td><td>${f(d.widths[i] * a, 4)}</td><td>${f(last[i] * a, 4)}</td><td>${f(100 * (d.widths[i] / last[i] - 1), 3)}%</td><td>${s.tf ? f(s.history[0].widths[i] * s.tf.scales.at(-1)[i] * a, 4) : "—"}</td></tr>`,
+        )
+        .join("");
+      el("theory-note").textContent = s.tf
+        ? `Castin–Dum Thomas–Fermi approximation: initial Ekin/Eint = ${f(s.tf_kinetic_ratio, 3)}, minimum µTF/(ℏωᵢ) = ${f((s.tf.chemical_potential / Math.max(c.fx_hz, c.fy_hz, c.fz_hz)) * c.reference_hz, 1)}. ${s.tf_kinetic_ratio > 0.1 ? "Kinetic energy is appreciable; TF is only a rough comparison here." : "Finite kinetic energy still causes physical differences from TF scaling."} Percentages compare with theory, not experimental data. Before release the reference stays at its initial width.`
+        : "Exact noninteracting Gaussian reference (aₛ = 0). Width agreement tests free evolution; it is not experimental validation.";
+      el("theory-note").textContent +=
+        ` Reference aspect ratios: x/z ${f(last[0] / last[2])}, y/z ${f(last[1] / last[2])}. Numerical deviations: ${f(100 * (d.aspect_xz / (last[0] / last[2]) - 1), 2)}%, ${f(100 * (d.aspect_yz / (last[1] / last[2]) - 1), 2)}%.`;
+    } else {
+      el("theory-title").textContent = "Single-cloud theory";
+      el("theory-table").innerHTML = ["x", "y", "z"]
+        .map(
+          (axis, i) =>
+            `<tr><td>${axis}</td><td>${f(d.widths[i] * a, 4)}</td><td>—</td><td>—</td><td>—</td></tr>`,
+        )
+        .join("");
+      el("theory-note").textContent =
+        "Widths below are numerical. Single-cloud Gaussian and Castin–Dum width curves do not apply to this interferometer.";
+      el("prepare-note").textContent =
+        `Prepared in ${f(p.elapsed_seconds, 2)} s. ${c.experiment === "pair" ? "Coherent pair starts released; relative phase is right minus left." : "Run executes the entire sequence; release is automatic. Expansion duration starts after Hold."} Edits apply on Prepare.`;
+    }
     el("performance").textContent =
-      `${p.kind}; ${p.iterations} iterations at Δτ=${p.dt}; relative stationary residual ${p.relative_stationary_residual.toExponential(2)}. Preparation ${f(p.elapsed_seconds, 2)} s; last evolution batch ${f(s.last_batch_seconds, 3)} s. Persistent numerical arrays ${f(p.persistent_array_bytes / 1024 ** 2, 1)} MiB; excludes temporary FFT arrays, Python/JSON and browser memory. Rendering uses ${renderer.triangles.length} triangles.`;
+      `${p.kind}; ${p.iterations} iterations at Δτ=${p.dt}; relative stationary residual ${p.relative_stationary_residual?.toExponential(2) ?? "not a stationary state"}. Preparation ${f(p.elapsed_seconds, 2)} s; last evolution batch ${f(s.last_batch_seconds, 3)} s. Persistent numerical arrays ${f(p.persistent_array_bytes / 1024 ** 2, 1)} MiB; excludes temporary FFT arrays, Python/JSON and browser memory. Rendering uses ${renderer.triangles.length} triangles.`;
     if (gpu)
       el("performance").textContent =
-        `${p.kind}; ${p.iterations} iterations; preparation step ${p.dt}; stationary residual ${p.relative_stationary_residual.toExponential(2)}. Fresh setup + preparation ${f(p.elapsed_seconds, 3)} s (setup ${f(p.setup_seconds, 3)} s); last evolution batch ${f(s.last_batch_seconds, 3)} s. Explicit GPU/readback buffers ${f(p.persistent_array_bytes / 1024 ** 2, 1)} MiB; browser and driver memory excluded. Float32 stopping tolerance is 3e-6 iterate change; compare with the float64 CPU reference for quantitative work.`;
+        `${p.kind}; ${p.iterations} iterations; preparation step ${p.dt}; stationary residual ${p.relative_stationary_residual?.toExponential(2) ?? "not a stationary state"}. Fresh setup + preparation ${f(p.elapsed_seconds, 3)} s (setup ${f(p.setup_seconds, 3)} s); last evolution batch ${f(s.last_batch_seconds, 3)} s. Explicit GPU/readback buffers ${f(p.persistent_array_bytes / 1024 ** 2, 1)} MiB; browser and driver memory excluded. Float32 stopping tolerance is 3e-6 iterate change; compare with the float64 CPU reference for quantitative work.`;
     const gas = d.peak_density * c.atoms * ((c.scattering_nm * 0.001) / a) ** 3;
     el("physical").textContent =
       `Norm-one convention; g₃D=${f(s.scales.interaction, 3)}; a₀=${f(a, 4)} µm; 1/ω₀=${f(s.scales.time_ms, 4)} ms. Current peak gas parameter n aₛ³=${gas.toExponential(2)}. Zero-temperature mean field with contact repulsion; no thermal cloud, losses or calibrated imaging. No transverse trap remains after release.`;
     images();
     historyPlot(ref);
+    interferometer();
+  }
+  function profilePlot(id, series, unit) {
+    const canvas = el(id);
+    canvas.width = Math.max(
+      280,
+      Math.round(canvas.getBoundingClientRect().width),
+    );
+    const ctx = canvas.getContext("2d"),
+      w = canvas.width,
+      h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+    const xs = series.flatMap((s) => s.x),
+      ys = series.flatMap((s) => s.y);
+    const xmin = Math.min(...xs),
+      xmax = Math.max(...xs),
+      ymin = Math.min(0, ...ys),
+      ymax = Math.max(...ys, ys.every((v) => v === 0) ? 1 : 1e-10) * 1.08;
+    ctx.font = "12px sans-serif";
+    ctx.fillStyle = "#647585";
+    ctx.fillText(unit, 52, 16);
+    for (let i = 0; i <= 4; i++) {
+      const y = 220 - i * 48;
+      ctx.strokeStyle = "#e4e9ee";
+      ctx.beginPath();
+      ctx.moveTo(52, y);
+      ctx.lineTo(w - 20, y);
+      ctx.stroke();
+      ctx.fillText(f(ymin + ((ymax - ymin) * i) / 4, 2), 2, y + 4);
+      ctx.fillText(
+        f(xmin + ((xmax - xmin) * i) / 4, 1),
+        44 + ((w - 72) * i) / 4,
+        242,
+      );
+    }
+    ctx.fillText("x / µm", w - 65, 258);
+    series.forEach((s, k) => {
+      ctx.strokeStyle = k ? "#b58227" : "#3672dd";
+      ctx.lineWidth = 2;
+      ctx.setLineDash(k ? [6, 4] : []);
+      ctx.beginPath();
+      s.x.forEach((x, i) => {
+        const px = 52 + ((x - xmin) / (xmax - xmin)) * (w - 72),
+          py = 220 - ((s.y[i] - ymin) / (ymax - ymin)) * 192;
+        i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+      });
+      ctx.stroke();
+    });
+    ctx.setLineDash([]);
+  }
+  function interferometer() {
+    const s = snapshot,
+      c = s.config,
+      m = s.interferometry;
+    el("interferometer").hidden = c.experiment === "single";
+    if (c.experiment === "single") return;
+    const t = s.scales.time_ms;
+    el("timeline").textContent = m.stage_steps
+      ? `${m.stage} · Split 0–${f(m.stage_steps[0] * c.dt * t, 2)} ms → Hold until ${f(m.stage_steps[1] * c.dt * t, 2)} ms → Expand until ${f(m.stage_steps[2] * c.dt * t, 2)} ms`
+      : `${m.stage} · controlled coherent Gaussian pair`;
+    el("interference-values").textContent =
+      `Left ${f(100 * m.left_fraction, 2)}% · Right ${f(100 * m.right_fraction, 2)}% · Mirror phase ${m.mirror_phase === null ? "unavailable" : f(m.mirror_phase, 3) + " rad"} · Mirror coherence ${f(m.mirror_coherence, 3)} · Fringe spacing ${m.fringes.spacing === null ? "unavailable" : f(m.fringes.spacing * s.scales.length_um, 3) + " µm"} · Profile contrast ${m.fringes.contrast === null ? "unavailable" : f(m.fringes.contrast, 3)}`;
+    const series = [s, ...(pinned ? [pinned.snapshot] : [])].map((v) => ({
+      x: v.x.map((x) => x * v.scales.length_um),
+      y: v.interferometry.profile.map(
+        (y) => (y * v.config.atoms) / v.scales.length_um,
+      ),
+    }));
+    profilePlot("line-profile", series, "atoms / µm");
+    profilePlot(
+      "potential-profile",
+      [{ x: series[0].x, y: m.potential.map((y) => y * s.scales.energy_hz) }],
+      "V / h · Hz",
+    );
+    el("fringe-note").textContent =
+      m.fringes.reason +
+      (s.diagnostics.released
+        ? " All external potentials are zero after release."
+        : "") +
+      " " +
+      (c.experiment === "pair" && s.diagnostics.time > 0
+        ? `Finite-width phase period (theory): ${f(((2 * Math.PI * (1 + ((c.fx_hz / c.reference_hz) * s.diagnostics.time) ** 2)) / ((c.fx_hz / c.reference_hz) ** 2 * s.diagnostics.time * c.separation)) * s.scales.length_um, 3)} µm. Local peak spacing can differ because of the packet envelopes.`
+        : "");
+    el("pin-note").textContent = pinned
+      ? `Pinned ${pinned.snapshot.config.experiment} at ${f(pinned.snapshot.diagnostics.time * pinned.snapshot.scales.time_ms, 2)} ms · bias ${pinned.snapshot.config.hold_bias} · pair phase ${f(pinned.snapshot.config.relative_phase, 3)} rad. Current ${f(s.diagnostics.time * t, 2)} ms. Shared physical axes; the pinned run is immutable.`
+      : "Pin a paused run to compare the next experiment on shared physical axes.";
   }
   el("form").addEventListener("submit", (e) => {
     e.preventDefault();
     action("prepare", {
-      config: Object.fromEntries(keys.map((k) => [k, Number(el(k).value)])),
+      config: Object.fromEntries(
+        keys.map((k) => [
+          k,
+          k === "experiment" ? el(k).value : Number(el(k).value),
+        ]),
+      ),
     });
   });
   keys.forEach((k) =>
@@ -371,6 +528,11 @@
     if (el("engine").value === "webgpu")
       el("preset-note").textContent =
         `WebGPU preset: ${selected.n}³, complex float32. All preparation and evolution run in your browser. TF is an approximate theory comparison, not a paper reproduction.`;
+    if (selected.experiment !== "single")
+      el("preset-note").textContent =
+        selected.experiment === "pair"
+          ? "Analytic coherent pair, zero interactions. Run to overlap the packets; compare phase 0 and π."
+          : "One interacting condensate, a rising barrier, biased hold, then full release. Teaching settings inspired by Shin et al.; no apparatus reproduction. Run starts the sequence.";
   });
   el("engine").addEventListener("change", () => {
     dirty = true;
@@ -434,9 +596,60 @@
       controls();
     }
   });
+  function download(data, name) {
+    const url = URL.createObjectURL(
+        new Blob([JSON.stringify(data)], { type: "application/json" }),
+      ),
+      link = document.createElement("a");
+    link.href = url;
+    link.download = name;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+  el("pin").addEventListener("click", async () => {
+    busy = true;
+    controls();
+    try {
+      const record = await request("export");
+      pinned = { record, snapshot: structuredClone(snapshot) };
+      interferometer();
+    } catch (e) {
+      error(e);
+    } finally {
+      busy = false;
+      controls();
+    }
+  });
+  el("clear-pin").addEventListener("click", () => {
+    pinned = null;
+    interferometer();
+    controls();
+  });
+  el("export-pair").addEventListener("click", async () => {
+    busy = true;
+    controls();
+    try {
+      download(
+        {
+          schema: "coldatomlab-3d-comparison-v1",
+          reference: pinned.record,
+          current: await request("export"),
+        },
+        "coldatomlab-3d-comparison.json",
+      );
+    } catch (e) {
+      error(e);
+    } finally {
+      busy = false;
+      controls();
+    }
+  });
   window.showLab3D = () => {
     if (!renderer) renderer = new window.DensitySurface3D(el("surface"));
     controls();
   };
+  window.addEventListener("resize", () => {
+    if (snapshot) interferometer();
+  });
   controls();
 })();

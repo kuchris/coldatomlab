@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="dashboard.css" />
     <link rel="stylesheet" href="lab3d.css" />
     <script src="surface3d.js" defer></script>
+    <script src="interferometry3d.js" defer></script>
     <script src="gpu3d.js" defer></script>
     <script src="lab3d.js" defer></script>
     <script src="gpu-page.js" defer></script>
@@ -44,10 +45,10 @@
         <div class="library-heading">
           <div>
             <p class="eyebrow">EXPERIMENT 04 / THREE DIMENSIONS</p>
-            <h1 id="lab3d-title">A cloud, released in space.</h1>
+            <h1 id="lab3d-title">Matter waves in three dimensions.</h1>
             <p>
-              Prepare an interacting condensate. Release all three axes. Measure
-              its expansion.
+              Prepare, split and release a condensate. Measure its expansion and
+              interference.
             </p>
           </div>
           <a
@@ -151,6 +152,96 @@
             <form id="three-form">
               <fieldset id="three-parameters">
                 <label
+                  >Experiment<select id="three-experiment">
+                    <option value="single">Single-cloud expansion</option>
+                    <option value="pair">
+                      Coherent Gaussian pair · analytic check
+                    </option>
+                    <option value="sequence">Split / hold / release</option>
+                  </select></label
+                >
+                <details class="numerics" open>
+                  <summary>Interferometer settings</summary>
+                  <p class="three-note">
+                    Lengths in a₀; times in ω₀⁻¹; potentials in ℏω₀. Pair
+                    settings apply only to the coherent pair. Sequence settings
+                    apply only to dynamic splitting.
+                  </p>
+                  <div class="pair">
+                    <label
+                      >Pair separation / a₀<input
+                        id="three-separation"
+                        type="number"
+                        value="6"
+                        min="2"
+                        max="10"
+                        step="any"
+                        required /></label
+                    ><label
+                      >Pair phase / rad<input
+                        id="three-relative_phase"
+                        type="number"
+                        value="0"
+                        min="-3.141592653589793"
+                        max="3.141592653589793"
+                        step="any"
+                        required
+                    /></label>
+                  </div>
+                  <div class="pair">
+                    <label
+                      >Barrier height<input
+                        id="three-barrier_height"
+                        type="number"
+                        value="12"
+                        min="0"
+                        max="40"
+                        step="any"
+                        required /></label
+                    ><label
+                      >Barrier width / a₀<input
+                        id="three-barrier_width"
+                        type="number"
+                        value="0.8"
+                        min="0.5"
+                        max="2"
+                        step="any"
+                        required
+                    /></label>
+                  </div>
+                  <div class="pair">
+                    <label
+                      >Split time<input
+                        id="three-split_time"
+                        type="number"
+                        value="3"
+                        min="0.1"
+                        max="6"
+                        step="any"
+                        required /></label
+                    ><label
+                      >Hold time<input
+                        id="three-hold_time"
+                        type="number"
+                        value="0.6"
+                        min="0"
+                        max="3"
+                        step="any"
+                        required
+                    /></label>
+                  </div>
+                  <label
+                    >Hold bias · right minus left<input
+                      id="three-hold_bias"
+                      type="number"
+                      value="1"
+                      min="-5"
+                      max="5"
+                      step="any"
+                      required
+                  /></label>
+                </details>
+                <label
                   >Compute engine<select id="three-engine">
                     <option value="webgpu">
                       WebGPU · browser GPU · float32
@@ -169,6 +260,10 @@
                       Noninteracting analytic check
                     </option>
                     <option value="tf">Thomas–Fermi expansion</option>
+                    <option value="pair">Coherent pair · in phase</option>
+                    <option value="opposite">Coherent pair · π phase</option>
+                    <option value="sequence">3D split / hold / release</option>
+                    <option value="reverse">3D sequence · reversed bias</option>
                   </select></label
                 ><button type="button" id="three-load">Load settings</button>
                 <p class="three-note" id="three-preset-note">
@@ -311,6 +406,60 @@
           </aside>
         </div>
         <div id="three-results" hidden>
+          <section
+            id="three-interferometer"
+            class="three-interferometer"
+            hidden
+          >
+            <p class="eyebrow">COHERENT MATTER WAVES / 3D</p>
+            <h2>Split, evolve, read the phase</h2>
+            <p id="three-timeline" class="three-timeline" role="status"></p>
+            <p id="three-interference-values" class="three-note"></p>
+            <div class="transport-buttons">
+              <button id="three-pin" type="button">Pin this run</button
+              ><button id="three-clear-pin" type="button" disabled>
+                Clear reference</button
+              ><button id="three-export-pair" type="button" disabled>
+                Export comparison
+              </button>
+            </div>
+            <p id="three-pin-note" class="three-note">
+              Pin a paused run to compare the next experiment on shared physical
+              axes.
+            </p>
+            <div class="three-interference-plots">
+              <figure>
+                <figcaption>Axial line density · current / pinned</figcaption>
+                <canvas
+                  id="three-line-profile"
+                  width="720"
+                  height="260"
+                ></canvas>
+              </figure>
+              <figure>
+                <figcaption>Applied potential · y = z = 0</figcaption>
+                <canvas
+                  id="three-potential-profile"
+                  width="720"
+                  height="260"
+                ></canvas>
+              </figure>
+            </div>
+            <p id="three-fringe-note" class="three-note"></p>
+            <p class="three-note">
+              Phase is a mirror-weighted wavefunction diagnostic, not an
+              absorption-image phase fit. It is masked when coherence or
+              population is insufficient. Driven energy need not be conserved.
+              Inspired by
+              <a
+                href="https://arxiv.org/abs/cond-mat/0306305"
+                target="_blank"
+                rel="noreferrer"
+                >Shin et al. (2004)</a
+              >; teaching parameters, no apparatus reconstruction, thermal noise
+              or independent-condensate phase statistics.
+            </p>
+          </section>
           <div class="three-section-heading">
             <div>
               <p class="eyebrow">LOOK INSIDE / PROJECT THROUGH</p>
@@ -392,9 +541,9 @@
           </div>
           <p class="three-note">
             Blue x · Teal y · Amber z. Solid curves: numerical field. Dashed
-            curves: absolute theory. The table also shows TF scaling anchored to
-            the prepared numerical widths, separately from the absolute TF
-            prediction.
+            curves: absolute theory for single-cloud modes only. The table also
+            shows TF scaling anchored to the prepared numerical widths,
+            separately from the absolute TF prediction.
           </p>
           <details class="benchmark-checks">
             <summary>Preparation, numerical limits & performance</summary>

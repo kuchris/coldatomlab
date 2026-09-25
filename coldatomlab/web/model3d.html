@@ -51,8 +51,7 @@
 ω₀ = 2πf₀; a₀ = √(ℏ / mω₀); τ = ω₀t; Xᵢ = rᵢ/a₀
 ∫ |ψ|² dX dY dZ = 1; g₃D = 4πNaₛ/a₀
 i ∂ψ/∂τ = [−½∇² + V + g₃D|ψ|²] ψ
-V = ½ Σᵢ (fᵢ/f₀)² Xᵢ² before release; V = 0 after release</pre
-    >
+V = ½ Σᵢ (fᵢ/f₀)² Xᵢ² before release; V = 0 after release</pre>
     <p>
       N uses the usual N−1 ≈ N convention. The mass is Rb-87. Number density is
       N|ψ|²/a₀³. A projection along z is N/a₀² ∫|ψ|²dZ; its image-plane integral
@@ -83,8 +82,7 @@ g = 0: σᵢ(τ) = √[(1 + Ωᵢ²τ²) / (2Ωᵢ)]
 TF chemical potential: μTF = ½ [15g ΩxΩyΩz / (4π)]^(2/5)
 TF initial RMS: σᵢ(0) = √(2μTF) / (√7 Ωᵢ)
 Full-release scaling: bᵢ″ = Ωᵢ² / (bᵢ bx by bz), bᵢ(0)=1, bᵢ′(0)=0
-Absolute TF RMS: σᵢ(τ) = σᵢ(0)bᵢ(τ)</pre
-    >
+Absolute TF RMS: σᵢ(τ) = σᵢ(0)bᵢ(τ)</pre>
     <p>
       The TF scaling ODE is solved separately from the 3D field. It does not
       drive the visualization. The table distinguishes the absolute TF
@@ -120,6 +118,37 @@ Absolute TF RMS: σᵢ(τ) = σᵢ(0)bᵢ(τ)</pre
       maps the equations to these sources; docs/MODEL3D.md records measured
       implementation checks. Neither paper validates this software.
     </p>
+    <h2>Coherent interferometry</h2>
+    <p>
+      The analytic pair is a normalized sum of two noninteracting Gaussians with
+      a controlled right-minus-left phase. It starts released. The dynamic
+      sequence instead prepares one interacting ground state, raises a Gaussian
+      barrier H exp(−X²/(2b²)), holds it with a bias B tanh(X/b)/2, then
+      releases every axis. Split uses a sin² ramp; bias acts only during Hold.
+      Stage times are rounded to complete solver steps and the external
+      potential is evaluated at step midpoints. Positive bias raises the right
+      well and approximately accumulates negative relative phase.
+    </p>
+    <p>
+      Line density integrates both transverse directions. The phase readout is
+      the argument of the mirror overlap conj(ψ(−X,Y,Z)) ψ(X,Y,Z) for X&gt;0,
+      not a camera-derived fit; it is hidden when coherence or population is too
+      small. Fringe spacing requires at least three resolved local peaks. Its
+      envelope-sensitive value can differ from the analytic carrier period. Pin
+      preserves each record's settings, scale and time. Single-cloud Gaussian
+      and TF width references do not apply to these modes.
+    </p>
+    <p>
+      <a href="https://arxiv.org/abs/cond-mat/0306305"
+        >Shin et al., PRL 92, 050405 (2004)</a
+      >
+      motivates the splitting, controlled phase and release sequence. Our Rb-87
+      harmonic-plus-barrier teaching model does not reproduce the paper's sodium
+      apparatus, optical potential, measured image or finite-temperature phase
+      statistics. The 3D projections remain ideal densities with no
+      absorption-camera model. The repository's docs/INTERFEROMETER3D.md
+      specifies the conventions and checks.
+    </p>
     <h2>WebGPU execution</h2>
     <p>
       The browser GPU backend uses complex float32 and workgroup radix-two FFTs
@@ -143,8 +172,7 @@ Absolute TF RMS: σᵢ(τ) = σᵢ(0)bᵢ(τ)</pre
       settings, then run:
     </p>
     <pre>
-uv run python -m coldatomlab.replay path/to/coldatomlab-3d-run.json</pre
-    >
+uv run python -m coldatomlab.replay path/to/coldatomlab-3d-run.json</pre>
     <p>
       Replay recomputes the preparation and evolution; it compares the final
       complex field with the saved array. Preparation takes time again.

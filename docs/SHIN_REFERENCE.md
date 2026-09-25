@@ -25,7 +25,7 @@ Define comparison error explicitly as `100 * (simulation - reported measurement)
 
 The current [model](MODEL.md) retains transverse confinement, prepares ideal Gaussian pairs or a harmonic trap with a raised Gaussian barrier, and defaults to Rb-87 teaching parameters. Its generic peak-spacing diagnostic is not the paper's fitted fringe period. The [camera](IMAGING.md) implements ideal Rb-87 optics only.
 
-Our inference from the reported energy and frequencies is that copying them into the frozen-axis model is unjustified: 3 kHz exceeds both confinement frequencies. Three-dimensional interacting release, the apparatus potential, and sodium absorption calibration are outside the present model.
+Our inference from the reported energy and frequencies is that copying them into the frozen-axis model is unjustified: 3 kHz exceeds both confinement frequencies. Three-dimensional interacting release, the apparatus potential, and sodium absorption calibration are outside this reduced benchmark. The separate [3D interferometer](INTERFEROMETER3D.md) now implements interacting splitting and release with a declared Rb-87 teaching potential; it does not reconstruct the sodium apparatus or camera.
 
 A defensible implementation evolves an explicitly noninteracting Gaussian pair using sodium mass, matching only separation and expansion time. Packet width, envelope, normalization and numerical domain must remain labeled modeling choices. Integrate the numerical density, fit its carrier period, and show the simulation, finite-width analytic check, rounded-input point-source prediction, quoted prediction, and reported measurement separately. Do not tune packet width to reproduce 41.5 µm.
 

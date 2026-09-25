@@ -35,6 +35,14 @@ Use **Density / Phase** to switch the observation view. Parameter edits remain p
 
 The English interface provides density and masked phase maps, central density profiles, RMS width histories, norm, energy, and boundary population. It adapts to desktop and narrow mobile layouts.
 
+## 3D interferometer (v0.7)
+
+Open [the browser GPU lab](http://127.0.0.1:8765/gpu.html), choose **3D split / hold / release**, click **Load settings**, **Prepare 3D experiment**, then **Run**. The barrier splits one condensate, a hold bias controls its phase, and all axes release automatically. The timeline follows actual solver steps. Inspect the axial density, applied potential, left/right populations, mirror phase/coherence and resolved fringe estimates. Pause or finish, **Pin this run**, load **3D sequence · reversed bias**, prepare and run again to compare profiles on shared physical axes. **Export comparison** saves both complete records for replay.
+
+For the analytic control, compare **Coherent pair · in phase** and **Coherent pair · π phase**. These noninteracting packets start released. The experiment selector distinguishes single-cloud expansion, coherent pair and dynamic sequence; edits take effect on Prepare. Both GPU and CPU backends implement the same protocols. The GPU static bundle includes the interferometer without a simulation server.
+
+These are teaching protocols inspired by Shin et al. (2004), with Rb-87 and a declared 3D mean-field potential. They do not reconstruct that sodium apparatus or its camera. Read [formulas, measurement limits, provenance and verification](docs/INTERFEROMETER3D.md). Unresolved fringes and weak-coherence phase estimates remain unavailable.
+
 ## Laboratory units (v0.3)
 
 Choose **Laboratory · μm / ms / Hz**, then open **Atomic parameters & confinement**. Select Rb-87 or a custom bosonic mass, set N, scattering length, reference frequency and axial confinement. Interaction g is derived automatically. Trap frequencies, barrier energies V/h, lengths and times now use laboratory units. The prepared state's axes and measurements update only after Prepare. The applicability panel reports conservative scale checks, including axial excitation and diluteness estimates; it does not certify a physical realization or finite-temperature validity.

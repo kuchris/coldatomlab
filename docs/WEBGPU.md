@@ -1,5 +1,7 @@
 # Browser GPU execution (v0.6)
 
+v0.7 extends the same backend to coherent Gaussian pairs and a driven 3D interferometer. See [interferometry conventions and new validation](INTERFEROMETER3D.md). The original single-cloud checks below retain their own scope; they are not substituted for the sequence-specific tests.
+
 The 3D lab now defaults to **WebGPU · browser GPU · float32**. The CPU float64 reference remains selectable in the full local app. The standalone `gpu.html` contains only the 3D lab and makes no simulation API requests; it can be served by an ordinary static HTTPS host. No CUDA installation is required.
 
 ## Supported execution

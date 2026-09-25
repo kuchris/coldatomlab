@@ -16,6 +16,7 @@
     <script src="/app.js" defer></script>
     <script src="/benchmark.js" defer></script>
     <script src="/surface3d.js" defer></script>
+    <script src="/interferometry3d.js" defer></script>
     <script src="/gpu3d.js" defer></script>
     <script src="/lab3d.js" defer></script>
     <script src="/dashboard.js" defer></script>
@@ -45,7 +46,7 @@
         <a href="/physical-units" target="_blank" rel="noopener"><span aria-hidden="true">↗</span>Units & literature</a>
         <a href="/imaging" target="_blank" rel="noopener"><span aria-hidden="true">↗</span>Imaging guide</a>
       </nav>
-      <div class="sidebar-bottom"><span class="model-pill">2D & 3D condensates</span><p>Explore coherent matter.<br>One experiment at a time.</p><small>Cold Atom Lab · v0.6</small></div>
+      <div class="sidebar-bottom"><span class="model-pill">2D & 3D condensates</span><p>Explore coherent matter.<br>One experiment at a time.</p><small>Cold Atom Lab · v0.7</small></div>
     </aside>
     <main id="main-content" tabindex="-1">
       <section id="experiment-library" aria-labelledby="library-title">
@@ -76,7 +77,7 @@
         <div class="library-session"><div><span class="eyebrow">COMPARE WITH LITERATURE</span><p>Shin et al. · A published fringe spacing and a reduced model.</p></div><a href="#benchmark">View paper benchmark →</a></div>
       </section>
       <section id="lab3d-page" aria-labelledby="lab3d-title" hidden>
-        <div class="library-heading"><div><p class="eyebrow">EXPERIMENT 04 / THREE DIMENSIONS</p><h1 id="lab3d-title">A cloud, released in space.</h1><p>Prepare an interacting condensate. Release all three axes. Measure its expansion.</p></div><a class="button-link" href="/model3d" target="_blank" rel="noopener">3D model & papers ↗</a></div>
+        <div class="library-heading"><div><p class="eyebrow">EXPERIMENT 04 / THREE DIMENSIONS</p><h1 id="lab3d-title">Matter waves in three dimensions.</h1><p>Prepare, split and release a condensate. Measure its expansion and interference.</p></div><a class="button-link" href="/model3d" target="_blank" rel="noopener">3D model & papers ↗</a></div>
         <div class="three-layout">
           <section class="three-observation" aria-label="3D observation">
             <div class="panel-heading"><div><span class="eyebrow">NUMERICAL DENSITY / ISOSURFACE</span><h2>Condensate in 3D</h2></div><span id="three-trap">Not prepared</span></div>
@@ -88,7 +89,13 @@
             <p id="three-warning" class="warning" role="alert" hidden></p>
           </section>
           <aside class="controls three-controls" aria-label="3D experiment controls"><p class="eyebrow">PREPARATION / RB-87</p><h2>Set the conditions</h2>
-            <form id="three-form"><fieldset id="three-parameters"><label>Compute engine<select id="three-engine"><option value="webgpu">WebGPU · browser GPU · float32</option><option value="cpu">CPU reference · float64</option></select></label><p id="three-engine-note" class="three-note">GPU preparation and evolution run in this browser. Requires hardware WebGPU in a secure context.</p><label>Reference example<select id="three-preset"><option value="interacting">Interacting cloud</option><option value="gaussian">Noninteracting analytic check</option><option value="tf">Thomas–Fermi expansion</option></select></label><button type="button" id="three-load">Load settings</button>
+            <form id="three-form"><fieldset id="three-parameters"><label>Experiment<select id="three-experiment"><option value="single">Single-cloud expansion</option><option value="pair">Coherent Gaussian pair · analytic check</option><option value="sequence">Split / hold / release</option></select></label>
+<details class="numerics" open><summary>Interferometer settings</summary>
+<p class="three-note">Lengths in a₀; times in ω₀⁻¹; potentials in ℏω₀. Pair settings apply only to the coherent pair. Sequence settings apply only to dynamic splitting.</p>
+<div class="pair"><label>Pair separation / a₀<input id="three-separation" type="number" value="6" min="2" max="10" step="any" required></label><label>Pair phase / rad<input id="three-relative_phase" type="number" value="0" min="-3.141592653589793" max="3.141592653589793" step="any" required></label></div>
+<div class="pair"><label>Barrier height<input id="three-barrier_height" type="number" value="12" min="0" max="40" step="any" required></label><label>Barrier width / a₀<input id="three-barrier_width" type="number" value="0.8" min="0.5" max="2" step="any" required></label></div>
+<div class="pair"><label>Split time<input id="three-split_time" type="number" value="3" min="0.1" max="6" step="any" required></label><label>Hold time<input id="three-hold_time" type="number" value="0.6" min="0" max="3" step="any" required></label></div>
+<label>Hold bias · right minus left<input id="three-hold_bias" type="number" value="1" min="-5" max="5" step="any" required></label></details><label>Compute engine<select id="three-engine"><option value="webgpu">WebGPU · browser GPU · float32</option><option value="cpu">CPU reference · float64</option></select></label><p id="three-engine-note" class="three-note">GPU preparation and evolution run in this browser. Requires hardware WebGPU in a secure context.</p><label>Reference example<select id="three-preset"><option value="interacting">Interacting cloud</option><option value="gaussian">Noninteracting analytic check</option><option value="tf">Thomas–Fermi expansion</option><option value="pair">Coherent pair · in phase</option><option value="opposite">Coherent pair · π phase</option><option value="sequence">3D split / hold / release</option><option value="reverse">3D sequence · reversed bias</option></select></label><button type="button" id="three-load">Load settings</button>
             <p class="three-note" id="three-preset-note">Repulsive Rb-87 gas. The three-axis field evolves numerically.</p>
             <div class="pair"><label>Atoms N<input id="three-atoms" type="number" value="20000" min="10" max="300000" step="1" required/></label><label>aₛ / nm<input id="three-scattering_nm" type="number" value="5.3" min="0" max="10" step="any" required/></label></div>
             <div class="pair"><label>f₀ / Hz<input id="three-reference_hz" type="number" value="30" min="10" max="100" step="any" required/></label><label>fₓ / Hz<input id="three-fx_hz" type="number" value="30" min="5" max="200" step="any" required/></label></div>
@@ -99,7 +106,15 @@
             <div class="model-note"><p><b>Full 3D GPE · zero temperature</b><br>Norm-one wavefunction; g = 4πNaₛ/a₀. Repulsive contact interactions, no thermal cloud, losses or quantum depletion. aₛ = 0 is an ideal reference.</p></div>
           </aside>
         </div>
-        <div id="three-results" hidden>
+        <div id="three-results" hidden><section id="three-interferometer" class="three-interferometer" hidden>
+<p class="eyebrow">COHERENT MATTER WAVES / 3D</p><h2>Split, evolve, read the phase</h2>
+<p id="three-timeline" class="three-timeline" role="status"></p>
+<p id="three-interference-values" class="three-note"></p>
+<div class="transport-buttons"><button id="three-pin" type="button">Pin this run</button><button id="three-clear-pin" type="button" disabled>Clear reference</button><button id="three-export-pair" type="button" disabled>Export comparison</button></div>
+<p id="three-pin-note" class="three-note">Pin a paused run to compare the next experiment on shared physical axes.</p>
+<div class="three-interference-plots"><figure><figcaption>Axial line density · current / pinned</figcaption><canvas id="three-line-profile" width="720" height="260"></canvas></figure><figure><figcaption>Applied potential · y = z = 0</figcaption><canvas id="three-potential-profile" width="720" height="260"></canvas></figure></div>
+<p id="three-fringe-note" class="three-note"></p>
+<p class="three-note">Phase is a mirror-weighted wavefunction diagnostic, not an absorption-image phase fit. It is masked when coherence or population is insufficient. Driven energy need not be conserved. Inspired by <a href="https://arxiv.org/abs/cond-mat/0306305" target="_blank" rel="noreferrer">Shin et al. (2004)</a>; teaching parameters, no apparatus reconstruction, thermal noise or independent-condensate phase statistics.</p></section>
           <div class="three-section-heading"><div><p class="eyebrow">LOOK INSIDE / PROJECT THROUGH</p><h2>Three views of the same state</h2></div><div class="view-switch" aria-label="3D image type"><button id="three-slices" class="selected" aria-pressed="true">Central slices</button><button id="three-columns" aria-pressed="false">Column density</button></div></div>
           <p id="three-image-note" class="three-note"></p><div class="three-image-grid"><figure><figcaption id="three-xy-label">XY · z = 0</figcaption><canvas id="three-xy" width="360" height="360" role="img" aria-label="XY numerical density view"></canvas></figure><figure><figcaption id="three-xz-label">XZ · y = 0</figcaption><canvas id="three-xz" width="360" height="360" role="img" aria-label="XZ numerical density view"></canvas></figure><figure><figcaption id="three-yz-label">YZ · x = 0</figcaption><canvas id="three-yz" width="360" height="360" role="img" aria-label="YZ numerical density view"></canvas></figure></div>
           <div class="three-section-heading"><div><p class="eyebrow">MEASURE / COMPARE WITH THEORY</p><h2>Widths and shape</h2></div><button id="three-export">Export 3D run ↓</button></div>
@@ -107,7 +122,7 @@
           <p id="three-theory-note" class="three-note"></p>
           <canvas id="three-width-history" width="1100" height="310" role="img" aria-label="Three-dimensional RMS widths versus time, with applicable theory curves"></canvas>
           <div class="table-scroll"><table class="benchmark-table"><thead><tr><th>Axis</th><th>Numerical RMS / µm</th><th id="three-theory-title">Theory RMS / µm</th><th>Difference</th><th>Initial-width scaling / µm</th></tr></thead><tbody id="three-theory-table"></tbody></table></div>
-          <p class="three-note">Blue x · Teal y · Amber z. Solid curves: numerical field. Dashed curves: absolute theory. The table also shows TF scaling anchored to the prepared numerical widths, separately from the absolute TF prediction.</p>
+          <p class="three-note">Blue x · Teal y · Amber z. Solid curves: numerical field. Dashed curves: absolute theory for single-cloud modes only. The table also shows TF scaling anchored to the prepared numerical widths, separately from the absolute TF prediction.</p>
           <details class="benchmark-checks"><summary>Preparation, numerical limits & performance</summary><p id="three-performance"></p><p id="three-physical"></p><p>Periodic FFT boundaries are monitored. A boundary warning stops the run at the first step exceeding 0.1% probability in the outer band. A conserved norm alone does not establish spatial or time accuracy. Refine grid, domain, time step and preparation step for quantitative use.</p><p><a href="/model3d" target="_blank" rel="noopener">Conventions, validation cases and Castin–Dum references ↗</a></p></details>
         </div>
       </section>

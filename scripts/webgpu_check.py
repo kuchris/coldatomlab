@@ -167,7 +167,7 @@ def main():
         with page.expect_download() as download:
             page.locator("#three-export").click()
         download.value.save_as(out / "browser-export.json")
-        page.locator("#three-form .numerics summary").click()
+        page.get_by_text("3D numerical resolution", exact=True).click()
         page.locator("#three-n").select_option("96")
         page.locator("#three-prepare").click()
         expect(page.locator("#three-error")).to_contain_text("32³, 64³ or 128³")

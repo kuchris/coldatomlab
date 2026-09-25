@@ -4,6 +4,12 @@
 // data, reduces downloaded diagnostics and integrates the independent TF ODE.
 window.GPUCloud3D = class {
   static validate(c) {
+    if (!["single", "pair", "sequence"].includes(c.experiment))
+      throw Error("Unknown 3D experiment.");
+    if (c.experiment === "pair" && c.scattering_nm !== 0)
+      throw Error(
+        "The analytic coherent pair requires zero scattering length.",
+      );
     if (![32, 64, 128].includes(c.n))
       throw Error(
         "WebGPU supports 32³, 64³ or 128³. Choose a supported grid; no automatic grid substitution is applied.",
@@ -19,6 +25,13 @@ window.GPUCloud3D = class {
       fz_hz: [5, 200],
       duration: [0.1, 4],
       preparation_dt: [0.0005, 0.004],
+      separation: [2, 10],
+      relative_phase: [-Math.PI, Math.PI],
+      barrier_height: [0, 40],
+      barrier_width: [0.5, 2],
+      split_time: [0.1, 6],
+      hold_time: [0, 3],
+      hold_bias: [-5, 5],
     };
     for (const [k, [lo, hi]] of Object.entries(limits))
       if (
@@ -30,6 +43,10 @@ window.GPUCloud3D = class {
         throw Error(`${k} must be between ${lo} and ${hi}.`);
     if (!Number.isInteger(c.atoms) || c.length / c.n > 0.5)
       throw Error("Use an integer atom number and grid spacing ≤ 0.5 a₀.");
+    if (c.experiment === "sequence" && c.barrier_width < (2 * c.length) / c.n)
+      throw Error(
+        "Resolve the barrier with at least two grid cells per width.",
+      );
     if (
       [c.fx_hz, c.fy_hz, c.fz_hz].some(
         (f) => f / c.reference_hz < 0.5 || f / c.reference_hz > 2,
@@ -55,6 +72,7 @@ window.GPUCloud3D = class {
     return scales;
   }
   static async create(config, progress = () => {}) {
+    config = { ...Interferometry3D.defaults, ...config };
     const s = new GPUCloud3D();
     s.config = { ...config };
     s.scales = this.validate(config);
@@ -91,6 +109,29 @@ window.GPUCloud3D = class {
       await s.initialize();
       s.setupSeconds = (performance.now() - start) / 1000;
       await s.prepare(progress);
+      if (config.experiment === "pair") {
+        const field = new Float32Array(s.count * 2);
+        let norm = 0;
+        for (let i = 0; i < s.count; i++) {
+          const x = s.x[Math.floor(i / s.n ** 2)],
+            y = s.x[Math.floor(i / s.n) % s.n],
+            z = s.x[i % s.n];
+          const transverse = Math.exp(-0.5 * (s.w[1] * y * y + s.w[2] * z * z));
+          const left =
+            Math.exp(-0.5 * s.w[0] * (x + config.separation / 2) ** 2) *
+            transverse;
+          const right =
+            Math.exp(-0.5 * s.w[0] * (x - config.separation / 2) ** 2) *
+            transverse;
+          field[2 * i] = left + Math.cos(config.relative_phase) * right;
+          field[2 * i + 1] = Math.sin(config.relative_phase) * right;
+          norm += (field[2 * i] ** 2 + field[2 * i + 1] ** 2) * s.dx ** 3;
+        }
+        for (let i = 0; i < field.length; i++) field[i] /= Math.sqrt(norm);
+        s.device.queue.writeBuffer(s.fields[s.index], 0, field);
+        s.preparation.kind = "WebGPU normalized coherent Gaussian pair";
+        s.preparation.relative_stationary_residual = null;
+      }
       s.preparation.elapsed_seconds = (performance.now() - start) / 1000;
       s.preparation.setup_seconds = s.setupSeconds;
       s.initial = await s.readField();
@@ -239,6 +280,7 @@ const DK:f32=${num((2 * Math.PI) / c.length)};
 fn multiply(a:vec2f,b:vec2f)->vec2f{return vec2f(a.x*b.x-a.y*b.y,a.x*b.y+a.y*b.x);}
 fn coords(i:u32)->vec3u{return vec3u(i/(N*N),(i/N)%N,i%N);}
 fn trap(i:u32)->f32{let r=(vec3f(coords(i))-vec3f(f32(N)/2.))*DX;return .5*dot(W*r,W*r);}
+fn driven(i:u32)->f32{let x=(f32(coords(i).x)-f32(N)/2.)*DX; let width=${num(c.barrier_width)};return trap(i)+ctl[3]*exp(-.5*x*x/(width*width))+.5*ctl[4]*tanh(x/width);}
 fn k2(i:u32)->f32{let q=coords(i);let k=vec3f(select(vec3i(q),vec3i(q)-vec3i(i32(N)),q>=vec3u(N/2u)))*DK;return dot(k,k);}
 fn address(line:u32,t:u32)->u32{
  if(mode.x==0u){return t*N*N+(line/N)*N+line%N;}
@@ -268,7 +310,7 @@ fn local(@builtin(global_invocation_id) id:vec3u){
   if(abs(z)>.01){ratio=(1.-ex)/v;}
   dst[i]=p*sqrt(ex/(1.+G*density*ratio));
  }else{
-  let v=select(trap(i),0.,mode.y==1u)+G*density;let angle=-.5*DT*v;
+  let v=select(driven(i),0.,mode.y==1u)+G*density;let angle=-.5*DT*v;
   dst[i]=multiply(p,vec2f(cos(angle),sin(angle)));
  }
 }
@@ -524,7 +566,7 @@ fn normalize(@builtin(global_invocation_id) id:vec3u){if(id.x<TOTAL){dst[id.x]=s
     this.device.queue.writeBuffer(this.fields[0], 0, this.initial);
     this.index = 0;
     this.steps = 0;
-    this.releaseStep = null;
+    this.releaseStep = this.config.experiment === "pair" ? 0 : null;
     this.complete = false;
     this.warning = "";
     this.history = [];
@@ -532,6 +574,8 @@ fn normalize(@builtin(global_invocation_id) id:vec3u){if(id.x<TOTAL){dst[id.x]=s
     await this.record();
   }
   async release() {
+    if (this.config.experiment !== "single")
+      throw Error("Release is automatic for this experiment.");
     if (this.releaseStep === null) {
       this.releaseStep = this.steps;
       this.complete = false;
@@ -544,6 +588,15 @@ fn normalize(@builtin(global_invocation_id) id:vec3u){if(id.x<TOTAL){dst[id.x]=s
     const started = performance.now();
     for (let k = 0; k < count && !this.complete && !this.warning; k++) {
       this.check();
+      const [height, bias] = Interferometry3D.drive(
+        this.config,
+        this.steps + 0.5,
+      );
+      this.device.queue.writeBuffer(
+        this.control,
+        12,
+        new Float32Array([height, bias]),
+      );
       const encoder = this.device.createCommandEncoder();
       this.encodeStep(encoder);
       this.dispatch(
@@ -558,6 +611,11 @@ fn normalize(@builtin(global_invocation_id) id:vec3u){if(id.x<TOTAL){dst[id.x]=s
       this.device.queue.submit([encoder.finish()]);
       const control = await this.read(this.control, this.controlRead);
       this.steps++;
+      if (
+        this.config.experiment === "sequence" &&
+        this.steps >= Interferometry3D.stages(this.config)[1]
+      )
+        this.releaseStep = Interferometry3D.stages(this.config)[1];
       if (!Number.isFinite(control[0]) || Math.abs(control[0] - 1) > 0.001)
         this.warning =
           "Single-precision norm drift exceeded 0.1%. Use CPU reference or a shorter run.";
@@ -565,8 +623,11 @@ fn normalize(@builtin(global_invocation_id) id:vec3u){if(id.x<TOTAL){dst[id.x]=s
         this.warning =
           "Cloud reached the periodic boundary region. Increase the box and grid.";
       this.complete =
-        this.steps - (this.releaseStep ?? 0) >=
-        Math.round(this.config.duration / this.config.dt);
+        this.steps >=
+        (this.config.experiment === "sequence"
+          ? Interferometry3D.stages(this.config)[2]
+          : (this.releaseStep ?? 0) +
+            Math.round(this.config.duration / this.config.dt));
     }
     this.lastBatchSeconds = (performance.now() - started) / 1000;
     await this.record();
@@ -602,7 +663,16 @@ fn normalize(@builtin(global_invocation_id) id:vec3u){if(id.x<TOTAL){dst[id.x]=s
       kinetic +=
         (this.field[2 * i] * h[2 * i] + this.field[2 * i + 1] * h[2 * i + 1]) *
         dv;
-      if (this.releaseStep === null) potential += this.trapAt(i) * mass;
+      if (this.releaseStep === null) {
+        const [height, bias] = Interferometry3D.drive(this.config, this.steps),
+          x = this.x[q[0]],
+          width = this.config.barrier_width;
+        potential +=
+          (this.trapAt(i) +
+            height * Math.exp(-0.5 * (x / width) ** 2) +
+            0.5 * bias * Math.tanh(x / width)) *
+          mass;
+      }
       interaction += 0.5 * this.g * density * mass;
     }
     const widths = second.map((v, i) =>
@@ -627,7 +697,7 @@ fn normalize(@builtin(global_invocation_id) id:vec3u){if(id.x<TOTAL){dst[id.x]=s
     this.history.push(this.diagnostics);
   }
   reference() {
-    if (!this.g) return null;
+    if (!this.g || this.config.experiment !== "single") return null;
     const widths = this.w.map(
       (w) => Math.sqrt(2 * this.muTF) / (w * Math.sqrt(7)),
     );
@@ -712,6 +782,7 @@ fn normalize(@builtin(global_invocation_id) id:vec3u){if(id.x<TOTAL){dst[id.x]=s
       warning: this.warning,
       complete: this.complete,
       last_batch_seconds: this.lastBatchSeconds,
+      interferometry: Interferometry3D.measure(this),
       backend: {
         type: "webgpu",
         precision: "complex-f32",
@@ -742,7 +813,7 @@ fn normalize(@builtin(global_invocation_id) id:vec3u){if(id.x<TOTAL){dst[id.x]=s
     }
     return {
       schema: "coldatomlab-webgpu-3d-v1",
-      version: "0.6.0",
+      version: "0.7.0",
       config: this.config,
       array_order: "x,y,z",
       wavefunction_normalization: "integral |psi|^2 dX dY dZ = 1",
