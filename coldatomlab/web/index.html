@@ -9,6 +9,7 @@
     />
     <title>Cold Atom Lab — Matter in motion</title>
     <link rel="stylesheet" href="/style.css" />
+    <script src="/physical.js" defer></script>
     <script src="/app.js" defer></script>
   </head>
   <body>
@@ -87,7 +88,7 @@
           </div>
           <label class="overlay-toggle"
             ><input type="checkbox" id="potential-overlay" />Potential contours
-            · 2 / 4 / 8 / 16 ℏω₀</label
+            <span id="contour-levels">· 2 / 4 / 8 / 16 ℏω₀</span></label
           >
           <div class="transport">
             <span class="status" id="status" role="status" aria-live="polite"
@@ -124,6 +125,98 @@
           <form id="config-form">
             <fieldset id="parameters">
               <legend class="sr-only">Experiment parameters</legend>
+              <div class="lab-setup">
+                <label
+                  >Units<select id="unit-mode">
+                    <option value="dimensionless">Dimensionless</option>
+                    <option value="physical">Laboratory · μm / ms / Hz</option>
+                  </select></label
+                >
+                <details id="physical-controls" hidden>
+                  <summary>Atomic parameters & confinement</summary>
+                  <label
+                    >Species<select id="species">
+                      <option value="Rb87">Rubidium-87</option>
+                      <option value="custom">Custom bosonic species</option>
+                    </select></label
+                  >
+                  <div class="pair">
+                    <label
+                      >Mass · u<input
+                        id="mass_u"
+                        type="number"
+                        min="1"
+                        max="300"
+                        step="any"
+                        value="86.90918052" /></label
+                    ><label
+                      >Atom number N<input
+                        id="atoms"
+                        type="number"
+                        min="10"
+                        max="100000"
+                        step="1"
+                        value="200"
+                    /></label>
+                  </div>
+                  <div class="pair">
+                    <label
+                      >Scattering length · nm<input
+                        id="scattering_nm"
+                        type="number"
+                        min="0"
+                        max="20"
+                        step="any"
+                        value="5.3" /></label
+                    ><label
+                      >Reference f₀ · Hz<input
+                        id="reference_hz"
+                        type="number"
+                        min="1"
+                        max="1000"
+                        step="any"
+                        value="20"
+                    /></label>
+                  </div>
+                  <label
+                    >Axial confinement fz · Hz<input
+                      id="axial_hz"
+                      type="number"
+                      min="10"
+                      max="100000"
+                      step="any"
+                      value="2000"
+                  /></label>
+                  <p class="hint">
+                    g = √(8π) N as / az. 5.3 nm is a nominal repulsive Rb-87
+                    value; internal state and magnetic field are not modeled. g
+                    ≤ 100.
+                  </p>
+                </details>
+                <details>
+                  <summary>Guided experiments</summary>
+                  <label
+                    >Rb-87 · 200 atoms<select id="demo">
+                      <option value="balanced">01 — Symmetric reference</option>
+                      <option value="positive">
+                        02 — Positive bias · +10 Hz
+                      </option>
+                      <option value="negative">
+                        03 — Reverse bias · −10 Hz
+                      </option>
+                      <option value="longer">
+                        04 — Longer hold · 15.92 ms
+                      </option>
+                    </select></label
+                  >
+                  <button type="button" id="load-demo">Load settings</button>
+                  <p id="demo-note" class="hint">
+                    Load a teaching example, Prepare, then Run. Pin one
+                    completed run to compare another. Inspired by double-well
+                    interferometry.
+                  </p>
+                </details>
+              </div>
               <label class="field-label" for="experiment">Experiment</label
               ><select id="experiment" name="experiment">
                 <option value="single">01 — Single-cloud expansion</option>
@@ -168,7 +261,7 @@
                     value="1.4"
                 /></label>
               </div>
-              <p class="hint">
+              <p class="hint" id="trap-units-note">
                 In units of ω₀; sets packet widths for two clouds.
               </p>
               <div id="double-controls" hidden>
@@ -258,7 +351,7 @@
                       value="0.5"
                   /></label>
                 </div>
-                <p class="hint">
+                <p class="hint" id="sequence-limit">
                   Positive bias raises the right well during Hold. Release and
                   stopping are automatic. Total time ≤ 18.
                 </p>
@@ -324,6 +417,23 @@
               ><button id="clear-reference" hidden>Clear reference</button
               ><button id="export" class="quiet">Export run ↓</button>
             </div>
+          </div>
+          <div id="physical-readout" class="physical-readout" hidden>
+            <span class="eyebrow">LABORATORY SCALES · CURRENT RUN</span>
+            <p id="physical-scale"></p>
+            <p id="lab-snapshot"></p>
+            <strong id="regime-status"></strong>
+            <p id="regime-ratios"></p>
+            <p class="hint">
+              Zero-temperature, frozen axial Gaussian. Checks use the initial μ∥
+              estimate, current peak interaction and mean kinetic energies, trap
+              frequencies, scattering length, and diluteness. Small ratios
+              support the approximation; they do not certify it or test thermal
+              excitation. Thresholds are conservative app heuristics.
+              <a href="/physical-units" target="_blank" rel="noopener"
+                >Equations, thresholds & papers ↗</a
+              >
+            </p>
           </div>
           <div class="readouts">
             <div>
@@ -402,7 +512,8 @@
           <div id="sequence-plots" class="plots sequence-plots" hidden>
             <div>
               <div class="plot-title">
-                Current applied potential <span>V(x, 0) / ℏω₀</span>
+                Current applied potential
+                <span id="potential-unit">V(x, 0) / ℏω₀</span>
               </div>
               <canvas
                 id="potential-profile"
@@ -411,6 +522,7 @@
                 role="img"
                 aria-label="Applied central potential versus x"
               ></canvas>
+              <p id="potential-status" class="hint"></p>
             </div>
             <div>
               <div class="plot-title">
@@ -432,7 +544,7 @@
         </section>
       </div>
       <footer>
-        <span>COLD ATOM LAB <span class="muted">/ 0.2</span></span>
+        <span>COLD ATOM LAB <span class="muted">/ 0.3</span></span>
         <span>A small window into coherent matter.</span
         ><a
           href="https://arxiv.org/abs/cond-mat/0303239"
@@ -460,11 +572,14 @@
       <p>
         The wavefunction has unit norm: ∫|ψ|² dx dy = 1. The interaction
         coefficient g includes the atom number. Density is normalized
-        probability per area; it is not an absolute atom count.
+        probability per area in dimensionless mode. Laboratory mode displays the
+        planar number density N|ψ|²/a₀² in atoms/μm².
       </p>
       <p>
-        Lengths use a₀ = √(ℏ/mω₀), time uses 1/ω₀, and energies use ℏω₀. No atom
-        species or physical trap scale is selected.
+        Lengths use a₀ = √(ℏ/mω₀), time uses 1/ω₀, and energies use ℏω₀.
+        Laboratory mode selects a species, atom number, scattering length and
+        axial confinement, derives g, and converts the axes to μm, ms and E/h in
+        Hz. Numerical export arrays retain these dimensionless conventions.
       </p>
       <p>
         <b>Single cloud:</b> normalized imaginary-time preparation in a harmonic

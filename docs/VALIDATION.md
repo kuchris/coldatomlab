@@ -4,7 +4,7 @@ Validated locally on Windows with Python 3.12, NumPy 2.5.3, and Playwright Chrom
 
 ## Numerical and HTTP checks
 
-`uv run pytest -q`: **28 passed**. The first-release checks remain in place alongside ten sequence checks, described below.
+`uv run pytest -q`: **42 passed**. The original 28 checks remain in place alongside 14 physical-unit checks, described below.
 
 | Check | Acceptance criterion |
 | --- | --- |
@@ -53,6 +53,20 @@ The added numerical checks cover:
 `scripts/sequence_browser_check.py` additionally verifies the actual timeline, potential overlay, pause during Hold, automatic release at step 300, and exact completion at step 450 for a `2 / 1 / 1.5` sequence with `dt=0.01`. Replacing the hold bias `+0.5` with `−0.5` yields final left fractions about `0.5263` and `0.4737`, and opposite mirror phases. The pinned reference stays unchanged through preparation, playback, and reset. Both downloaded records replay with observed maximum complex-field error `0.0`.
 
 The comparison workflow also passes invalid-duration recovery and 390px/320px mobile overflow checks, with no reported browser page errors. New evidence is saved to ignored `artifacts/sequence-browser-report.json`, `sequence-comparison.json`, and `sequence-*.png`. The phase and contrast diagnostics are labeled approximations; these checks do not establish many-body coherence, experimental metrology accuracy, or 3D validity.
+
+## Laboratory units milestone (v0.3)
+
+The physical-unit checks independently integrate the axial Gaussian density squared and recover the derived coupling, including its N and sqrt(fz) scaling and independence from f0. For Rb-87, N=200, as=5.3 nm, f0=20 Hz and fz=2000 Hz, the scales are a0=2.41143618 um, time=7.95774715 ms and g=22.03687574. A noninteracting released cloud agrees with the SI analytic expansion width to relative tolerance 2e-5; integrated planar number density recovers N to 1e-8.
+
+Tests cover invalid physical values, integer atom count, excessive coupling rejection, custom mass, authoritative server-derived coupling, old exports, and exact physical replay. Applicability checks distinguish a well-separated default case, a marginal fz=200 Hz case and an outside-regime fz=20 Hz case, and use the actual field density.
+
+All four guided sequences complete without boundary stopping and preserve norm to 1e-10. At the end of Hold, biases 0, +10 Hz and -10 Hz over 7.957747 ms give mirror phases approximately 0, -0.48103 and +0.48103 rad. Doubling the +10 Hz hold gives approximately -0.95595 rad. These are interacting, deterministic model results, not experimental calibration. The final positive/negative runs have complementary left fractions about 0.530434 and 0.469566.
+
+For the full positive-bias example (split 4, hold 1, expand 2), relative density L2 differences are 3.99e-5 for dt=0.01 versus 0.005, 5.78e-7 for grid 128 versus 256 at L=32, and 5.75e-7 for L=32 versus L=64 at matched spacing. Spatial comparisons use coincident coordinates. These values concern this example; they do not validate every input combination or the fixed imaginary-time preparation step.
+
+`scripts/physical_browser_check.py` exercises laboratory controls, derived coupling, invalid-input recovery, ms stepping/pause, actual density/potential plot conversion, complete positive/negative runs, immutable references and downloaded comparison replay. Both observed field replay errors are 0.0. A changed reference frequency verifies each run uses its own length/time factors in comparison plots. Reset restores physical parameters; weak axial confinement displays the expected warning; mixed comparisons use dimensionless axes. Switching back from physical units retains the derived coupling and accepts arbitrary converted values instead of failing HTML step validation. A targeted browser check also prepares successfully at the minimum dt and trap-frequency ratio before and after a unit-mode round trip.
+
+Desktop and 390px/320px views, the linked reference page and browser console checks pass. A final visual pass checks the physical contour energies, millisecond comparison caption and narrow layout. Evidence is in ignored `artifacts/physical-browser-report.json`, `physical-comparison.json`, and screenshots. `docs/preview.png` shows the actual physical sequence during Hold. The original expansion/interference browser suite and the v0.2 sequence comparison suite also pass.
 
 ## Additional checks and limits
 

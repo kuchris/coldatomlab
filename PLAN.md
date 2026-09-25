@@ -53,6 +53,17 @@ Acceptance criteria:
 
 Status: implemented; see `docs/VALIDATION.md` for measured evidence and limitations. Full three-dimensional evolution remains a future milestone.
 
+## Third milestone: laboratory scales and literature-backed examples
+
+- Keep the canonical norm-one solver and old dimensionless exports; accept validated physical species/mass, N, scattering length, f0 and fz and derive g server-side.
+- Convert controls, axes, density, time, widths, energy, protocol and comparisons consistently. Preserve each reference run's scales and distinguish mixed-unit comparisons.
+- Show transparent conservative quasi-2D/diluteness checks with unknown thermal validity explicitly stated.
+- Supply four tested physical split/hold/release examples for zero/reversed bias and longer hold; identify them as teaching choices, not reproductions of a paper.
+- Link established physics literature to the precise formulas, approximations and experimental inspiration used.
+- Verify SI analytic limits, axial reduction, parameter scaling, invalid-input recovery, replay/backward compatibility, actual browser workflows and responsive layouts.
+
+Status: implemented and verified. Numerical and browser evidence is recorded in `docs/VALIDATION.md`; physical derivation and paper provenance are in `docs/PHYSICAL_UNITS.md`.
+
 ## Later extensions
 
-Virtual absorption imaging with an explicitly defined projection and camera model, finite resolution and noise; vortices and stirring; physical-unit presets; additional experiment protocols. These are separate from the first-release acceptance criteria.
+Virtual absorption imaging with an explicitly defined projection and camera model, finite resolution and noise; vortices and stirring; additional experiment protocols. These are separate from the first-release acceptance criteria.

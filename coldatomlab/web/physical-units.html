@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Laboratory units & papers — Cold Atom Lab</title>
+    <link rel="stylesheet" href="/style.css" />
+    <style>
+      body {
+        padding: 24px;
+      }
+      article {
+        max-width: 850px;
+        margin: auto;
+        font:
+          16px/1.8 Georgia,
+          serif;
+      }
+      h1 {
+        font-size: 36px;
+        margin: 32px 0;
+      }
+      h2 {
+        font-size: 25px;
+        margin: 32px 0 12px;
+      }
+      pre {
+        overflow-x: auto;
+        padding: 16px;
+        background: #162420;
+        font:
+          13px/1.8 Consolas,
+          monospace;
+      }
+      td {
+        padding: 10px;
+        border-bottom: 1px solid #34443c;
+      }
+      p {
+        margin: 16px 0;
+      }
+      code {
+        font-size: 0.85em;
+      }
+      article a {
+        overflow-wrap: anywhere;
+      }
+    </style>
+  </head>
+  <body>
+    <article>
+      <a href="/">← Cold Atom Lab</a>
+      <h1>Laboratory units and the papers behind them</h1>
+      <p>
+        Laboratory mode adds SI scales to the existing effective 2D solver. It
+        is a zero-temperature mean-field model with a frozen axial Gaussian, not
+        a calibrated reconstruction of a particular apparatus. The dimensionless
+        mode remains available.
+      </p>
+      <h2>Conventions and derivation</h2>
+      <p>
+        Use frequencies in cycles per second: omega0 = 2 pi f0 and omegaz = 2 pi
+        fz. All lengths in the following derivation are in meters.
+      </p>
+      <pre><code>a0 = sqrt(hbar / (m omega0))
+az = sqrt(hbar / (m omegaz))
+g3D = 4 pi hbar^2 as / m
+chi(z) = exp(-z^2 / (2 az^2)) / (pi az^2)^(1/4)
+integral |chi|^4 dz = 1 / (sqrt(2 pi) az)
+g2D = g3D / (sqrt(2 pi) az)
+g = N g2D / (hbar omega0 a0^2) = sqrt(8 pi) N as / az
+</code></pre>
+      <p>
+        We use the large-N <code>N</code> convention, not <code>N-1</code>, and
+        normalize the planar wavefunction to one. The omitted axial zero-point
+        energy is a constant hbar omegaz / 2. Releasing the trap retains axial
+        confinement, so this coupling remains constant.
+      </p>
+      <p>
+        For canonical dimensionless coordinates X, time tau, energy epsilon and
+        density rho:
+      </p>
+      <pre><code>x_um = X a0 10^6
+t_ms = tau / omega0 * 1000
+E/h in Hz = epsilon f0
+n2D in atoms/um^2 = N rho / (a0 10^6)^2
+</code></pre>
+      <p>
+        Widths and fringe spacing use the same length scale. Energy readouts are
+        mean-field energy per particle under the norm-one convention, with the
+        interaction-energy factor 1/2. Potential/bias in Hz means V/h, not an
+        angular frequency. The field remains a model density, not an absorption
+        image.
+      </p>
+      <p>
+        Rb-87 uses mass <code>1.443160895e-25 kg</code> from Steck&#x27;s data
+        table. The editable <code>5.3 nm</code> scattering length is a rounded
+        teaching value, not a state- or field-specific calibration. Custom
+        species use a user-supplied bosonic mass and repulsive scattering
+        length. The app does not determine their stability, spin state or
+        Feshbach tuning. Planck&#x27;s constant is
+        <code>6.62607015e-34 J s</code>; the atomic mass unit is
+        <code>1.66053906660e-27 kg</code>.
+      </p>
+      <h2>Applicability panel</h2>
+      <p>
+        The diagnostic panel reports the following ratios. “Supported” means
+        they meet conservative app thresholds; these numerical thresholds are
+        our choices, not universal criteria quoted from a paper.
+      </p>
+      <div class="table-scroll">
+        <table>
+          <tr>
+            <td>Check</td>
+            <td>Supported threshold</td>
+          </tr>
+          <tr>
+            <td>Initial planar mu estimate / hbar omegaz</td>
+            <td>&lt;= 0.1</td>
+          </tr>
+          <tr>
+            <td>Current peak g rho / (omegaz/omega0)</td>
+            <td>&lt;= 0.1</td>
+          </tr>
+          <tr>
+            <td>Current mean kinetic energy / hbar omegaz</td>
+            <td>&lt;= 0.1</td>
+          </tr>
+          <tr>
+            <td>max(fx, fy) / fz</td>
+            <td>&lt;= 0.1</td>
+          </tr>
+          <tr>
+            <td>as / az</td>
+            <td>&lt;= 0.05</td>
+          </tr>
+          <tr>
+            <td>Peak reconstructed n3D as^3</td>
+            <td>&lt;= 0.001</td>
+          </tr>
+        </table>
+      </div>
+      <p>
+        Initial mu is the expectation of kinetic + external + full nonlinear
+        terms in the prepared field. It approximates the chemical potential of
+        the stationary trapped state; for the ideal two-packet initial state it
+        is only an energy-scale estimate. It excludes the axial zero point.
+        Current kinetic energy is obtained from the solver&#x27;s Fourier
+        derivatives. The peak 3D density assumes
+        <code>n3D(x,y,0) = n2D(x,y)/(sqrt(pi) az)</code>.
+      </p>
+      <p>
+        Exceeding any threshold shows “Marginal”. An energy/frequency ratio
+        &gt;= 1, as/az &gt;= 0.2, or gas parameter &gt;= 0.01 shows “Outside”.
+        These warnings do not stop the exploratory solver, and do not imply a 3D
+        calculation was performed. Large derived g (&gt;100) is rejected because
+        it exceeds this release&#x27;s numerical operating range.
+      </p>
+      <p>
+        This is an instantaneous scale check, not a guarantee of validity
+        throughout a run. It omits high-energy momentum tails, nonseparable trap
+        effects, excited axial modes and thermal populations. A physical
+        experiment also needs kB T much smaller than hbar omegaz; no temperature
+        is simulated or certified here. Finite-size phase coherence, depletion,
+        phase diffusion and many-body correlations are not established by this
+        panel. Grid/domain/time-step convergence remains a separate requirement.
+      </p>
+      <h2>Guided comparisons</h2>
+      <p>
+        All examples use Rb-87, N=200, as=5.3 nm, f0=20 Hz, fx=20 Hz, fy=28 Hz
+        and fz=2000 Hz. This gives a0=2.411436 um, az=0.241144 um,
+        1/omega0=7.957747 ms and g=22.036876. The barrier rises to V/h=240 Hz
+        over 31.83099 ms, has width 1.688005 um, and expansion lasts 15.91549
+        ms. The numerical default is 128^2 points, L=32 a0 and dt=0.01/omega0.
+        Durations round to solver steps.
+      </p>
+      <div class="table-scroll">
+        <table>
+          <tr>
+            <td>Example</td>
+            <td>Bias Delta V/h</td>
+            <td>Hold</td>
+            <td>Question</td>
+          </tr>
+          <tr>
+            <td>Symmetric reference</td>
+            <td>0 Hz</td>
+            <td>7.957747 ms</td>
+            <td>Does symmetry preserve equal populations?</td>
+          </tr>
+          <tr>
+            <td>Positive bias</td>
+            <td>+10 Hz</td>
+            <td>7.957747 ms</td>
+            <td>Which sign does right-minus-left phase acquire?</td>
+          </tr>
+          <tr>
+            <td>Reverse bias</td>
+            <td>-10 Hz</td>
+            <td>7.957747 ms</td>
+            <td>Do phase and population imbalance reverse?</td>
+          </tr>
+          <tr>
+            <td>Longer hold</td>
+            <td>+10 Hz</td>
+            <td>15.91549 ms</td>
+            <td>How much additional phase accumulates?</td>
+          </tr>
+        </table>
+      </div>
+      <p>
+        Load settings, Prepare, Run, and Pin reference. Load and run a second
+        example, then compare. Pause near the end of Hold to inspect phase
+        before expansion changes the spatially weighted diagnostic. For isolated
+        arms the estimate is
+        <code>Delta phi = -2 pi (Delta V/h) T_seconds</code>; interactions,
+        residual tunnelling and distorted arms can change the result. The
+        longer-hold run has a different absolute final time but the same
+        expansion duration. These are our pedagogical settings, not values
+        fitted to Shin et al.
+      </p>
+      <p>
+        Changing reference frequency or mass rescales the input display at fixed
+        dimensionless trap/protocol settings; editing a time, width or frequency
+        directly changes its physical value. Changing N, as, mass or fz
+        recomputes g at Prepare. Pending edits never relabel the existing
+        prepared run. Both physical runs in a comparison use their own unit
+        conversions; a mixed physical/dimensionless comparison uses
+        dimensionless plot/table axes with an explicit notice.
+      </p>
+      <p>
+        Exports retain dimensionless arrays and canonical protocol parameters,
+        and add the complete physical configuration, SI constants-derived
+        scales, and the current applicability report. Replay derives g again
+        from the saved configuration. Old dimensionless exports remain
+        supported. Pinned snapshots retain their own scales; references are
+        local to the page and disappear on reload.
+      </p>
+      <h2>Reference map</h2>
+      <p>
+        These established papers supply the physical basis; numerical and
+        browser tests check our implementation, not the papers or a laboratory
+        device.
+      </p>
+      <p>
+        1.
+        <strong
+          >Dalfovo, Giorgini, Pitaevskii &amp; Stringari (1999), Reviews of
+          Modern Physics 71, 463.</strong
+        >
+        <a
+          href="https://arxiv.org/abs/cond-mat/9806038"
+          target="_blank"
+          rel="noopener"
+          >Theory of Bose-Einstein condensation in trapped gases</a
+        >. Foundation for dilute-gas mean-field theory, GPE energy and harmonic
+        oscillator scales; see Sec. III. Our effective-2D implementation is a
+        reduction of this framework, and does not implement the review&#x27;s
+        finite-temperature theory. 2.
+        <strong
+          >Petrov, Holzmann &amp; Shlyapnikov (2000), Physical Review Letters
+          84, 2551.</strong
+        >
+        <a
+          href="https://arxiv.org/abs/cond-mat/9909344"
+          target="_blank"
+          rel="noopener"
+          >Bose-Einstein condensation in quasi-2D trapped gases</a
+        >. Establishes the importance of tight confinement and quasi-2D
+        scattering. Our constant repulsive coupling uses the
+        weak-confinement-scattering limit; we do not implement its full
+        energy-dependent scattering theory or confinement-induced interaction
+        changes. 3.
+        <strong
+          >Hadzibabic &amp; Dalibard (2011), Rivista del Nuovo Cimento 34,
+          389.</strong
+        >
+        <a href="https://arxiv.org/abs/0912.1490" target="_blank" rel="noopener"
+          >Two-dimensional Bose fluids: An atomic physics perspective</a
+        >. Sections 6.2–6.3, especially Eqs. 75–78, explain the approximate
+        sqrt(8 pi) as/az coupling, the axial Gaussian reduction, and limitations
+        from residual axial excitation. We multiply their dimensionless coupling
+        by N because our wavefunction has unit norm. We do not simulate BKT
+        thermodynamics. 4.
+        <strong>Shin et al. (2004), Physical Review Letters 92, 050405.</strong>
+        <a
+          href="https://arxiv.org/abs/cond-mat/0306305"
+          target="_blank"
+          rel="noopener"
+          >Atom interferometry with Bose-Einstein condensates in a double-well
+          potential</a
+        >. Experimental inspiration for coherent splitting, phase accumulation
+        under an energy bias and interference readout. Our 2D Gaussian barrier
+        and retained axial confinement are different from their optical
+        apparatus and expansion geometry. 5.
+        <strong
+          >Daniel Steck, Rubidium 87 D Line Data, revision 2.3.4 (2025).</strong
+        >
+        <a
+          href="https://steck.us/alkalidata/rubidium87numbers.pdf"
+          target="_blank"
+          rel="noopener"
+          >Atomic mass, Table 2</a
+        >. Atomic constants only; this source is not used as a scattering-length
+        calibration.
+      </p>
+      <p>
+        Read Dalfovo first for the GPE foundation, then Hadzibabic–Dalibard for
+        the dimensional reduction, Petrov for where the simple coupling breaks
+        down, and Shin for the experimental motivation.
+      </p>
+    </article>
+  </body>
+</html>

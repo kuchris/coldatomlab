@@ -6,6 +6,7 @@ from dataclasses import asdict, dataclass
 import numpy as np
 
 from . import __version__
+from .physical import Physical, regime
 from .protocol import SplitProtocol, fringe_metrics
 
 
@@ -26,8 +27,20 @@ class Config:
     hold_time: float = 2.0
     expansion_time: float = 3.0
     bias: float = 0.5
+    physical: Physical | None = None
 
     def __post_init__(self):
+        if self.physical is not None:
+            p = Physical(**self.physical) if isinstance(self.physical, dict) else self.physical
+            if not isinstance(p, Physical):
+                raise ValueError("Physical parameters must be an object.")
+            object.__setattr__(self, "physical", p)
+            coupling = p.scales()["interaction"]
+            if coupling > 100:
+                raise ValueError(
+                    "Derived g exceeds 100. Reduce atom number, scattering length, or axial frequency."
+                )
+            object.__setattr__(self, "interaction", coupling)
         if self.experiment not in ("single", "double", "sequence"):
             raise ValueError("Choose a single-cloud, two-cloud, or split/hold/release experiment.")
         if type(self.n) is not int or self.n not in (64, 128, 256):
@@ -87,6 +100,12 @@ class Solver:
             ).astype(complex)
             self.normalize()
         self.initial = self.psi.copy()
+        rho = abs(self.initial) ** 2
+        kinetic = (self.k2 * abs(np.fft.fft2(self.initial)) ** 2).sum() / (2 * config.n**2)
+        initial_potential = self.trap if config.experiment != "double" else 0
+        self.initial_mu = float(
+            (kinetic + (initial_potential * rho + config.interaction * rho**2).sum()) * self.dx**2
+        )
         self.reset()
 
     def gaussian(self, center=0.0):
@@ -229,6 +248,8 @@ class Solver:
             "width_x": float(np.sqrt((rho * (self.X - mean_x) ** 2).sum() * self.dx**2 / norm)),
             "width_y": float(np.sqrt((rho * (self.Y - mean_y) ** 2).sum() * self.dx**2 / norm)),
             "energy": kinetic + potential + interaction,
+            "kinetic_per_particle": kinetic / norm,
+            "peak_density": float(rho.max()),
             "edge_mass": self.edge_mass(),
             "released": self.released,
             "left_fraction": left_fraction,
@@ -266,12 +287,21 @@ class Solver:
             "protocol": self.protocol.summary(self.steps) if self.protocol else None,
             "potential": self.potential.tolist(),
             "potential_profile": self.potential[self.config.n // 2].tolist(),
+            "physical": self.physical_report(),
         }
+
+    def physical_report(self):
+        return (
+            regime(self.config.physical, self.config, self.history[-1], self.initial_mu)
+            if self.config.physical
+            else None
+        )
 
     def export(self):
         return {
             "schema": "coldatomlab-experiment-v1",
             "solver_version": __version__,
+            "physical": self.physical_report(),
             "numpy_version": np.__version__,
             "config": asdict(self.config),
             "model": "i dpsi/dt = [-laplacian/2 + V + g|psi|^2]psi; integral |psi|^2 = 1",

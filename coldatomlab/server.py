@@ -41,6 +41,8 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         files = {
             "/": ("index.html", "text/html; charset=utf-8"),
+            "/physical.js": ("physical.js", "text/javascript; charset=utf-8"),
+            "/physical-units": ("physical-units.html", "text/html; charset=utf-8"),
             "/app.js": ("app.js", "text/javascript; charset=utf-8"),
             "/style.css": ("style.css", "text/css; charset=utf-8"),
         }

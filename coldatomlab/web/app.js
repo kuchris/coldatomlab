@@ -28,14 +28,14 @@ const fields = [
 ];
 
 function config() {
-  return Object.fromEntries(
+  const result = Object.fromEntries(
     fields.map((key) => [
       key,
-      key === "experiment"
-        ? $(key).value
-        : Number($(key).value) * (key === "phase" ? Math.PI : 1),
+      key === "experiment" ? $(key).value : canonicalValue(key),
     ]),
   );
+  result.physical = physicalInputs();
+  return result;
 }
 
 function controls() {
@@ -131,6 +131,7 @@ function labels() {
     : two
       ? "Prepare two coherent Gaussian packets, already released. Change the relative phase to move the fringes."
       : "Prepare the ground state in a harmonic trap. Release it to watch the cloud expand.";
+  syncPhysicalInputs();
 }
 
 $("config-form").addEventListener("input", () => {
@@ -173,12 +174,7 @@ $("release").addEventListener("click", () => request("release"));
 $("reset").addEventListener("click", async () => {
   const result = await request("reset");
   if (result) {
-    for (const key of fields)
-      $(key).value =
-        key === "experiment"
-          ? result.config[key]
-          : result.config[key] / (key === "phase" ? Math.PI : 1);
-    labels();
+    restorePhysical(result.config);
   }
 });
 $("export").addEventListener("click", async () => {
@@ -268,7 +264,7 @@ function phaseColor(theta) {
 function drawField() {
   const { canvas, ctx, w, h } = surface("field");
   const n = state.config.n,
-    length = state.config.length;
+    length = state.config.length * labScale().length_um;
   const side = Math.min(w - 88, h - 105),
     left = (w - side) / 2,
     top = 44;
@@ -319,21 +315,32 @@ function drawField() {
   }
   ctx.fillStyle = "#b0c4b7";
   ctx.textAlign = "center";
-  ctx.fillText("x / a₀", left + side / 2, top + side + 34);
+  ctx.fillText(`x / ${unitText("length")}`, left + side / 2, top + side + 34);
   ctx.save();
   ctx.translate(left - 37, top + side / 2);
   ctx.rotate(-Math.PI / 2);
-  ctx.fillText("y / a₀", 0, 0);
+  ctx.fillText(`y / ${unitText("length")}`, 0, 0);
   ctx.restore();
   canvas.setAttribute(
     "aria-label",
-    `${view === "density" ? "Density" : "Masked phase"} of ${state.config.experiment === "single" ? "one condensate" : "two coherent clouds"}, time ${state.diagnostics.time.toFixed(3)}, domain ${length} a0 per side`,
+    `${view === "density" ? "Density" : "Masked phase"} of ${state.config.experiment === "single" ? "one condensate" : "two coherent clouds"}, time ${(state.diagnostics.time * labScale().time_ms).toFixed(3)} ${unitText("time")}, domain ${length} ${unitText("length")} per side`,
   );
   $("legend-label").textContent =
-    view === "density" ? "DENSITY |ψ|² · a₀⁻²" : "PHASE · RADIANS";
+    view === "density"
+      ? state.physical
+        ? "DENSITY · ATOMS/μm²"
+        : "DENSITY |ψ|² · a₀⁻²"
+      : "PHASE · RADIANS";
   $("legend-low").textContent = view === "density" ? "0" : "−π";
   $("legend-high").textContent =
-    view === "density" ? peak.toPrecision(3) : "+π";
+    view === "density"
+      ? (
+          peak *
+          (state.physical
+            ? state.config.physical.atoms / state.physical.length_um ** 2
+            : 1)
+        ).toPrecision(3)
+      : "+π";
   $("colorbar").style.background =
     view === "density"
       ? ""
@@ -341,6 +348,52 @@ function drawField() {
 }
 
 function plot(id, series, xmin, xmax, ymax, xlabel, ylabel, ymin = 0) {
+  const comparable =
+    id === "potential-profile" || !reference || !!reference.snapshot.physical;
+  if (state.physical && comparable) {
+    const factors = (s) => {
+      const p = s.physical;
+      return id === "profile"
+        ? [p.length_um, s.config.physical.atoms / p.length_um ** 2]
+        : id === "widths"
+          ? [p.time_ms, p.length_um]
+          : id === "potential-profile"
+            ? [p.length_um, p.energy_hz]
+            : [p.time_ms, 1];
+    };
+    const current = factors(state);
+    series = series.map((s) => {
+      const scale = factors(s.reference ? reference.snapshot : state);
+      return {
+        ...s,
+        points: s.points.map(([x, y]) => [x * scale[0], y * scale[1]]),
+      };
+    });
+    const xs = series.flatMap((s) => s.points.map((p) => p[0]));
+    const ys = series.flatMap((s) => s.points.map((p) => p[1]));
+    xmin = Math.min(xmin * current[0], ...xs);
+    xmax = Math.max(xmax * current[0], ...xs);
+    ymin *= current[1];
+    ymax = id === "population-history" ? 1 : Math.max(...ys, 1e-10) * 1.15;
+    if (id === "potential-profile") {
+      ymin = Math.min(...ys, 0);
+      if (ymax < 1) {
+        ymin = -0.1 * current[1];
+        ymax = current[1];
+      }
+    }
+    xlabel =
+      id === "profile" || id === "potential-profile" ? "x / μm" : "t / ms";
+    ylabel = {
+      profile: "n(x, 0) / atoms μm⁻²",
+      widths: "RMS width / μm",
+      "potential-profile": "V/h / Hz",
+      "population-history": "Left / total",
+    }[id];
+  }
+  rawPlot(id, series, xmin, xmax, ymax, xlabel, ylabel, ymin);
+}
+function rawPlot(id, series, xmin, xmax, ymax, xlabel, ylabel, ymin = 0) {
   const { ctx, w, h } = surface(id),
     left = 55,
     right = w - 16,
@@ -405,19 +458,27 @@ function plot(id, series, xmin, xmax, ymax, xlabel, ylabel, ymin = 0) {
 }
 
 function render() {
-  const d = state.diagnostics;
+  const d = state.diagnostics,
+    scale = labScale();
+  renderPhysical();
+  $("contour-levels").textContent = state.physical
+    ? `· ${[2, 4, 8, 16].map((v) => (v * scale.energy_hz).toFixed(0)).join(" / ")} Hz (V/h)`
+    : "· 2 / 4 / 8 / 16 ℏω₀";
   $("experiment-title").textContent =
     state.config.experiment === "sequence"
       ? "Split, hold & interfere"
       : state.config.experiment === "single"
         ? "Condensate expansion"
         : "Matter-wave interference";
-  $("time").innerHTML = `${d.time.toFixed(3)} <small>ω₀⁻¹</small>`;
-  $("width").innerHTML = `${d.width_x.toFixed(3)} <small>a₀</small>`;
+  $("time").innerHTML =
+    `${(d.time * scale.time_ms).toFixed(3)} <small>${unitText("time")}</small>`;
+  $("width").innerHTML =
+    `${(d.width_x * scale.length_um).toFixed(3)} <small>${unitText("length")}</small>`;
   $("norm").textContent = d.norm.toFixed(8);
-  $("energy").innerHTML = `${d.energy.toFixed(4)} <small>ℏω₀</small>`;
+  $("energy").innerHTML =
+    `${(d.energy * scale.energy_hz).toFixed(4)} <small>${unitText("energy")}</small>`;
   $("grid-label").textContent =
-    `${state.config.n} × ${state.config.n} · L = ${state.config.length} a₀`;
+    `${state.config.n} × ${state.config.n} · L = ${(state.config.length * scale.length_um).toFixed(2)} ${unitText("length")}`;
   $("trap-state").textContent = d.released
     ? "TRAP OFF / EXPANDING"
     : "TRAP ON / CONFINED";
@@ -435,7 +496,9 @@ function render() {
       ? "—"
       : `${(d.relative_phase / Math.PI).toFixed(3)} π`;
   $("fringe-spacing").textContent =
-    d.fringe_spacing === null ? "—" : `${d.fringe_spacing.toFixed(3)} a₀`;
+    d.fringe_spacing === null
+      ? "—"
+      : `${(d.fringe_spacing * scale.length_um).toFixed(3)} ${unitText("length")}`;
   $("fringe-contrast").textContent =
     d.fringe_contrast === null ? "—" : d.fringe_contrast.toFixed(3);
   const ref = reference?.snapshot;
@@ -451,6 +514,7 @@ function render() {
         ? [
             {
               color: "#e3ae76",
+              reference: true,
               dashed: true,
               points: ref.x.map((x, i) => [x, ref.cross_section[i]]),
             },
@@ -477,10 +541,12 @@ function render() {
         ? [
             {
               color: "#e3ae76",
+              reference: true,
               points: ref.history.map((p) => [p.time, p.width_x]),
             },
             {
               color: "#b98e69",
+              reference: true,
               dashed: true,
               points: ref.history.map((p) => [p.time, p.width_y]),
             },
@@ -548,7 +614,14 @@ function renderProtocol() {
   $("sequence-timeline").hidden = !p;
   $("sequence-plots").hidden = !p;
   if (!p) return;
-  const d = state.diagnostics;
+  const d = state.diagnostics,
+    scale = labScale();
+  $("potential-unit").textContent = state.physical
+    ? "V(x, 0) / h · Hz"
+    : "V(x, 0) / ℏω₀";
+  $("potential-status").textContent = d.released
+    ? "Trap released — V = 0. Axial confinement remains."
+    : "Applied in-plane trap, barrier and bias.";
   $("sequence-stage").textContent = state.warning
     ? "Stopped before completion"
     : d.steps === 0
@@ -560,18 +633,18 @@ function renderProtocol() {
           complete: "Sequence complete",
         }[p.stage];
   $("sequence-clock").textContent =
-    `${d.time.toFixed(2)} / ${p.end_time.toFixed(2)} ω₀⁻¹`;
-  $("split-end").textContent = `0–${p.split_end.toFixed(2)}`;
+    `${(d.time * scale.time_ms).toFixed(2)} / ${(p.end_time * scale.time_ms).toFixed(2)} ${unitText("time")}`;
+  $("split-end").textContent = `0–${(p.split_end * scale.time_ms).toFixed(2)}`;
   $("hold-end").textContent =
-    `${p.split_end.toFixed(2)}–${p.release_time.toFixed(2)}`;
+    `${(p.split_end * scale.time_ms).toFixed(2)}–${(p.release_time * scale.time_ms).toFixed(2)}`;
   $("expand-end").textContent =
-    `${p.release_time.toFixed(2)}–${p.end_time.toFixed(2)}`;
+    `${(p.release_time * scale.time_ms).toFixed(2)}–${(p.end_time * scale.time_ms).toFixed(2)}`;
   for (const stage of ["split", "hold", "expand"])
     $("stage-" + stage).classList.toggle("active", p.stage === stage);
   $("sequence-progress").max = p.end_time;
   $("sequence-progress").value = d.time;
   $("sequence-live").textContent =
-    `Barrier ${p.barrier_height.toFixed(2)} · Hold bias ${p.bias.toFixed(2)} ℏω₀ · Mirror phase ${d.relative_phase === null ? "—" : (d.relative_phase / Math.PI).toFixed(3) + " π"}`;
+    `Barrier ${(p.barrier_height * scale.energy_hz).toFixed(2)} · Hold bias ${(p.bias * scale.energy_hz).toFixed(2)} ${unitText("energy")} · Mirror phase ${d.relative_phase === null ? "—" : (d.relative_phase / Math.PI).toFixed(3) + " π"}`;
   const samples = state.x
     .map((x, i) => [x, state.potential_profile[i]])
     .filter(([x]) => Math.abs(x) <= 6);
@@ -594,6 +667,7 @@ function renderProtocol() {
   if (reference)
     series.push({
       color: "#e3ae76",
+      reference: true,
       dashed: true,
       points: reference.snapshot.history.map((p) => [p.time, p.left_fraction]),
     });
@@ -613,22 +687,38 @@ function renderComparison() {
   if (!reference) return;
   const a = reference.snapshot,
     b = state;
+  const physicalComparison = !!a.physical && !!b.physical;
   $("comparison-caption").textContent =
-    `Reference A: ${a.config.experiment} at t=${a.diagnostics.time.toFixed(3)}. Current B: ${b.config.experiment} at t=${b.diagnostics.time.toFixed(3)}. Overlaid data: reference in amber, current in green/cyan. Widths: solid x, dashed y.`;
+    `Reference A: ${a.config.experiment} at ${(a.diagnostics.time * (physicalComparison ? a.physical.time_ms : 1)).toFixed(3)} ${physicalComparison ? "ms" : "ω₀⁻¹"}. Current B: ${b.config.experiment} at ${(b.diagnostics.time * (physicalComparison ? b.physical.time_ms : 1)).toFixed(3)} ${physicalComparison ? "ms" : "ω₀⁻¹"}. Overlaid data: reference in amber, current in green/cyan. Widths: solid x, dashed y.`;
   const rows = [
-    ["Time / ω₀⁻¹", "time"],
-    ["RMS width x / a₀", "width_x"],
+    [physicalComparison ? "Time / ms" : "Time / ω₀⁻¹", "time"],
+    [physicalComparison ? "RMS width x / μm" : "RMS width x / a₀", "width_x"],
     ["Left population fraction", "left_fraction"],
     ["Mirror phase / rad", "relative_phase"],
-    ["Fringe spacing / a₀", "fringe_spacing"],
+    [
+      physicalComparison ? "Fringe spacing / μm" : "Fringe spacing / a₀",
+      "fringe_spacing",
+    ],
     ["Profile contrast", "fringe_contrast"],
-    ["Energy / ℏω₀", "energy"],
+    [physicalComparison ? "Energy / h · Hz" : "Energy / ℏω₀", "energy"],
   ];
   const body = $("comparison-body");
   body.replaceChildren();
   for (const [label, key] of rows) {
     const tr = document.createElement("tr");
-    for (const val of [label, a.diagnostics[key], b.diagnostics[key]]) {
+    const value = (s) => {
+      const v = s.diagnostics[key];
+      const factor = {
+        time: "time_ms",
+        width_x: "length_um",
+        fringe_spacing: "length_um",
+        energy: "energy_hz",
+      }[key];
+      return v !== null && physicalComparison && factor
+        ? v * s.physical[factor]
+        : v;
+    };
+    for (const val of [label, value(a), value(b)]) {
       const td = document.createElement("td");
       td.textContent = typeof val === "number" ? val.toFixed(4) : (val ?? "—");
       tr.append(td);
@@ -655,6 +745,11 @@ function renderComparison() {
   $("comparison-settings").textContent = Object.entries(labels)
     .map(([key, label]) => `${label}: A ${a.config[key]} · B ${b.config[key]}`)
     .join("\n");
+  $("comparison-settings").textContent +=
+    `\nPhysical parameters A: ${JSON.stringify(a.config.physical)}\nPhysical parameters B: ${JSON.stringify(b.config.physical)}`;
+  $("comparison-caption").textContent += physicalComparison
+    ? " Physical axes use each run’s own conversion factors."
+    : " Comparison plots and table use dimensionless units; physical scales may differ or be unavailable.";
 }
 
 let resizeTimer;
@@ -664,6 +759,7 @@ window.addEventListener("resize", () => {
     if (state) render();
   }, 100);
 });
+setupDemos();
 labels();
 controls();
 request("prepare", { config: config() });

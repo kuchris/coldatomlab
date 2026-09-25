@@ -10,9 +10,9 @@ i ∂ψ/∂t = [−½∇² + V(x,y,t) + g|ψ|²] ψ
 V_trap = ½(ωx² x² + ωy² y²)
 ```
 
-Here `g` includes the atom number and the effective transverse coupling. It is restricted to nonnegative values in this release. Coordinates use `a0 = sqrt(hbar/(m*omega0))`, time uses `1/omega0`, and energies use `hbar*omega0`. The frequency controls are ratios to `omega0`. No species, atom number, scattering length, transverse frequency, or physical reference frequency is selected, so the app reports dimensionless results rather than laboratory seconds or micrometers.
+Here `g` includes the atom number and the effective transverse coupling. It is restricted to nonnegative values in this release. Coordinates use `a0 = sqrt(hbar/(m*omega0))`, time uses `1/omega0`, and energies use `hbar*omega0`. The frequency controls are ratios to `omega0`. Dimensionless mode leaves these scales unspecified. Laboratory mode supplies a species/mass, N, scattering length, f0 and fz, derives g = sqrt(8 pi) N as/az, and converts readouts to micrometers, milliseconds and E/h in Hz. See [physical units and literature](PHYSICAL_UNITS.md) for the derivation, N convention, diagnostics, parameter provenance and limitations.
 
-The model assumes a prepared dilute, weakly interacting condensate with frozen transverse motion. Releasing the trap switches off **in-plane** confinement; the transverse confinement remains. It does not model the formation of a condensate, finite-temperature thermal atoms, laser cooling, particle loss, strong correlations, or full three-dimensional expansion. Changing `g` without selecting a transverse scale does not establish that a particular physical realization remains in the quasi-2D regime.
+The model assumes a prepared dilute, weakly interacting condensate with frozen transverse motion. Releasing the trap switches off **in-plane** confinement; the transverse confinement remains. It does not model the formation of a condensate, finite-temperature thermal atoms, laser cooling, particle loss, strong correlations, or full three-dimensional expansion. In dimensionless mode, changing `g` without a transverse scale does not establish physical validity. Laboratory mode reports conservative scale checks; those do not certify a 3D realization or test thermal excitation.
 
 ## Preparation
 
@@ -53,7 +53,7 @@ The server stores independent sessions per browser page, with up to 16 sessions 
 - **Energy:** kinetic energy from spectral derivatives, plus `∫V|ψ|²`, plus `g/2 ∫|ψ|⁴`. The factor of one half in the interaction energy differs from the GPE's local evolution term.
 - **Central profile:** `|ψ(x,0)|²`, sampled along the central row; not a line-integrated image.
 - **Boundary population:** norm in the union of the outer `n/16` rows and columns, with corners counted once. Stop once it exceeds `0.001` (0.1% of unit norm), or when time reaches 20.
-- **Left/right populations:** normalized half-plane populations, with the `x=0` column divided equally. They sum to one; they are fractions, not absolute atom counts.
+- **Left/right populations:** normalized half-plane populations, with the `x=0` column divided equally. They sum to one; they remain fractions in both display modes. Laboratory density is N times the normalized density divided by the physical area scale.
 - **Mirror phase:** argument of `sum(conj(psi(−x,y))*psi(x,y))` for matched grid points with `x>0`. Global phase cancels. This is a spatially weighted phase diagnostic, not a fitted fringe phase. It becomes unavailable when normalized mirror overlap is below 0.1; a scalar phase may still be a poor description of strongly distorted arms.
 - **Fringe estimates:** after release, find central-profile local maxima above 8% of the current peak. Require at least three peaks, spacing of at least four grid cells, relative spacing standard deviation at most 0.3, and each adjacent peak/valley contrast at least 0.1. Report median peak spacing and median `(mean_peak−valley)/(mean_peak+valley)`. These local profile estimates include envelope effects and are not a coherence measurement. Missing values mean no reliably resolved pattern under these criteria.
 
