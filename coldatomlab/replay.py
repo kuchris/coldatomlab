@@ -23,6 +23,10 @@ def verify_run(data):
 
 
 def verify_export(data):
+    if data.get("schema") == "coldatomlab-twomode-v1":
+        from .twomode import verify_export as verify_twomode
+
+        return verify_twomode(data)
     if data.get("schema") == "coldatomlab-scan3d-v1":
         from .scan3d import verify_scan
 

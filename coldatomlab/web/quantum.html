@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Quantum coherence · Cold Atom Lab</title>
+  <link rel="stylesheet" href="twomode.css">
+  <script src="twomode.js" defer></script><script src="twomode-ui.js" defer></script>
+</head>
+<body>
+  <header class="tm-header"><a href="gpu.html" target="_blank" rel="noopener">✳ Cold Atom <b>Lab</b></a><span>05 / TWO-MODE QUANTUM LAB</span><a href="#model">Model &amp; papers ↓</a></header>
+  <main>
+    <div class="tm-title"><div><p class="eyebrow">FROM ONE CLOUD TO MANY POSSIBLE COUNTS</p><h1>Same preparation.<br>Different possible outcomes.</h1><p>Follow a quantum state through two wells. See how its average motion differs from the uncertainty of a single measurement.</p></div><div class="tm-engine">BROWSER · FLOAT64<br><strong>Two spatial modes<br>N + 1 amplitudes</strong><span>No GPU or simulation API needed</span></div></div>
+    <nav class="tm-recipes" aria-label="Guided experiments">
+      <button data-preset="tunnelling"><b>01</b><span>Watch atoms tunnel<small>All left → all right → back</small></span></button>
+      <button data-preset="diffusion"><b>02</b><span>Let coherence evolve<small>Isolated wells · interactions on</small></span></button>
+      <button data-preset="narrow"><b>03</b><span>Narrow the number spread<small>Compare with a pinned coherent state</small></span></button>
+      <button data-preset="fock"><b>04</b><span>Exactly half in each well<small>Fixed counts · no first-order coherence</small></span></button>
+    </nav>
+    <p id="tm-lesson" class="tm-lesson"></p>
+    <div class="tm-layout">
+      <aside class="tm-settings">
+        <p class="eyebrow">PREPARE THE STATE</p><h2>Two wells. One system.</h2>
+        <form id="tm-form">
+          <label>Total atoms N<input id="tm-atoms" type="number" min="2" max="100" step="1" value="40" required></label>
+          <label>Initial state<select id="tm-initial"><option value="coherent">Coherent · binomial</option><option value="gaussian">Gaussian · number-narrow</option><option value="fock">Fock · fixed count</option></select></label>
+          <label>Initial left fraction<input id="tm-left_fraction" type="number" min="0" max="1" step="0.05" value="1" required></label>
+          <label>Right − left phase / rad<input id="tm-phase" type="number" min="-3.141592653589793" max="3.141592653589793" step="any" value="0" required></label>
+          <label>Gaussian width σ / atoms<input id="tm-sigma" type="number" min="0.25" max="20" step="0.25" value="1.5" required></label>
+          <hr><p class="eyebrow">HOLD HAMILTONIAN · CONSTANT</p>
+          <label>Tunnelling J / Hz<input id="tm-tunnelling_hz" type="number" min="0" max="20" step="0.5" value="5" required></label>
+          <label>On-site interaction U / Hz<input id="tm-interaction_hz" type="number" min="0" max="2" step="0.1" value="0" required></label>
+          <label>Right-well bias δ / Hz<input id="tm-bias_hz" type="number" min="-20" max="20" step="0.5" value="0" required></label>
+          <label>Duration / ms<input id="tm-duration_ms" type="number" min="1" max="1000" step="any" value="100" required></label>
+          <button class="primary" type="submit">Prepare experiment</button>
+        </form>
+        <p id="tm-pending" class="muted">Settings apply on Prepare.</p>
+        <p class="muted">The Gaussian width sets an amplitude envelope. Its measured number spread is reported from the normalized state. A Fock state uses round(N × left fraction).</p>
+      </aside>
+      <div class="tm-observation">
+        <section class="tm-panel">
+          <div class="panel-title"><div><p class="eyebrow">EXPECTED POPULATIONS</p><h2>Where are the atoms?</h2></div><output id="tm-time">0.00 ms</output></div>
+          <div class="tm-population"><div><span>LEFT · ⟨N<sub>L</sub>⟩</span><strong id="tm-left">40.00</strong></div><div><span>RIGHT · ⟨N<sub>R</sub>⟩</span><strong id="tm-right">0.00</strong></div></div>
+          <div class="tm-population-bar" aria-hidden="true"><span id="tm-left-bar"></span></div>
+          <p class="muted">These are averages over identical preparations, not the result of one atom-count measurement.</p>
+          <div class="tm-actions"><button id="tm-run" class="primary">Run</button><button id="tm-step">Step</button><button id="tm-reset">Reset</button><button id="tm-pin">Pin this run</button><button id="tm-clear" disabled>Clear reference</button></div>
+          <p id="tm-status" role="status" aria-live="polite">Preparing…</p>
+          <p id="tm-reference" class="muted">No pinned reference.</p>
+        </section>
+        <div class="tm-plots">
+          <section class="tm-panel"><div class="panel-title"><div><p class="eyebrow">OCCUPATION PROBABILITIES</p><h2>What could one count be?</h2></div></div><div id="tm-distribution" class="chart"></div><p class="muted">Horizontal axis: atoms counted in the left well; right count = N − left. Teal: exact model probability. Amber: sampled frequency. Dashed: pinned model.</p></section>
+          <section class="tm-panel"><div class="panel-title"><div><p class="eyebrow">FIRST-ORDER COHERENCE</p><h2>How well do the modes agree?</h2></div></div><div id="tm-coherence-plot" class="chart"></div><p class="muted">Teal: coherence C. Blue: mean left fraction. Dashed curves: pinned run. All runs use the same time axis, even with different durations.</p></section>
+        </div>
+        <section class="tm-panel tm-readings" aria-label="Quantum observables">
+          <div><span>Coherence C</span><strong id="tm-coherence"></strong><small>2 |⟨a†<sub>L</sub>a<sub>R</sub>⟩| / N</small></div>
+          <div><span>Left count spread</span><strong id="tm-spread"></strong><small>Standard deviation / atoms</small></div>
+          <div><span>Number-noise ratio</span><strong id="tm-noise"></strong><small>Variance / binomial reference</small></div>
+          <div><span>Coherence phase</span><strong id="tm-phase-value"></strong><small>Right − left / rad</small></div>
+        </section>
+        <section class="tm-panel">
+          <div class="panel-title"><div><p class="eyebrow">IDEAL NUMBER MEASUREMENTS</p><h2>Repeat the preparation.</h2></div><span class="tag">No camera noise</span></div>
+          <p>Pause at a chosen time, then draw independent outcomes from this state's probabilities. Each shot represents a fresh copy of the preparation. Sampling leaves the displayed state unchanged; it does not model a continuous measurement.</p>
+          <div class="tm-sampling"><label>Shots<input id="tm-shots" type="number" value="1000" min="1" max="10000" step="1"></label><label>Seed<input id="tm-seed" type="number" value="17" min="0" max="4294967295" step="1"></label><button id="tm-sample">Sample atom counts</button></div>
+          <p id="tm-sample-info" class="muted">No measurements sampled at this time.</p>
+        </section>
+        <section class="tm-panel tm-export"><div><h2>Keep the evidence.</h2><p id="tm-accuracy" class="muted"></p><p class="muted">Plots sample 200 intervals. Shorten the duration to resolve faster changes.</p></div><div class="tm-actions"><button id="tm-json">Export reproducible data</button><button id="tm-csv">Export history CSV</button></div></section>
+      </div>
+    </div>
+    <section id="model" class="tm-panel tm-model">
+      <p class="eyebrow">MODEL / ASSUMPTIONS / SOURCES</p><h2>A small quantum system, solved in its full occupation basis.</h2>
+      <p>The state is Σ c<sub>n</sub>|n, N − n⟩, with Σ|c<sub>n</sub>|² = 1. The two <em>spatial</em> modes are left and right; the many-body state has N + 1 amplitudes. Probabilities and all plots come from those amplitudes.</p>
+      <div class="equation">H/h = −J(a†<sub>L</sub>a<sub>R</sub> + a†<sub>R</sub>a<sub>L</sub>) + U(n<sub>L</sub> − N/2)² − δ(n<sub>L</sub> − N/2)</div>
+      <p>J, U and δ are frequencies in Hz, not angular frequencies. Evolution uses exp(−i 2π (H/h) t), with t in seconds. Positive δ raises the right well. U is the on-site pair coefficient in U/2 [n<sub>L</sub>(n<sub>L</sub>−1) + n<sub>R</sub>(n<sub>R</sub>−1)]; a constant energy offset is removed. No N factor is absorbed into U.</p>
+      <details><summary>What the measurements do and do not mean</summary><p>Coherence C is a first-order moment. It is not a single-shot fringe fit, a phase probability distribution or the visibility of a simulated camera image. Phase is unavailable for C ≤ 10⁻⁸. An exact fixed-count state can have no first-order coherence even though individual interference measurements require a more detailed measurement model.</p><p>The number-noise ratio is Var(N<sub>L</sub>) / [N p(1−p)], with p = ⟨N<sub>L</sub>⟩/N at the displayed time. It is unavailable at fully occupied or empty wells. A ratio below one indicates a narrower distribution than the corresponding binomial reference; this alone is not an entanglement or metrological spin-squeezing certificate.</p><p>At J = 0, atom-count probabilities stay fixed while interactions can change coherence through relative phases between occupation amplitudes. Closed finite systems can revive: this is unitary evolution, not irreversible environmental decoherence.</p></details>
+      <details><summary>Numerics and physical limits</summary><p>The browser diagonalizes the real symmetric Hamiltonian with float64 Jacobi rotations, checks residuals and orthogonality, then propagates spectrally from the initial state. There is no per-step renormalization. Run displays 200 equally spaced physical times; frame rate changes playback speed only. Export retains complete final amplitudes, settings, history and seeded counts, plus any pinned reference. Python replay uses an independent NumPy eigensolver.</p><p>These fixed spatial orbitals have no 3D shape dynamics. J and U are illustrative inputs, not extracted from the existing GPE cloud. Higher modes, changing orbital shapes, finite temperature, loss, detector noise and apparatus calibration are omitted. The Gaussian number-narrow state is prescribed, not prepared by a simulated splitting ramp. Numerical accuracy within this model does not prove the two-mode approximation applies to an experimental apparatus.</p></details>
+      <div class="tm-papers"><a href="https://arxiv.org/abs/0810.0600" target="_blank" rel="noopener"><b>Estève et al. · Nature, 2008 ↗</b><span>Experimental motivation: atom-number difference, relative phase and squeezing. Our teaching states do not reproduce their measured data.</span></a><a href="https://arxiv.org/abs/1203.5359" target="_blank" rel="noopener"><b>Gross · J. Phys. B, 2012 ↗</b><span>Fixed-N collective-spin framework and the distinction between number noise, coherence and spin squeezing.</span></a><a href="https://arxiv.org/abs/cond-mat/9706220" target="_blank" rel="noopener"><b>Smerzi et al. · PRL, 1997 ↗</b><span>Two-mode Josephson dynamics context. Here we evolve occupation amplitudes, rather than only mean-field number and phase.</span></a></div>
+    </section>
+    <footer>Cold Atom Lab · v0.10 · Quantum probabilities, not a 3D density image. <a href="gpu.html" target="_blank" rel="noopener">Open 3D lab ↗</a></footer>
+  </main>
+</body>
+</html>

@@ -45,6 +45,10 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         files = {
+            "/quantum.html": ("quantum.html", "text/html; charset=utf-8"),
+            "/twomode.js": ("twomode.js", "text/javascript; charset=utf-8"),
+            "/twomode-ui.js": ("twomode-ui.js", "text/javascript; charset=utf-8"),
+            "/twomode.css": ("twomode.css", "text/css; charset=utf-8"),
             "/scan3d.js": ("scan3d.js", "text/javascript; charset=utf-8"),
             "/scan3d-ui.js": ("scan3d-ui.js", "text/javascript; charset=utf-8"),
             "/camera3d.js": ("camera3d.js", "text/javascript; charset=utf-8"),

@@ -17,7 +17,7 @@ Open **http://127.0.0.1:8765**. Stop the server with `Ctrl+C`. Use `--port 8766`
 
 ## Try an experiment
 
-The home page is an **Experiments** dashboard. Search four templates or switch between grid and list views. **3D expansion & interferometry** opens its own experiment and preparation controls. The original **Set up expansion / interference / sequence** cards stage the experiment type in the 2D workspace; review the settings and click **Prepare experiment** to apply them. **Open workspace** resumes the 2D experiment without changing settings.
+The home page is an **Experiments** dashboard. Search five templates or switch between grid and list views. **3D expansion & interferometry** opens its own experiment and preparation controls. **Quantum coherence** opens an independent two-mode experiment in a new tab, preserving the existing workspace. The original **Set up expansion / interference / sequence** cards stage the experiment type in the 2D workspace; review the settings and click **Prepare experiment** to apply them. **Open workspace** resumes the 2D experiment without changing settings.
 
 The left navigation opens the workspace, measurements, virtual camera and reference guides. On narrow screens, use the menu button. Navigation keeps the current solver session, pending settings and pinned run/image comparisons; it does not pause a running experiment. Reloading still starts a new session and clears pinned records. Template diagrams are labeled illustrations, while workspace plots come from the numerical state. Direct links to `/#workspace`, `/#measurements` and `/#camera-lab` are supported.
 
@@ -34,6 +34,18 @@ Turn on **Potential contours** to see the changing trap over the density/phase f
 Use **Density / Phase** to switch the observation view. Parameter edits remain pending until **Prepare experiment** is clicked; preparation replaces the current run. Grid, domain size, and time step are under **Numerical resolution**. Numerical warnings stop playback before the cloud significantly reaches the periodic boundary region.
 
 The English interface provides density and masked phase maps, central density profiles, RMS width histories, norm, energy, and boundary population. It adapts to desktop and narrow mobile layouts.
+
+## Two-mode quantum coherence (v0.10)
+
+Open **Quantum coherence** from the dashboard/sidebar, or visit **http://127.0.0.1:8765/quantum.html**. This small fixed-N many-body model runs entirely in browser float64; it needs neither WebGPU nor a simulation API. The static WebGPU ZIP includes the same page and a link from its 3D lab.
+
+Start with **Watch atoms tunnel → Prepare experiment → Run**. Compare the mean left/right populations with the probability distribution of individual atom counts. Pause and **Sample atom counts** to draw repeated, seeded ideal measurements from independent copies of that state. This is intrinsic number uncertainty, without camera noise or continuous measurement collapse.
+
+Next select **Let coherence evolve → Prepare → Run → Pin this run**, then **Narrow the number spread → Prepare → Run**. The pinned coherent state and the prescribed Gaussian number-narrow state share an isolated interacting hold. Their count distributions stay fixed while coherence collapses and revives at different rates. **Exactly half in each well** demonstrates a fixed-count state with zero first-order coherence. A narrow count distribution alone is not an entanglement certificate.
+
+Controls include pause/step/reset, immutable comparison, ideal shot count/seed, history CSV and complete JSON export. Edits and recipe selections stay pending until Prepare. JSON contains both final complex occupation states, history, physical conventions and seeded counts; verify it with `uv run python -m coldatomlab.replay path/to/coldatomlab-quantum.json`. Python independently diagonalizes the Hamiltonian and checks the saved amplitudes and observables.
+
+This is a separate two-mode approximation, with illustrative J/U/bias values in Hz and time in ms. Its spatial modes are fixed; it is not connected to the 3D GPE, absorption camera or an apparatus calibration. See [two-mode formulas, primary papers, validation and limits](docs/TWOMODE.md).
 
 ## Automated phase scans (v0.9)
 
@@ -116,7 +128,7 @@ Pause and click **Export run** to download a JSON record containing parameters, 
 uv run python -m coldatomlab.replay "path/to/coldatomlab-single-100.json"
 ```
 
-Replay computes the experiment again. Full float64 field exports use a maximum wavefunction difference of `1e-8`; GPU, camera and compact scan exports use their separately documented verification scopes and tolerances.
+Replay computes the experiment again. Full float64 GPE field exports use a maximum wavefunction difference of `1e-8`; GPU, camera, compact scan and two-mode exports use their separately documented verification scopes and tolerances.
 
 **Export image** saves the source simulation, full camera settings, seed, raw frames and measurements. With an image pinned it exports both acquisitions. The same replay command verifies source evolution and camera regeneration, including noise. The 3D browser camera uses independent numerical comparison with documented tolerances.
 
@@ -152,11 +164,20 @@ Browser checks exercise the actual controls, download and replay a run, compare 
 
 The WebGPU check requires installed Chrome with a hardware adapter. GPU exports use a separate schema; the replay command performs a toleranced CPU reference comparison rather than claiming exact float32 GPU replay. The GPU norm-drift guard is 0.1%, with no real-time renormalization.
 
+The two-mode browser check requires installed Chrome and manages temporary loopback servers itself, closing them on exit. It tests both the local app and the extracted static bundle, including downloads with independent replay:
+
+```powershell
+uv run python -m scripts.package_webgpu
+uv run python -m scripts.twomode_browser_check
+```
+
 ## Model scope
 
 The original workspace uses an effective two-dimensional Gross–Pitaevskii model of an already prepared, dilute, weakly interacting condensate. In-plane release retains tight transverse confinement. The two-cloud initial state is an ideal coherent Gaussian pair. Dimensionless mode leaves physical scales unspecified. Laboratory mode derives coupling from physical parameters and reports conservative frozen-axial applicability checks. The separate v0.5 single-cloud experiment evolves a genuine 3D field with complete trap release and its own coupling convention.
 
 The v0.7 extension supplies interacting 3D splitting/interference; v0.8/v0.9 add three-axis synthetic imaging and parameter scans. Laser cooling, condensation formation, a thermal component, and full optical/atomic imaging dynamics remain outside this release. The density/phase views are model diagnostics; both camera panels produce explicitly simplified synthetic images. Numerical accuracy depends on the chosen grid, step, and domain; passing reference cases does not validate every parameter combination.
+
+The separate v0.10 two-mode page includes finite-N occupation superpositions and ideal number measurements beyond mean-field GPE. It retains only two fixed orbitals, with no temperature, loss or spatial dynamics. Agreement with analytic and independent numerical references verifies the chosen Hamiltonian, not a full experiment.
 
 See [the model and conventions](docs/MODEL.md), [implementation plan](PLAN.md), and [agent guidance](AGENTS.md).
 

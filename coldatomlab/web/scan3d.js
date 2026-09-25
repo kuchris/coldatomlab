@@ -247,7 +247,7 @@ window.Scan3DRunner = class {
     this.cancelled = false;
     this.report = {
       schema: "coldatomlab-scan3d-v1",
-      version: "0.9.0",
+      version: "0.10.0",
       camera_model: "rb87-browser-camera-v1",
       plan: this.plan,
       status: "running",

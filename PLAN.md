@@ -138,6 +138,43 @@ Deliver an independent browser WebGPU scan workspace without changing the manual
 
 Status: implemented and verified. See `docs/SCANS3D.md` for recipes, statistics, compact-export verification scope, literature, numerical evidence and live browser checks.
 
+## v0.10: two-mode quantum coherence lab
+
+Implement a separate fixed-N, two-site Bose-Hubbard experiment in the browser. This
+is a finite many-body model, not a 3D GPE upgrade or a reproduction of an apparatus.
+Use the occupation basis |n_L, N-n_L>, sum |c_n|^2 = 1, and
+H/h = -J(a_L†a_R + a_R†a_L) + U(n_L-N/2)^2 - delta(n_L-N/2).
+J, U and delta are in Hz; positive delta raises the right mode. U is the on-site
+pair coefficient in U/2 [n_L(n_L-1)+n_R(n_R-1)], with its constant removed.
+Time is displayed in ms; propagation is exp(-i 2 pi (H/h) t_seconds).
+
+- Provide coherent binomial, number-narrow Gaussian and fixed-occupation initial
+  states; compare tunnelling and isolated interacting holds. Gaussian preparation
+  is prescribed, not simulated adiabatic squeezing. Fixed spatial modes, fixed N,
+  no thermal mixture, loss, camera noise or 3D coupling.
+- Use float64 spectral unitary propagation with a checked real-symmetric browser
+  eigensolver; no real-time renormalization. Rendering cadence does not set physics.
+- Plot occupation probabilities, mean populations, first-order coherence and
+  history. Seeded ideal number measurements represent independent preparations at
+  one time, not repeated nondestructive measurements on one cloud. Mask undefined
+  phase and number-noise ratios. Do not equate number narrowing with entanglement.
+- Support prepare/run/pause/step/reset, immutable pin comparison, JSON/CSV export,
+  English explanatory text, desktop/mobile and a server-independent static package.
+- Validate binomial moments, analytic noninteracting tunnelling, isolated-well
+  phase sign, interacting collapse/revival, frozen number probabilities at J=0,
+  norm/energy and spectral residuals, time subdivision, independent NumPy eigensolver
+  agreement, measurement statistics/seeds and tamper-detecting replay. Target
+  complex-state L2 < 5e-8 and norm drift < 1e-9 in validated cases. Explain that
+  numerical accuracy within two modes does not establish spatial-model validity.
+- Use Esteve et al. (2008) for number/phase measurement motivation, Gross (2012)
+  for the fixed-N spin description and Smerzi et al. (1997) for Josephson context;
+  state explicitly which physics is demonstrated rather than experimentally fitted.
+
+Status: implemented and verified. The dedicated numerical suite has 39 passing
+tests; the full suite has 151. Local-app and extracted-static browser controls,
+independent export replay, desktop/mobile layouts and existing dashboard
+regressions passed. See `docs/TWOMODE.md` for conventions, evidence and limitations.
+
 ## Later extensions
 
 Dashboard interface: implemented with a light navigation shell, searchable experiment cards, grid/list views and direct workspace/measurement/camera links. Template illustrations are explicitly labeled; selecting a template stages its experiment type for preparation. Navigation preserves the solver session, pending settings and pinned comparisons. Desktop and mobile browser evidence is recorded in `docs/VALIDATION.md`. The dashboard now also links to the independent three-dimensional single-cloud experiment.
