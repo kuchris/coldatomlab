@@ -19,6 +19,8 @@ Build a local interactive experiment that lets a user prepare, release, and meas
 
 ## Milestones
 
+First-release status: implemented and validated. See `docs/VALIDATION.md` for the reference cases and browser evidence; later extensions below remain outside this release.
+
 1. Numerical core: grid, normalization, trapped state, release, density and width diagnostics.
 2. Interactive single-cloud experiment: prepare, run, pause, reset, adjust trap parameters, inspect density and a density cross-section.
 3. Coherent two-cloud experiment: vary separation and relative phase; release and compare interference patterns.

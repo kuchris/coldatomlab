@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Explore condensate expansion and matter-wave interference in a local virtual laboratory."
+    />
+    <title>Cold Atom Lab — Matter in motion</title>
+    <link rel="stylesheet" href="/style.css" />
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <header>
+      <a class="wordmark" href="/" aria-label="Cold Atom Lab home"
+        ><span class="atom-mark" aria-hidden="true">✳</span> COLD ATOM
+        <b>LAB</b></a
+      ><span class="header-note">VIRTUAL EXPERIMENTS / VOL. 01</span
+      ><span class="connection" id="connection">Connecting</span>
+    </header>
+    <main>
+      <section class="intro">
+        <div>
+          <p class="eyebrow">QUANTUM MATTER, MADE VISIBLE</p>
+          <h1>Matter in motion<span>.</span></h1>
+          <p class="subtitle">
+            Prepare a condensate. Release the trap. Follow the wave.
+          </p>
+        </div>
+        <button class="quiet" id="model-open">About the model ↗</button>
+      </section>
+      <div class="workspace">
+        <section class="observation" aria-label="Experiment observation">
+          <div class="panel-heading">
+            <div>
+              <span class="eyebrow">01 / OBSERVATION</span>
+              <h2 id="experiment-title">Condensate expansion</h2>
+            </div>
+            <div class="view-switch" aria-label="Observation view">
+              <button id="density-view" class="selected" aria-pressed="true">
+                Density</button
+              ><button id="phase-view" aria-pressed="false">Phase</button>
+            </div>
+          </div>
+          <div class="field-wrap">
+            <canvas
+              id="field"
+              width="720"
+              height="520"
+              role="img"
+              aria-label="Simulated condensate density in the x-y plane"
+            ></canvas>
+            <div class="field-meta">
+              <span id="trap-state">Preparing state</span
+              ><span id="grid-label">128 × 128</span>
+            </div>
+            <div class="field-legend">
+              <span id="legend-label">DENSITY |ψ|² · a₀⁻²</span>
+              <div id="colorbar"></div>
+              <div class="legend-limits">
+                <span id="legend-low">0</span><span id="legend-high">—</span>
+              </div>
+            </div>
+          </div>
+          <div class="transport">
+            <span class="status" id="status" role="status" aria-live="polite"
+              >Preparing…</span
+            >
+            <div class="transport-buttons">
+              <button id="reset" title="Restore the prepared initial state">
+                ↺ Reset</button
+              ><button id="step">Step</button
+              ><button id="release">Release trap</button
+              ><button class="primary" id="run">▶ Run</button>
+            </div>
+          </div>
+          <div class="metrics">
+            <div>
+              <span>SIMULATION TIME</span
+              ><strong id="time">0.000 <small>ω₀⁻¹</small></strong>
+            </div>
+            <div>
+              <span>RMS WIDTH · X</span
+              ><strong id="width">— <small>a₀</small></strong>
+            </div>
+            <div><span>NORM</span><strong id="norm">—</strong></div>
+            <div>
+              <span>ENERGY</span
+              ><strong id="energy">— <small>ℏω₀</small></strong>
+            </div>
+          </div>
+          <p class="warning" id="warning" role="alert" hidden></p>
+        </section>
+        <aside class="controls" aria-label="Experiment controls">
+          <p class="eyebrow">02 / PREPARATION</p>
+          <h2>Set the conditions</h2>
+          <form id="config-form">
+            <fieldset id="parameters">
+              <legend class="sr-only">Experiment parameters</legend>
+              <label class="field-label" for="experiment">Experiment</label
+              ><select id="experiment" name="experiment">
+                <option value="single">01 — Single-cloud expansion</option>
+                <option value="double">02 — Two-cloud interference</option>
+              </select>
+              <p class="experiment-note" id="experiment-note">
+                Prepare the ground state in a harmonic trap. Release it to watch
+                the cloud expand.
+              </p>
+              <label class="range-label" for="interaction"
+                >Interaction strength
+                <output id="interaction-value">20</output></label
+              ><input
+                id="interaction"
+                name="interaction"
+                type="range"
+                min="0"
+                max="100"
+                step="1"
+                value="20"
+              />
+              <p class="hint">g ≥ 0 · repulsive, includes atom number</p>
+              <div class="pair">
+                <label
+                  >Trap frequency x<input
+                    id="omega_x"
+                    name="omega_x"
+                    type="number"
+                    min="0.5"
+                    max="2"
+                    step="0.1"
+                    value="1" /></label
+                ><label
+                  >Trap frequency y<input
+                    id="omega_y"
+                    name="omega_y"
+                    type="number"
+                    min="0.5"
+                    max="2"
+                    step="0.1"
+                    value="1.4"
+                /></label>
+              </div>
+              <p class="hint">
+                In units of ω₀; sets packet widths for two clouds.
+              </p>
+              <div id="double-controls" hidden>
+                <label class="range-label" for="separation"
+                  >Cloud separation
+                  <output id="separation-value">6.0 a₀</output></label
+                ><input
+                  id="separation"
+                  name="separation"
+                  type="range"
+                  min="2"
+                  max="12"
+                  step="0.5"
+                  value="6"
+                /><label class="range-label" for="phase"
+                  >Relative phase
+                  <output id="phase-value">0.00 π</output></label
+                ><input
+                  id="phase"
+                  name="phase"
+                  type="range"
+                  min="-1"
+                  max="1"
+                  step="0.05"
+                  value="0"
+                />
+                <div class="phase-presets">
+                  <button type="button" data-phase="0">In phase · 0</button
+                  ><button type="button" data-phase="1">Opposite · π</button>
+                </div>
+              </div>
+              <details class="numerics">
+                <summary>Numerical resolution</summary>
+                <div class="pair">
+                  <label
+                    >Grid<select name="n" id="n">
+                      <option>64</option>
+                      <option selected>128</option>
+                      <option>256</option>
+                    </select></label
+                  ><label
+                    >Domain side · a₀<select name="length" id="length">
+                      <option>24</option>
+                      <option selected>32</option>
+                      <option>48</option>
+                      <option>64</option>
+                    </select></label
+                  >
+                </div>
+                <label class="field-label" for="dt">Time step · ω₀⁻¹</label
+                ><input
+                  name="dt"
+                  id="dt"
+                  type="number"
+                  min="0.001"
+                  max="0.02"
+                  step="0.001"
+                  value="0.005"
+                />
+                <p class="hint">
+                  Independent of display frame rate. Larger domains may need a
+                  finer grid.
+                </p>
+              </details>
+            </fieldset>
+            <button class="prepare" type="submit" id="prepare">
+              Prepare experiment <span>↗</span>
+            </button>
+          </form>
+          <p class="prepare-note" id="prepare-note">
+            Preparation replaces the current experiment.
+          </p>
+          <p id="error" class="error" role="alert" hidden></p>
+          <div class="model-note">
+            <span class="mini-dot"></span>
+            <p>
+              <b>Effective 2D · prepared BEC</b><br />Release removes the
+              in-plane trap. Tight transverse confinement remains.
+            </p>
+          </div>
+        </aside>
+        <section class="measurements" aria-label="Measurements">
+          <div class="panel-heading">
+            <div>
+              <span class="eyebrow">03 / MEASUREMENTS</span>
+              <h2>Read the experiment</h2>
+            </div>
+            <button id="export" class="quiet">Export run ↓</button>
+          </div>
+          <div class="plots">
+            <div>
+              <div class="plot-title">
+                Central density profile <span>y = 0</span>
+              </div>
+              <canvas
+                id="profile"
+                width="560"
+                height="210"
+                role="img"
+                aria-label="Density versus x along the central row"
+              ></canvas>
+            </div>
+            <div>
+              <div class="plot-title">
+                Cloud expansion
+                <span
+                  ><i class="line-key x"></i>σx
+                  <i class="line-key y"></i>σy</span
+                >
+              </div>
+              <canvas
+                id="widths"
+                width="560"
+                height="210"
+                role="img"
+                aria-label="Root-mean-square cloud widths versus simulation time"
+              ></canvas>
+            </div>
+          </div>
+          <div class="measurement-foot">
+            <span id="boundary">Boundary population: —</span
+            ><span>Model diagnostics · not a camera image</span>
+          </div>
+        </section>
+      </div>
+      <footer>
+        <span>COLD ATOM LAB <span class="muted">/ 0.1</span></span
+        ><span>A small window into coherent matter.</span
+        ><a
+          href="https://arxiv.org/abs/cond-mat/0303239"
+          target="_blank"
+          rel="noreferrer"
+          >Numerical method ↗</a
+        >
+      </footer>
+    </main>
+    <dialog id="model-dialog">
+      <button
+        id="model-close"
+        class="dialog-close"
+        aria-label="Close model information"
+      >
+        ✕
+      </button>
+      <p class="eyebrow">THE MODEL</p>
+      <h2>One wave. Many atoms.</h2>
+      <p>
+        We evolve a dilute, weakly interacting condensate with an effective
+        two-dimensional Gross–Pitaevskii equation:
+      </p>
+      <p class="equation">i ∂ψ/∂t = [−½∇² + V + g|ψ|²]ψ</p>
+      <p>
+        The wavefunction has unit norm: ∫|ψ|² dx dy = 1. The interaction
+        coefficient g includes the atom number. Density is normalized
+        probability per area; it is not an absolute atom count.
+      </p>
+      <p>
+        Lengths use a₀ = √(ℏ/mω₀), time uses 1/ω₀, and energies use ℏω₀. No atom
+        species or physical trap scale is selected.
+      </p>
+      <p>
+        <b>Single cloud:</b> normalized imaginary-time preparation in a harmonic
+        trap. <b>Two clouds:</b> a normalized, coherent sum of two Gaussian
+        packets with a controlled relative phase, initially released. This is an
+        idealized initial state, not a simulation of splitting or condensation.
+      </p>
+      <p>
+        Real-time evolution uses a second-order split-step Fourier method.
+        Periodic boundaries require enough empty space around the cloud.
+        Evolution stops when more than 0.1% of the norm reaches the outer
+        boundary band, or at t = 20.
+      </p>
+      <p>
+        Density colors use a linear, frame-relative scale with a labeled
+        maximum. Phase colors are cyclic; pixels below 0.1% of the current peak
+        density are masked. The phase is a model diagnostic, not directly an
+        absorption image.
+      </p>
+      <p>
+        This model retains tight transverse confinement. It does not include
+        laser cooling, a thermal cloud, losses, camera noise, or full
+        three-dimensional expansion.
+      </p>
+      <p>
+        Numerical resolution matters. Compare smaller time steps, finer grids,
+        and larger domains before drawing quantitative conclusions.
+      </p>
+    </dialog>
+  </body>
+</html>
