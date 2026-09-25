@@ -45,6 +45,8 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         files = {
+            "/preparation.js": ("preparation.js", "text/javascript; charset=utf-8"),
+            "/preparation-ui.js": ("preparation-ui.js", "text/javascript; charset=utf-8"),
             "/quantum-host.js": ("quantum-host.js", "text/javascript; charset=utf-8"),
             "/quantum.html": ("quantum.html", "text/html; charset=utf-8"),
             "/twomode.js": ("twomode.js", "text/javascript; charset=utf-8"),

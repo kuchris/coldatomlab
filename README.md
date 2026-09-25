@@ -35,6 +35,14 @@ Use **Density / Phase** to switch the observation view. Parameter edits remain p
 
 The English interface provides density and masked phase maps, central density profiles, RMS width histories, norm, energy, and boundary population. It adapts to desktop and narrow mobile layouts.
 
+## Preparation variation (v0.11)
+
+Open **Quantum coherence** at **http://127.0.0.1:8765/#quantum**, scroll to **What if each preparation is slightly different?**, then click **Run preparations**. Each run draws independent uniform initial-phase and constant-bias offsets. Compare individual coherence with the magnitude of their averaged signal, inspect the count-probability mixture, and separate within-preparation quantum variance from variation of preparation means.
+
+The default 64-preparation example keeps individual coherence at 1 while ensemble coherence falls to about 0.0153 after 500 ms. The count distribution stays unchanged. Set both variation ranges to zero to recover the ideal reference, or try **Add interactions**. Pause/resume/cancel retains finished preparations; JSON and CSV exports include applied settings. Manual states and pins are preserved. This also works in the static ZIP without a GPU.
+
+These are declared teaching distributions, not calibrated experimental noise. See [preparation model, analytic guide, paper provenance and verification](docs/PREPARATION.md). Independently verify exported states and statistics with `uv run python -m coldatomlab.replay path/to/coldatomlab-preparations.json`.
+
 ## Two-mode quantum coherence (v0.10)
 
 Open **Quantum coherence** from the dashboard/sidebar, or visit **http://127.0.0.1:8765/#quantum**. Old `quantum.html` links redirect to this dashboard route. This small fixed-N many-body model runs entirely in browser float64; it needs neither WebGPU nor a simulation API. The static WebGPU ZIP includes the same page, an experiment library and a link from its 3D lab. Returning to the library and reopening Quantum coherence preserves its state and pinned reference. Reloading the page starts a fresh experiment.

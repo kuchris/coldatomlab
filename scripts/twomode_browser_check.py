@@ -72,7 +72,8 @@ def exercise(browser, url, prefix):
     page.wait_for_function(
         "parseFloat(document.getElementById('quantum-frame').contentDocument.getElementById('tm-time').textContent)>4"
     )
-    page.frame_locator("#quantum-frame").get_by_role("button", name="Pause", exact=True).click()
+    expect(page.frame_locator("#quantum-frame").locator("#tm-run")).to_have_text("Pause")
+    page.frame_locator("#quantum-frame").locator("#tm-run").click()
     time = page.frame_locator("#quantum-frame").locator("#tm-time").inner_text()
     page.wait_for_timeout(150)
     assert page.frame_locator("#quantum-frame").locator("#tm-time").inner_text() == time

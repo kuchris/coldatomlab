@@ -217,7 +217,10 @@ JSON/replay pairs, history CSVs, browser report and desktop/mobile screenshots.
 
 The model assumes two fixed, orthonormal localized orbitals and conserves total
 N. It omits higher spatial modes, interaction-driven orbital deformation, thermal
-mixtures, environmental coupling, losses, 3D expansion and imaging. The chosen
+mixtures, dynamical environmental coupling, losses, 3D expansion and imaging.
+The separate [preparation variation panel](PREPARATION.md) adds classical
+shot-to-shot phase and static bias offsets while preserving these conditional
+unitary dynamics. The manual experiment described here remains deterministic. The chosen
 J/U values do not establish that a real trap stays in the two-mode regime. There
 is no spatial grid convergence claim: full occupation-basis convergence **within
 two modes** cannot establish the validity of the spatial truncation. A later

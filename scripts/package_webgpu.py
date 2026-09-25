@@ -9,6 +9,8 @@ def main():
     out = Path("artifacts/coldatomlab-webgpu.zip")
     out.parent.mkdir(exist_ok=True)
     files = (
+        "preparation.js",
+        "preparation-ui.js",
         "quantum-host.js",
         "quantum.html",
         "twomode.js",
@@ -40,14 +42,18 @@ def main():
         archive.writestr(
             "QUANTUM.txt",
             "Cold Atom Lab - two-mode quantum coherence lab\n\n"
-            "Open quantum.html on the same static host. This independent page uses "
+            "Open /#quantum on the same static host. This experiment uses "
             "browser float64 arithmetic and requires no GPU or simulation API.\n"
             "It evolves a fixed-N occupation state in two fixed spatial modes. "
             "It is not coupled to the 3D GPE or absorption camera. Model assumptions "
             "and primary paper references appear at the bottom of the page.\n"
             "Export reproducible data saves complete amplitudes, history and seeded "
             "ideal number counts. In the full repository, independently verify with:\n"
-            "  uv run python -m coldatomlab.replay path/to/coldatomlab-quantum.json\n",
+            "  uv run python -m coldatomlab.replay path/to/coldatomlab-quantum.json\n\n"
+            "The preparation variation panel compares independent phase and static "
+            "bias offsets, individual coherence and ensemble coherence. Its JSON "
+            "exports can be checked with the same replay command. Uniform ranges "
+            "are teaching choices, not calibrated laboratory noise.\n",
         )
     print(out.resolve())
 

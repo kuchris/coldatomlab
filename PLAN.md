@@ -175,6 +175,39 @@ tests; the full suite has 151. Local-app and extracted-static browser controls,
 independent export replay, desktop/mobile layouts and existing dashboard
 regressions passed. See `docs/TWOMODE.md` for conventions, evidence and limitations.
 
+## v0.11: preparation variation in the two-mode lab
+
+Keep the v0.10 Hamiltonian, fixed N and spectral solver unchanged. Add an
+independent ensemble panel inside experiment 05. Each realization draws two
+independent uniform offsets: initial phase in [-A,A] radians (wrapped modulo
+2 pi) and bias in [-B,B] Hz. The drawn bias is constant throughout that run;
+this is shot-to-shot technical variation, not continuous environmental noise.
+Do not clip samples or silently change the manual experiment.
+
+- Compare an ideal reference with 2–128 seeded preparations and 101 equally
+  spaced physical times. Default to balanced N=40, J=U=delta=0, 500 ms, A=0.3 rad,
+  B=1 Hz; offer an interacting hold and explicit copying of applied manual settings.
+- Show individual coherence vectors, their complex average, average individual
+  coherence magnitude, ensemble number probabilities and within/between-preparation
+  number variance. Average density-matrix observables, never wavefunctions.
+- At J=0 verify exact finite-sample factorization and the infinite uniform-ensemble
+  guide C_ideal |sinc(A) sinc(2 pi B t)|. At J>0 mark that guide unavailable.
+  Finite-sample departures from the guide are sampling effects, not solver error.
+- Provide progress, pause/resume/cancel with completed-prefix results, manual-state
+  isolation, JSON/CSV export and independent Python replay of settings, offsets,
+  states, histories and aggregate observables. Preserve unavailable phase handling.
+- Check zero-noise recovery, uniform RNG reproducibility/statistics, phase and bias
+  sign/units, ensemble versus conditional coherence, total-variance decomposition,
+  fixed probabilities at J=0, interacting/coupled cases, tampering, browser controls,
+  responsive layout, in-dashboard persistence and extracted static packaging.
+- Reference Gross (2012), section IV.3, for differential-energy-shift noise. Uniform
+  distributions are declared teaching choices, not a measured noise spectrum or
+  reconstruction of a published apparatus. No detector noise or atom loss is added.
+
+Status: implemented. All 191 tests passed (40 preparation tests). Local and
+extracted-static browser controls, exports/replay, manual isolation, dashboard
+persistence and desktop/mobile layouts passed. See `docs/PREPARATION.md`.
+
 ## Later extensions
 
 Dashboard interface: implemented with a light navigation shell, searchable experiment cards, grid/list views and direct workspace/measurement/camera links. Template illustrations are explicitly labeled; selecting a template stages its experiment type for preparation. Navigation preserves the solver session, pending settings and pinned comparisons. Desktop and mobile browser evidence is recorded in `docs/VALIDATION.md`. The dashboard now also links to the independent three-dimensional single-cloud experiment.

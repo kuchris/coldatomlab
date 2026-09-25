@@ -23,6 +23,10 @@ def verify_run(data):
 
 
 def verify_export(data):
+    if data.get("schema") == "coldatomlab-preparation-v1":
+        from .preparation import verify_export as verify_preparation
+
+        return verify_preparation(data)
     if data.get("schema") == "coldatomlab-twomode-v1":
         from .twomode import verify_export as verify_twomode
 

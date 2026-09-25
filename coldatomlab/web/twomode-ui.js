@@ -134,7 +134,7 @@
     catch (e) { message(e.message, true); }
   };
   $("json").onclick = () => download("coldatomlab-quantum.json", JSON.stringify({
-    schema: "coldatomlab-twomode-v1", version: "0.10.0",
+    schema: "coldatomlab-twomode-v1", version: "0.11.0",
     convention: "n_left=0..N; H/h in Hz; time_ms; right-minus-left phase", current, pinned,
   }, null, 2), "application/json");
   $("csv").onclick = () => {
@@ -152,4 +152,5 @@
     parent.postMessage({ type: "quantum-route", route: "lab3d" }, location.origin);
   };
   stage("tunnelling"); prepare();
+  new PreparationPanel(document.getElementById("ensemble-lab"), () => ({ ...current.config }));
 })();
