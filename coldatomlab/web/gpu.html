@@ -10,6 +10,8 @@
     <script src="surface3d.js" defer></script>
     <script src="interferometry3d.js" defer></script>
     <script src="gpu3d.js" defer></script>
+    <script src="camera3d.js" defer></script>
+    <script src="camera3d-ui.js" defer></script>
     <script src="lab3d.js" defer></script>
     <script src="gpu-page.js" defer></script>
     <style>
@@ -160,6 +162,38 @@
                     <option value="sequence">Split / hold / release</option>
                   </select></label
                 >
+
+                <label
+                  >Compute engine<select id="three-engine">
+                    <option value="webgpu">
+                      WebGPU · browser GPU · float32
+                    </option>
+                    <option value="cpu">CPU reference · float64</option>
+                  </select></label
+                >
+                <p id="three-engine-note" class="three-note">
+                  GPU preparation and evolution run in this browser. Requires
+                  hardware WebGPU in a secure context.
+                </p>
+                <label
+                  >Reference example<select id="three-preset">
+                    <option value="interacting">Interacting cloud</option>
+                    <option value="gaussian">
+                      Noninteracting analytic check
+                    </option>
+                    <option value="tf">Thomas–Fermi expansion</option>
+                    <option value="pair">Coherent pair · in phase</option>
+                    <option value="camera">
+                      Camera-friendly pair · 2,000 atoms
+                    </option>
+                    <option value="opposite">Coherent pair · π phase</option>
+                    <option value="sequence">3D split / hold / release</option>
+                    <option value="reverse">3D sequence · reversed bias</option>
+                  </select></label
+                ><button type="button" id="three-load">Load settings</button>
+                <p class="three-note" id="three-preset-note">
+                  Repulsive Rb-87 gas. The three-axis field evolves numerically.
+                </p>
                 <details class="numerics" open>
                   <summary>Interferometer settings</summary>
                   <p class="three-note">
@@ -241,34 +275,6 @@
                       required
                   /></label>
                 </details>
-                <label
-                  >Compute engine<select id="three-engine">
-                    <option value="webgpu">
-                      WebGPU · browser GPU · float32
-                    </option>
-                    <option value="cpu">CPU reference · float64</option>
-                  </select></label
-                >
-                <p id="three-engine-note" class="three-note">
-                  GPU preparation and evolution run in this browser. Requires
-                  hardware WebGPU in a secure context.
-                </p>
-                <label
-                  >Reference example<select id="three-preset">
-                    <option value="interacting">Interacting cloud</option>
-                    <option value="gaussian">
-                      Noninteracting analytic check
-                    </option>
-                    <option value="tf">Thomas–Fermi expansion</option>
-                    <option value="pair">Coherent pair · in phase</option>
-                    <option value="opposite">Coherent pair · π phase</option>
-                    <option value="sequence">3D split / hold / release</option>
-                    <option value="reverse">3D sequence · reversed bias</option>
-                  </select></label
-                ><button type="button" id="three-load">Load settings</button>
-                <p class="three-note" id="three-preset-note">
-                  Repulsive Rb-87 gas. The three-axis field evolves numerically.
-                </p>
                 <div class="pair">
                   <label
                     >Atoms N<input

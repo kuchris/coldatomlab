@@ -17,7 +17,7 @@ Open **http://127.0.0.1:8765**. Stop the server with `Ctrl+C`. Use `--port 8766`
 
 ## Try an experiment
 
-The home page is an **Experiments** dashboard. Search four templates or switch between grid and list views. **3D expansion** opens its own experiment and preparation controls. The original **Set up expansion / interference / sequence** cards stage the experiment type in the 2D workspace; review the settings and click **Prepare experiment** to apply them. **Open workspace** resumes the 2D experiment without changing settings.
+The home page is an **Experiments** dashboard. Search four templates or switch between grid and list views. **3D expansion & interferometry** opens its own experiment and preparation controls. The original **Set up expansion / interference / sequence** cards stage the experiment type in the 2D workspace; review the settings and click **Prepare experiment** to apply them. **Open workspace** resumes the 2D experiment without changing settings.
 
 The left navigation opens the workspace, measurements, virtual camera and reference guides. On narrow screens, use the menu button. Navigation keeps the current solver session, pending settings and pinned run/image comparisons; it does not pause a running experiment. Reloading still starts a new session and clears pinned records. Template diagrams are labeled illustrations, while workspace plots come from the numerical state. Direct links to `/#workspace`, `/#measurements` and `/#camera-lab` are supported.
 
@@ -34,6 +34,14 @@ Turn on **Potential contours** to see the changing trap over the density/phase f
 Use **Density / Phase** to switch the observation view. Parameter edits remain pending until **Prepare experiment** is clicked; preparation replaces the current run. Grid, domain size, and time step are under **Numerical resolution**. Numerical warnings stop playback before the cloud significantly reaches the periodic boundary region.
 
 The English interface provides density and masked phase maps, central density profiles, RMS width histories, norm, energy, and boundary population. It adapts to desktop and narrow mobile layouts.
+
+## 3D virtual camera (v0.8)
+
+Open the **3D lab**, choose **Camera-friendly pair · 2,000 atoms**, then **Load settings → Prepare 3D experiment → Run**. In **What would the camera see?**, capture ideal optics, pin the image, then try FWHM 4 or 8 µm, photon/read noise, or a different viewing axis. Compare reconstructed density, ROI atoms and image-only fringe phase/period/contrast with the independently fitted ideal projection. Unresolved measurements remain unavailable.
+
+Both CPU and WebGPU experiments support the camera; the standalone GPU package performs acquisition without simulation API calls. Capture preserves the numerical state. Export saves complete source and camera frames/settings, including pinned comparisons, for independent replay. The top **Experiment / Compute engine / Reference example** controls stay in place across 3D modes; dashboard cards distinguish **2D CPU** and **3D WebGPU**.
+
+See [the three-axis imaging model, classic papers, limits and verification](docs/IMAGING3D.md). This remains an idealized virtual measurement, with explicit recoil, optical-depth and resolution warnings; it is not a calibrated apparatus or reproduction of a published image.
 
 ## 3D interferometer (v0.7)
 
@@ -82,9 +90,9 @@ Both write to ignored `artifacts/`. The report has its own `coldatomlab-shin-ben
 
 For a **browser-only, shareable version**, open **http://127.0.0.1:8765/gpu.html**. All 3D preparation/evolution runs in the browser without simulation API calls. `uv run python -m scripts.package_webgpu` creates `artifacts/coldatomlab-webgpu.zip` for an ordinary static HTTPS host. No site is published automatically. WebGPU supports 32³/64³/128³; loading its TF preset explicitly uses 128³ instead of the CPU preset's 96³.
 
-Open **3D expansion** in the sidebar, or visit **http://127.0.0.1:8765/#lab3d**. Choose a reference example, **Load settings**, then **Prepare 3D experiment**. Preparation can take tens of seconds or several minutes on the largest grids. **Release all axes**, then **Run**. **Pause**, **Step**, and **Reset** act on this independent 3D session; navigation preserves both it and the original 2D workspace.
+Open **3D lab** in the sidebar, or visit **http://127.0.0.1:8765/#lab3d**. Choose a reference example, **Load settings**, then **Prepare 3D experiment**. Preparation can take tens of seconds or several minutes on the largest grids. **Release all axes**, then **Run**. **Pause**, **Step**, and **Reset** act on this independent 3D session; navigation preserves both it and the original 2D workspace.
 
-Drag the numerical density surface or use arrow keys to rotate it. Zoom and isodensity change only the view. Switch between **Central slices** (atoms/µm³) and **Column density** (atoms/µm²); all three planes use the full solver grid, while the surface states its rendering-grid coarsening. These projections have no absorption-camera model.
+Drag the numerical density surface or use arrow keys to rotate it. Zoom and isodensity change only the view. Switch between **Central slices** (atoms/µm³) and **Column density** (atoms/µm²); all three planes use the full solver grid, while the surface states its rendering-grid coarsening. These panels show ideal projections; the separate 3D camera below them models optical acquisition.
 
 The **Noninteracting analytic check** compares widths with the exact Gaussian result. **Interacting cloud** demonstrates finite-interaction expansion. **Thomas–Fermi expansion** uses 150,000 Rb-87 atoms on a 96³ grid and compares all three widths against Castin–Dum scaling, including shape inversion. The absolute TF prediction and scaling anchored to numerical initial widths are shown separately. Finite kinetic energy prevents exact TF agreement; this is a theory benchmark, not a reproduction of measured experimental data.
 
@@ -102,7 +110,7 @@ uv run python -m coldatomlab.replay "path/to/coldatomlab-single-100.json"
 
 Replay computes the experiment again and reports the maximum difference from the saved wavefunction. It exits with an error for a discrepancy above `1e-8`.
 
-**Export image** saves the source simulation, full camera settings, seed, raw frames and measurements. With an image pinned it exports both acquisitions. The same replay command verifies source evolution and exact camera regeneration, including noise.
+**Export image** saves the source simulation, full camera settings, seed, raw frames and measurements. With an image pinned it exports both acquisitions. The same replay command verifies source evolution and camera regeneration, including noise. The 3D browser camera uses independent numerical comparison with documented tolerances.
 
 With a reference pinned, **Export comparison** saves both complete experiments. The same replay command verifies both records. Sequence timing and bias are included; no manual release action needs to be recreated.
 

@@ -103,8 +103,9 @@ Absolute TF RMS: σᵢ(τ) = σᵢ(0)bᵢ(τ)</pre>
       block averaged to a smaller rendering grid when indicated. Its threshold
       is a fraction of that displayed grid's peak. The box stays fixed during
       evolution. Central planes and column densities use the full solver grid.
-      These are ideal model observables with no virtual camera, thermal cloud,
-      loss, trap imperfections or optical calibration.
+      These panels are ideal model observables. The separate virtual camera
+      below them forms absorption images from the same field. Thermal clouds,
+      loss, trap imperfections and apparatus calibration are omitted.
     </p>
     <h2>Established primary references</h2>
     <p>
@@ -145,9 +146,64 @@ Absolute TF RMS: σᵢ(τ) = σᵢ(0)bᵢ(τ)</pre>
       motivates the splitting, controlled phase and release sequence. Our Rb-87
       harmonic-plus-barrier teaching model does not reproduce the paper's sodium
       apparatus, optical potential, measured image or finite-temperature phase
-      statistics. The 3D projections remain ideal densities with no
-      absorption-camera model. The repository's docs/INTERFEROMETER3D.md
-      specifies the conventions and checks.
+      statistics. The projection panels remain ideal densities; the separate
+      virtual camera models optical measurement. The repository's
+      docs/INTERFEROMETER3D.md specifies the conventions and checks.
+    </p>
+    <h2>Three-axis absorption camera</h2>
+    <p>
+      Pause or finish the Camera-friendly pair example, then capture its actual
+      column density along x, y or z. The detector axes are shown on each image.
+      Capture freezes the field; it never advances time or changes
+      normalization. Browser JavaScript performs saturation-corrected Rb-87
+      absorption, Gaussian intensity blur, pixel-area integration, then seeded
+      independent Poisson photon and Gaussian read noise in atom/reference/dark
+      frames. Invalid counts remain invalid and negative density estimates are
+      retained.
+    </p>
+    <pre>
+n_col = N integral |psi|² dX_los / a0²  [atoms / µm²]
+sigma0 n_col = -ln(T) + s(1-T); sigma0 = 3 lambda²/(2 pi)
+n_est = [ln(R/A) + s(R-A)/R0] / sigma0
+lambda = 0.780241209 µm; s = I0/Isat; Isat = 16.69 W/m²</pre>
+    <p>
+      A and R are dark-subtracted electrons; R0 is the expected reference count.
+      Fit the camera and ideal profiles independently with a Gaussian envelope
+      multiplying a quadratic baseline plus b cos(kx) + c sin(kx). Image phase
+      atan2(c,b) refers to cos(kx − phase) at coordinate zero; it is not the
+      source mirror phase. Period is 2 pi/k and fitted contrast is hypot(b,c)
+      divided by the fitted envelope baseline at its center. No
+      theoretical/source phase is supplied to the image fit.
+    </p>
+    <p>
+      At least 20 valid samples, 2.5 cycles across the ROI and four pixels per
+      period are required. Further residual, contrast and signal gates reject
+      unreliable fits. These are demonstration criteria, not confidence
+      intervals. Looking along x integrates the x-fringes away. Strong blur,
+      coarse pixels, low light or an incompatible envelope can make measurements
+      unavailable. Fitted contrast is an empirical ratio and may slightly exceed
+      one through estimation error. ROI atom counts require every ROI pixel to
+      be valid.
+    </p>
+    <p>
+      The ideal two-level saturation relation follows
+      <a href="https://arxiv.org/abs/0707.2930">Reinaudi et al. (2007)</a>, with
+      calibration factor alpha=1. For established imaging context see
+      <a href="https://arxiv.org/abs/cond-mat/9904034"
+        >Ketterle, Durfee &amp; Stamper-Kurn (1999)</a
+      >. Gaussian optics and detector settings are teaching assumptions. Recoil,
+      motion during exposure, defocus, optical pumping, multiple scattering,
+      detector saturation and experimental calibration are omitted. High optical
+      depth, underresolved PSF and more than five mean absorbed photons per atom
+      trigger warnings. A good fit does not remove those physical limitations.
+    </p>
+    <p>
+      Pin and export preserve the complete source and all camera
+      frames/settings. The same replay command independently verifies the source
+      and regenerates camera arrays with numerical tolerances; source GPU
+      comparison is not bitwise replay. The repository's docs/IMAGING3D.md gives
+      formulas, fitting gates, seed convention, tolerances and separate
+      browser/numerical evidence.
     </p>
     <h2>WebGPU execution</h2>
     <p>

@@ -36,7 +36,7 @@ The default sequence uses N=2000, as=5.3 nm, frequencies (30,42,21) Hz at f0=30 
 - Fringe spacing uses parabolically interpolated local peaks above 15% of the line-profile maximum. At least three peaks, four cells per spacing and a spacing coefficient of variation no greater than 15% are required. Otherwise spacing and contrast are unavailable. Contrast uses parabolic peak/valley heights (clamped to nonnegative density), taking the lower of each adjacent pair of peaks. Finite envelopes and sampling bias both estimates, so they must not be equated to the analytic carrier period or the paper's fitted contrast.
 - Pin stores an immutable snapshot and complete export. Current and pinned line densities share physical axes, retaining their own atom numbers, scales and times. The comparison export contains both full records; replay verifies each independently. A reload clears the pinned record.
 
-The noninteracting single-cloud and Castin–Dum width curves are not applicable to these experiments and are suppressed. Column density is ideal, with no absorption camera or optical noise. Boundary stopping, float32 norm-drift stopping, and preparation residual checks remain active. Unsupported settings are rejected rather than silently approximated.
+The noninteracting single-cloud and Castin–Dum width curves are not applicable to these experiments and are suppressed. Column-density panels remain ideal. The separate [v0.8 three-axis camera](IMAGING3D.md) adds optical acquisition and image-only measurements. Boundary stopping, float32 norm-drift stopping, and preparation residual checks remain active. Unsupported settings are rejected rather than silently approximated.
 
 ## Relation to established experiments
 

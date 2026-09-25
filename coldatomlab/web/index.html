@@ -18,6 +18,8 @@
     <script src="/surface3d.js" defer></script>
     <script src="/interferometry3d.js" defer></script>
     <script src="/gpu3d.js" defer></script>
+    <script src="/camera3d.js" defer></script>
+    <script src="/camera3d-ui.js" defer></script>
     <script src="/lab3d.js" defer></script>
     <script src="/dashboard.js" defer></script>
   </head>
@@ -34,8 +36,8 @@
       <p class="nav-heading">Laboratory</p>
       <nav aria-label="Laboratory">
         <a href="#experiments" data-route="experiments"><span aria-hidden="true">▦</span>Experiments</a>
-        <a href="#workspace" data-route="workspace"><span aria-hidden="true">◉</span>Experiment workspace</a>
-        <a href="#lab3d" data-route="lab3d"><span aria-hidden="true">◇</span>3D expansion <small>NEW</small></a>
+        <a href="#workspace" data-route="workspace"><span aria-hidden="true">◉</span>2D workspace · CPU</a>
+        <a href="#lab3d" data-route="lab3d"><span aria-hidden="true">◇</span>3D lab <small>WebGPU</small></a>
         <a href="#measurements" data-route="measurements"><span aria-hidden="true">⌁</span>Measurements</a>
         <a href="#camera-lab" data-route="camera-lab"><span aria-hidden="true">▣</span>Virtual camera</a>
       </nav>
@@ -46,7 +48,7 @@
         <a href="/physical-units" target="_blank" rel="noopener"><span aria-hidden="true">↗</span>Units & literature</a>
         <a href="/imaging" target="_blank" rel="noopener"><span aria-hidden="true">↗</span>Imaging guide</a>
       </nav>
-      <div class="sidebar-bottom"><span class="model-pill">2D & 3D condensates</span><p>Explore coherent matter.<br>One experiment at a time.</p><small>Cold Atom Lab · v0.7</small></div>
+      <div class="sidebar-bottom"><span class="model-pill">2D & 3D condensates</span><p>Explore coherent matter.<br>One experiment at a time.</p><small>Cold Atom Lab · v0.8</small></div>
     </aside>
     <main id="main-content" tabindex="-1">
       <section id="experiment-library" aria-labelledby="library-title">
@@ -54,21 +56,21 @@
         <div class="library-toolbar"><label class="experiment-search"><span aria-hidden="true">⌕</span><input type="search" id="experiment-search" placeholder="Search experiments…" aria-label="Search experiments" /></label><div class="library-view" role="group" aria-label="Experiment layout"><button id="grid-layout" aria-label="Grid view" aria-pressed="true">▦</button><button id="list-layout" aria-label="List view" aria-pressed="false">☰</button></div></div>
         <p class="library-count" id="library-count" aria-live="polite">4 experiments</p>
         <div class="experiment-cards" id="experiment-cards">
-          <article class="experiment-card" data-search="3d three dimensional expansion full release interacting cloud thomas fermi castin dum">
+          <article class="experiment-card" data-search="webgpu camera interferometry split 3d three dimensional expansion full release interacting cloud thomas fermi castin dum">
             <div class="card-diagram" aria-hidden="true"><svg viewBox="0 0 320 140"><g fill="none" stroke="#9ab3cc"><ellipse cx="160" cy="70" rx="72" ry="45"/><ellipse cx="160" cy="70" rx="72" ry="17"/><ellipse cx="160" cy="70" rx="24" ry="45"/><path d="m110 99 100-58M160 15v110M72 70h176" stroke-dasharray="3 5"/></g><circle cx="160" cy="70" r="4" fill="#2373d7"/></svg><span>Illustrative diagram</span></div>
-            <div class="card-copy"><div class="card-category">04 <span>Full 3D · New</span></div><h2>Three-dimensional expansion</h2><p>Release all three axes. Rotate the density surface and compare with scaling theory.</p><div class="card-tags"><span>3D GPE</span><span>Castin–Dum</span></div><a class="open-experiment-link" href="#lab3d">Open 3D experiment →</a></div>
+            <div class="card-copy"><div class="card-category">04 <span>Full 3D · WebGPU</span></div><h2>3D expansion &amp; interferometry</h2><p>Expand or split a condensate on your browser GPU, then photograph it along any axis.</p><div class="card-tags"><span>3D GPE</span><span>Castin–Dum</span></div><a class="open-experiment-link" href="#lab3d">Open 3D experiment →</a></div>
           </article>
-          <article class="experiment-card" data-search="condensate expansion single cloud trap release width">
+          <article class="experiment-card" data-search="2d cpu condensate expansion single cloud trap release width">
             <div class="card-diagram" aria-hidden="true"><svg viewBox="0 0 320 140"><g fill="none" stroke="#9ab3cc"><ellipse cx="160" cy="72" rx="104" ry="48"/><ellipse cx="160" cy="72" rx="78" ry="36"/><ellipse cx="160" cy="72" rx="49" ry="23"/><ellipse cx="160" cy="72" rx="23" ry="11"/></g><path d="M28 72h264M160 13v118" stroke="#dce4ed" stroke-dasharray="3 5"/><circle cx="160" cy="72" r="4" fill="#2373d7"/></svg><span>Illustrative diagram</span></div>
-            <div class="card-copy"><div class="card-category">01 <span>Single cloud</span></div><h2>Condensate expansion</h2><p>Release a trapped cloud and follow its density and width over time.</p><div class="card-tags"><span>Density</span><span>RMS widths</span></div><button class="open-experiment" data-experiment="single">Set up expansion <span aria-hidden="true">→</span></button></div>
+            <div class="card-copy"><div class="card-category">01 <span>2D · CPU · Single cloud</span></div><h2>Condensate expansion</h2><p>Release a trapped cloud and follow its density and width over time.</p><div class="card-tags"><span>Density</span><span>RMS widths</span></div><button class="open-experiment" data-experiment="single">Set up expansion <span aria-hidden="true">→</span></button></div>
           </article>
-          <article class="experiment-card" data-search="matter wave interference two double clouds phase fringe">
+          <article class="experiment-card" data-search="2d cpu matter wave interference two double clouds phase fringe">
             <div class="card-diagram" aria-hidden="true"><svg viewBox="0 0 320 140"><g fill="none" stroke="#9ab3cc"><ellipse cx="117" cy="70" rx="64" ry="43"/><ellipse cx="117" cy="70" rx="44" ry="30"/><ellipse cx="203" cy="70" rx="64" ry="43"/><ellipse cx="203" cy="70" rx="44" ry="30"/></g><path d="M143 40v60m8-70v80m9-85v90m9-85v80m8-70v60" stroke="#2373d7" stroke-width="2"/></svg><span>Illustrative diagram</span></div>
-            <div class="card-copy"><div class="card-category">02 <span>Coherent pair</span></div><h2>Matter-wave interference</h2><p>Overlap two coherent clouds and explore how relative phase shifts the fringes.</p><div class="card-tags"><span>Relative phase</span><span>Fringes</span></div><button class="open-experiment" data-experiment="double">Set up interference <span aria-hidden="true">→</span></button></div>
+            <div class="card-copy"><div class="card-category">02 <span>2D · CPU · Coherent pair</span></div><h2>Matter-wave interference</h2><p>Overlap two coherent clouds and explore how relative phase shifts the fringes.</p><div class="card-tags"><span>Relative phase</span><span>Fringes</span></div><button class="open-experiment" data-experiment="double">Set up interference <span aria-hidden="true">→</span></button></div>
           </article>
-          <article class="experiment-card" data-search="split hold release sequence barrier bias interferometer">
+          <article class="experiment-card" data-search="2d cpu split hold release sequence barrier bias interferometer">
             <div class="card-diagram" aria-hidden="true"><svg viewBox="0 0 320 140"><path d="M25 33c25 105 70 98 94 40s58-58 82 0 69 65 94-40" fill="none" stroke="#7297bd" stroke-width="2"/><path d="M25 115h270M160 20v95" stroke="#dce4ed" stroke-dasharray="3 5"/><g fill="#2373d7"><circle cx="84" cy="96" r="7"/><circle cx="236" cy="96" r="7"/></g><path d="M126 24h68m-8-5 8 5-8 5" fill="none" stroke="#2373d7"/></svg><span>Illustrative diagram</span></div>
-            <div class="card-copy"><div class="card-category">03 <span>Time sequence</span></div><h2>Split / hold / release</h2><p>Raise a barrier, accumulate phase and release the cloud to reveal interference.</p><div class="card-tags"><span>Timeline</span><span>Population</span></div><button class="open-experiment" data-experiment="sequence">Set up sequence <span aria-hidden="true">→</span></button></div>
+            <div class="card-copy"><div class="card-category">03 <span>2D · CPU · Time sequence</span></div><h2>Split / hold / release</h2><p>Raise a barrier, accumulate phase and release the cloud to reveal interference.</p><div class="card-tags"><span>Timeline</span><span>Population</span></div><button class="open-experiment" data-experiment="sequence">Set up sequence <span aria-hidden="true">→</span></button></div>
           </article>
         </div>
         <div id="library-empty" hidden><h2>No matching experiments</h2><p>Try “phase”, “expansion” or “barrier”.</p><button id="clear-search">Clear search</button></div>
@@ -90,13 +92,15 @@
           </section>
           <aside class="controls three-controls" aria-label="3D experiment controls"><p class="eyebrow">PREPARATION / RB-87</p><h2>Set the conditions</h2>
             <form id="three-form"><fieldset id="three-parameters"><label>Experiment<select id="three-experiment"><option value="single">Single-cloud expansion</option><option value="pair">Coherent Gaussian pair · analytic check</option><option value="sequence">Split / hold / release</option></select></label>
+<label>Compute engine<select id="three-engine"><option value="webgpu">WebGPU · browser GPU · float32</option><option value="cpu">CPU reference · float64</option></select></label><p id="three-engine-note" class="three-note">GPU preparation and evolution run in this browser. Requires hardware WebGPU in a secure context.</p><label>Reference example<select id="three-preset"><option value="interacting">Interacting cloud</option><option value="gaussian">Noninteracting analytic check</option><option value="tf">Thomas–Fermi expansion</option><option value="pair">Coherent pair · in phase</option><option value="camera">Camera-friendly pair · 2,000 atoms</option>
+                    <option value="opposite">Coherent pair · π phase</option><option value="sequence">3D split / hold / release</option><option value="reverse">3D sequence · reversed bias</option></select></label><button type="button" id="three-load">Load settings</button>
+            <p class="three-note" id="three-preset-note">Repulsive Rb-87 gas. The three-axis field evolves numerically.</p>
 <details class="numerics" open><summary>Interferometer settings</summary>
 <p class="three-note">Lengths in a₀; times in ω₀⁻¹; potentials in ℏω₀. Pair settings apply only to the coherent pair. Sequence settings apply only to dynamic splitting.</p>
 <div class="pair"><label>Pair separation / a₀<input id="three-separation" type="number" value="6" min="2" max="10" step="any" required></label><label>Pair phase / rad<input id="three-relative_phase" type="number" value="0" min="-3.141592653589793" max="3.141592653589793" step="any" required></label></div>
 <div class="pair"><label>Barrier height<input id="three-barrier_height" type="number" value="12" min="0" max="40" step="any" required></label><label>Barrier width / a₀<input id="three-barrier_width" type="number" value="0.8" min="0.5" max="2" step="any" required></label></div>
 <div class="pair"><label>Split time<input id="three-split_time" type="number" value="3" min="0.1" max="6" step="any" required></label><label>Hold time<input id="three-hold_time" type="number" value="0.6" min="0" max="3" step="any" required></label></div>
-<label>Hold bias · right minus left<input id="three-hold_bias" type="number" value="1" min="-5" max="5" step="any" required></label></details><label>Compute engine<select id="three-engine"><option value="webgpu">WebGPU · browser GPU · float32</option><option value="cpu">CPU reference · float64</option></select></label><p id="three-engine-note" class="three-note">GPU preparation and evolution run in this browser. Requires hardware WebGPU in a secure context.</p><label>Reference example<select id="three-preset"><option value="interacting">Interacting cloud</option><option value="gaussian">Noninteracting analytic check</option><option value="tf">Thomas–Fermi expansion</option><option value="pair">Coherent pair · in phase</option><option value="opposite">Coherent pair · π phase</option><option value="sequence">3D split / hold / release</option><option value="reverse">3D sequence · reversed bias</option></select></label><button type="button" id="three-load">Load settings</button>
-            <p class="three-note" id="three-preset-note">Repulsive Rb-87 gas. The three-axis field evolves numerically.</p>
+<label>Hold bias · right minus left<input id="three-hold_bias" type="number" value="1" min="-5" max="5" step="any" required></label></details>
             <div class="pair"><label>Atoms N<input id="three-atoms" type="number" value="20000" min="10" max="300000" step="1" required/></label><label>aₛ / nm<input id="three-scattering_nm" type="number" value="5.3" min="0" max="10" step="any" required/></label></div>
             <div class="pair"><label>f₀ / Hz<input id="three-reference_hz" type="number" value="30" min="10" max="100" step="any" required/></label><label>fₓ / Hz<input id="three-fx_hz" type="number" value="30" min="5" max="200" step="any" required/></label></div>
             <div class="pair"><label>fᵧ / Hz<input id="three-fy_hz" type="number" value="42" min="5" max="200" step="any" required/></label><label>f_z / Hz<input id="three-fz_hz" type="number" value="21" min="5" max="200" step="any" required/></label></div>

@@ -115,6 +115,16 @@ Implement two distinct WebGPU and float64 CPU modes: a normalized, noninteractin
 
 Status: implemented; numerical and browser evidence is recorded in `docs/INTERFEROMETER3D.md`. The default 64³ contrast and mirror-phase estimates remain more grid-sensitive than RMS widths, with measured refinement differences and acceptance thresholds disclosed there.
 
+## v0.8: stable controls and three-axis absorption camera
+
+- Keep Experiment, Compute engine and Reference example above variable experiment controls in both 3D entry pages. Label 2D CPU and 3D WebGPU dashboard entries explicitly.
+- Acquire immutable x/y/z line-of-sight projections from the actual 3D state, without evolving or modifying it. Preserve detector-plane axes and physical normalization N/a0². Run acquisition in browser JavaScript so the standalone WebGPU bundle remains server-independent.
+- Apply the documented ideal Rb-87 saturation-corrected transmission law, Gaussian intensity PSF, physical pixel integration, seeded independent Poisson photon and Gaussian read noise, and atom/reference/dark-frame inversion. Preserve invalid and negative estimates, source identity/time, raw frames and settings. Report optical-depth, unresolved-PSF and omitted recoil limits.
+- Estimate fringe phase, period and contrast from the observed profile alone, using a declared envelope/carrier fit and rejection gates. Fit the ideal projected density separately for comparison; never use source phase or density to seed or constrain the image fit. Distinguish this image phase from the wavefunction's mirror diagnostic, and report unavailable when projection, resolution, noise or model mismatch prevents a reliable fit.
+- Support paused capture, ideal/noisy comparisons, immutable pin/export, stale-source notices and reproducible source/frame verification. Verify axis orientation, projection normalization, ideal inversion, PSF/binning, seeded noise statistics, blind synthetic phase recovery, unresolved cases, CPU/browser consistency and complete browser workflows on both entry pages and the static package.
+
+Status: implemented. See `docs/IMAGING3D.md` for model conventions, primary references, numerical checks, browser workflows and standalone packaging evidence.
+
 ## Later extensions
 
 Dashboard interface: implemented with a light navigation shell, searchable experiment cards, grid/list views and direct workspace/measurement/camera links. Template illustrations are explicitly labeled; selecting a template stages its experiment type for preparation. Navigation preserves the solver session, pending settings and pinned comparisons. Desktop and mobile browser evidence is recorded in `docs/VALIDATION.md`. The dashboard now also links to the independent three-dimensional single-cloud experiment.

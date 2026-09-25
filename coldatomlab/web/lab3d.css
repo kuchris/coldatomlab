@@ -247,3 +247,70 @@
     padding: 14px;
   }
 }
+.three-camera {
+  margin: 28px 0;
+  padding: 24px;
+  border: 1px solid #dce4eb;
+  border-radius: 12px;
+  background: #fafcfe;
+}
+.camera3d-controls {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin: 20px 0;
+}
+.camera3d-controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 12px;
+  color: #435569;
+}
+.camera3d-controls .camera3d-noise {
+  flex-direction: row;
+  align-items: center;
+}
+.camera3d-controls input,
+.camera3d-controls select {
+  min-width: 0;
+  width: 100%;
+}
+.camera3d-controls input[type="checkbox"] {
+  width: auto;
+}
+.camera3d-images,
+.camera3d-raw {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  margin: 24px 0;
+}
+.camera3d-raw {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.three-camera figure {
+  margin: 0;
+  min-width: 0;
+}
+.three-camera figcaption {
+  color: #435569;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+.three-camera canvas {
+  width: 100%;
+  height: auto;
+}
+@media (max-width: 760px) {
+  .camera3d-controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .camera3d-images,
+  .camera3d-raw {
+    grid-template-columns: 1fr;
+  }
+  .three-camera {
+    padding: 14px;
+  }
+}

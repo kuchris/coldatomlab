@@ -49,6 +49,15 @@
       relative_phase: Math.PI,
     },
     sequence: { ...base, experiment: "sequence", atoms: 2000, dt: 0.006 },
+    camera: {
+      ...base,
+      length: 32,
+      experiment: "pair",
+      scattering_nm: 0,
+      atoms: 2000,
+      duration: 3,
+      relative_phase: 0.7,
+    },
     reverse: {
       ...base,
       experiment: "sequence",
@@ -66,8 +75,18 @@
     renderer = null,
     view = "slices";
   let pinned = null;
+  let generation = 0;
+  const cameraPanel = new window.Camera3DPanel(
+    el("results"),
+    () => request("export"),
+    (locked) => {
+      busy = locked;
+      controls();
+    },
+  );
   const f = (x, n = 3) => Number(x).toFixed(n);
   function controls() {
+    cameraPanel.update(snapshot, running, busy, generation);
     const experiment = el("experiment").value;
     for (const node of el("duration").closest("label").childNodes) {
       if (
@@ -186,6 +205,7 @@
     try {
       snapshot = await request(name, extra);
       if (name === "prepare" || name === "reset") {
+        generation++;
         dirty = false;
         setConfig(snapshot.config);
         el("engine").value = snapshot.backend?.type || "cpu";

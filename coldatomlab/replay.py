@@ -23,6 +23,12 @@ def verify_run(data):
 
 
 def verify_export(data):
+    if data.get("schema") == "coldatomlab-camera3d-comparison-v1":
+        return {key: verify_export(data[key]) for key in ("reference", "current")}
+    if data.get("schema") == "coldatomlab-camera3d-v1":
+        from .camera3d import verify_camera
+
+        return {"source": verify_export(data["source"]), **verify_camera(data)}
     if data.get("schema") == "coldatomlab-3d-comparison-v1":
         return {key: verify_export(data[key]) for key in ("reference", "current")}
     if data.get("schema") == "coldatomlab-webgpu-3d-v1":
