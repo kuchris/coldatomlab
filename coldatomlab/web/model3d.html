@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>3D model · Cold Atom Lab</title>
+    <link rel="stylesheet" href="/style.css" />
+    <style>
+      body {
+        max-width: 900px;
+        margin: 40px auto;
+        padding: 0 24px;
+        line-height: 1.8;
+      }
+      h1,
+      h2 {
+        margin-top: 30px;
+      }
+      pre {
+        white-space: pre-wrap;
+        background: #edf2f5;
+        padding: 20px;
+      }
+      a {
+        color: #2865b0;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      td,
+      th {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #dae1e8;
+      }
+    </style>
+  </head>
+  <body>
+    <a href="/#lab3d">← Back to 3D expansion</a>
+    <p class="eyebrow">MODEL / CONVENTIONS / SOURCES</p>
+    <h1>A numerical condensate in three dimensions</h1>
+    <p>
+      This experiment evolves a complex field on an x/y/z grid. All three trap
+      axes are removed on release; contact interactions remain. It is a
+      zero-temperature mean-field calculation, not a reconstruction of a
+      particular experimental image.
+    </p>
+    <h2>Scales and normalization</h2>
+    <pre>
+ω₀ = 2πf₀; a₀ = √(ℏ / mω₀); τ = ω₀t; Xᵢ = rᵢ/a₀
+∫ |ψ|² dX dY dZ = 1; g₃D = 4πNaₛ/a₀
+i ∂ψ/∂τ = [−½∇² + V + g₃D|ψ|²] ψ
+V = ½ Σᵢ (fᵢ/f₀)² Xᵢ² before release; V = 0 after release</pre
+    >
+    <p>
+      N uses the usual N−1 ≈ N convention. The mass is Rb-87. Number density is
+      N|ψ|²/a₀³. A projection along z is N/a₀² ∫|ψ|²dZ; its image-plane integral
+      returns the atom number. A central slice has volume-density units and is
+      not a projection. Energy is per condensate atom, displayed as E/h in Hz.
+    </p>
+    <h2>Preparation and numerical evolution</h2>
+    <p>
+      Interacting ground states use normalized imaginary time, exact local
+      nonlinear substeps and spectral kinetic propagation. The preparation panel
+      reports iteration count, step, stationary residual and runtime.
+      Noninteracting ground states start from the analytic oscillator. Real-time
+      Strang splitting uses the original full grid and never renormalizes the
+      state. The simulation step is independent of display frame rate.
+    </p>
+    <p>
+      The Fourier box is periodic. The outer band (at least two cells; otherwise
+      one-sixteenth of the side) is monitored. Evolution stops at the first step
+      where its probability exceeds 0.1%; this guard is not a rigorous error
+      bound. Refine time step, grid, box and preparation step before
+      interpreting a quantitative result. Norm conservation alone does not
+      demonstrate accuracy.
+    </p>
+    <h2>Independent theory comparisons</h2>
+    <pre>
+Ωᵢ = fᵢ/f₀
+g = 0: σᵢ(τ) = √[(1 + Ωᵢ²τ²) / (2Ωᵢ)]
+TF chemical potential: μTF = ½ [15g ΩxΩyΩz / (4π)]^(2/5)
+TF initial RMS: σᵢ(0) = √(2μTF) / (√7 Ωᵢ)
+Full-release scaling: bᵢ″ = Ωᵢ² / (bᵢ bx by bz), bᵢ(0)=1, bᵢ′(0)=0
+Absolute TF RMS: σᵢ(τ) = σᵢ(0)bᵢ(τ)</pre
+    >
+    <p>
+      The TF scaling ODE is solved separately from the 3D field. It does not
+      drive the visualization. The table distinguishes the absolute TF
+      prediction from scaling anchored to the numerical initial widths. Those
+      are different comparisons. When interactions are zero, the exact Gaussian
+      reference replaces TF.
+    </p>
+    <p>
+      TF requires chemical potential large compared with all three trap quanta
+      and a small initial kinetic contribution. The displayed ratios are
+      indicators, not experimental certification. Finite kinetic energy and
+      cloud tails cause legitimate GPE–TF differences even when the numerical
+      calculation has converged.
+    </p>
+    <h2>What is visible</h2>
+    <p>
+      The rotatable surface uses marching tetrahedra on the numerical density,
+      block averaged to a smaller rendering grid when indicated. Its threshold
+      is a fraction of that displayed grid's peak. The box stays fixed during
+      evolution. Central planes and column densities use the full solver grid.
+      These are ideal model observables with no virtual camera, thermal cloud,
+      loss, trap imperfections or optical calibration.
+    </p>
+    <h2>Established primary references</h2>
+    <p>
+      <a href="https://doi.org/10.1103/PhysRevLett.77.5315"
+        >Castin &amp; Dum, Physical Review Letters 77, 5315 (1996)</a
+      >: anisotropic Thomas–Fermi scaling and complete release.
+      <a href="https://doi.org/10.1103/RevModPhys.71.463"
+        >Dalfovo et al., Reviews of Modern Physics 71, 463 (1999)</a
+      >: trapped BEC mean-field theory, TF equilibrium, expansion and
+      finite-kinetic-energy corrections. The repository's docs/3D_REFERENCE.md
+      maps the equations to these sources; docs/MODEL3D.md records measured
+      implementation checks. Neither paper validates this software.
+    </p>
+    <h2>Reproduce a run</h2>
+    <p>
+      Pause, export the complete complex wavefunction and preparation/release
+      settings, then run:
+    </p>
+    <pre>
+uv run python -m coldatomlab.replay path/to/coldatomlab-3d-run.json</pre
+    >
+    <p>
+      Replay recomputes the preparation and evolution; it compares the final
+      complex field with the saved array. Preparation takes time again.
+      Performance labels count persistent numerical arrays, not peak process
+      memory.
+    </p>
+  </body>
+</html>

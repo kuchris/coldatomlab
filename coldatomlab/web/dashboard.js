@@ -9,6 +9,7 @@
     measurements: "Measurements",
     "camera-lab": "Virtual camera",
     benchmark: "Paper benchmark",
+    lab3d: "3D expansion",
   };
   const nav = $("lab-navigation");
   const toggle = $("nav-toggle");
@@ -21,9 +22,11 @@
       ? location.hash.slice(1) : "experiments";
     const library = route === "experiments";
     const benchmark = route === "benchmark";
+    const three = route === "lab3d";
     $("experiment-library").hidden = !library;
-    $("lab-workbench").hidden = library || benchmark;
+    $("lab-workbench").hidden = library || benchmark || three;
     $("paper-benchmark").hidden = !benchmark;
+    $("lab3d-page").hidden = !three;
     $("page-label").textContent = routes[route];
     document.title = `${routes[route]} · Cold Atom Lab`;
     document.querySelectorAll("[data-route]").forEach((link) => {
@@ -31,8 +34,9 @@
       else link.removeAttribute("aria-current");
     });
     closeNavigation();
-    if (!library && !benchmark && state) render();
+    if (!library && !benchmark && !three && state) render();
     if (benchmark) window.loadBenchmark();
+    if (three) window.showLab3D();
     requestAnimationFrame(() => {
       const target = route === "measurements" || route === "camera-lab"
         ? $(route) : $("main-content");

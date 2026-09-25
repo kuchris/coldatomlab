@@ -1,0 +1,393 @@
+"use strict";
+(() => {
+  const el = (id) => document.getElementById(`three-${id}`);
+  const keys = [
+    "n",
+    "length",
+    "dt",
+    "atoms",
+    "scattering_nm",
+    "reference_hz",
+    "fx_hz",
+    "fy_hz",
+    "fz_hz",
+    "duration",
+    "preparation_dt",
+  ];
+  const base = {
+    n: 64,
+    length: 24,
+    dt: 0.004,
+    atoms: 20000,
+    scattering_nm: 5.3,
+    reference_hz: 30,
+    fx_hz: 30,
+    fy_hz: 42,
+    fz_hz: 21,
+    duration: 2,
+    preparation_dt: 0.002,
+  };
+  const presets = {
+    interacting: base,
+    gaussian: { ...base, n: 48, scattering_nm: 0 },
+    tf: { ...base, n: 96, length: 48, atoms: 150000, duration: 3 },
+  };
+  let snapshot = null,
+    session = null,
+    busy = false,
+    running = false,
+    dirty = false,
+    renderer = null,
+    view = "slices";
+  const f = (x, n = 3) => Number(x).toFixed(n);
+  function controls() {
+    el("parameters").disabled = busy || running;
+    el("prepare").disabled = busy || running;
+    el("reset").disabled = !snapshot || busy || running;
+    el("step").disabled =
+      !snapshot ||
+      busy ||
+      running ||
+      dirty ||
+      snapshot.complete ||
+      !!snapshot.warning;
+    el("release").disabled =
+      !snapshot ||
+      busy ||
+      running ||
+      dirty ||
+      snapshot.diagnostics.released ||
+      !!snapshot.warning;
+    el("run").disabled =
+      !snapshot ||
+      (!running && (busy || dirty || snapshot.complete || !!snapshot.warning));
+    el("export").disabled = !snapshot || busy || running;
+    el("run").textContent = running ? "Ⅱ Pause" : "▶ Run";
+    el("status").textContent = running
+      ? "Running"
+      : busy
+        ? "Working…"
+        : dirty
+          ? "Settings pending"
+          : !snapshot
+            ? "Not prepared"
+            : snapshot.warning
+              ? "Stopped"
+              : snapshot.complete
+                ? "Complete"
+                : snapshot.diagnostics.steps
+                  ? "Paused"
+                  : "Ready";
+  }
+  async function request(action, extra = {}) {
+    const response = await fetch("/api3d", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, session, ...extra }),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "3D request failed.");
+    session = data.session;
+    return data.result;
+  }
+  function error(err) {
+    running = false;
+    el("error").textContent = err.message;
+    el("error").hidden = false;
+  }
+  function setConfig(c) {
+    keys.forEach((k) => {
+      el(k).value = c[k];
+    });
+  }
+  async function action(name, extra = {}) {
+    if (busy) return;
+    busy = true;
+    el("error").hidden = true;
+    controls();
+    if (name === "prepare")
+      el("prepare-note").textContent =
+        "Preparing the 3D ground state… Large grids can take over a minute. Other pages remain available.";
+    try {
+      snapshot = await request(name, extra);
+      if (name === "prepare" || name === "reset") {
+        dirty = false;
+        setConfig(snapshot.config);
+      }
+      render();
+      if (snapshot.complete || snapshot.warning) running = false;
+    } catch (err) {
+      error(err);
+    } finally {
+      busy = false;
+      controls();
+    }
+  }
+  async function tick() {
+    if (!running) return;
+    await action("step", { count: 8 });
+    if (running) setTimeout(tick, 20);
+  }
+  function images() {
+    if (!snapshot) return;
+    const s = snapshot,
+      arrays = s[view],
+      n = s.config.n,
+      a = s.scales.length_um;
+    const factor = s.config.atoms / a ** (view === "slices" ? 3 : 2);
+    const peak = Math.max(
+      ...arrays.map((rows) => Math.max(...rows.map((row) => Math.max(...row)))),
+    );
+    const bounds = [s.x[0] * a, s.x.at(-1) * a];
+    ["xy", "xz", "yz"].forEach((name, idx) => {
+      const canvas = el(name),
+        ctx = canvas.getContext("2d"),
+        w = canvas.width,
+        h = canvas.height;
+      ctx.fillStyle = "#0e2028";
+      ctx.fillRect(0, 0, w, h);
+      const off = document.createElement("canvas");
+      off.width = n;
+      off.height = n;
+      const oc = off.getContext("2d"),
+        pixels = oc.createImageData(n, n);
+      arrays[idx].forEach((row, y) =>
+        row.forEach((p, x) => {
+          const t = Math.max(0, p / peak),
+            i = ((n - 1 - y) * n + x) * 4;
+          pixels.data.set([14 + 70 * t, 32 + 184 * t, 40 + 179 * t, 255], i);
+        }),
+      );
+      oc.putImageData(pixels, 0, 0);
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(off, 43, 20, w - 60, h - 65);
+      ctx.fillStyle = "#b2c8ce";
+      ctx.font = "11px sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText(f(bounds[0], 1), 43, h - 28);
+      ctx.textAlign = "right";
+      ctx.fillText(f(bounds[1], 1), w - 17, h - 28);
+      ctx.textAlign = "center";
+      ctx.fillText(`${name[0]} / µm`, w / 2, h - 9);
+      ctx.save();
+      ctx.translate(15, h / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText(
+        `${name[1]} / µm  [${f(bounds[0], 1)}, ${f(bounds[1], 1)}]`,
+        0,
+        0,
+      );
+      ctx.restore();
+      el(`${name}-label`).textContent =
+        `${name.toUpperCase()} · ${view === "slices" ? ["z = 0", "y = 0", "x = 0"][idx] : ["integrated along z", "integrated along y", "integrated along x"][idx]}`;
+    });
+    el("image-note").textContent =
+      `${view === "slices" ? "Central planes through the numerical volume" : "Ideal line-of-sight projections; no camera noise or optics"}. Shared linear color scale: 0–${f(peak * factor, 2)} atoms / ${view === "slices" ? "µm³" : "µm²"}. All views use the full ${n}³ solver grid.`;
+  }
+  function theory() {
+    const s = snapshot,
+      c = s.config,
+      w = [c.fx_hz, c.fy_hz, c.fz_hz].map((v) => v / c.reference_hz);
+    const released = s.history.find((h) => h.released)?.steps;
+    return s.tf
+      ? s.tf.widths
+      : s.history.map((h) => {
+          const t =
+            released === undefined
+              ? 0
+              : Math.max(0, (h.steps - released) * c.dt);
+          return w.map((o) => Math.sqrt((1 + o * o * t * t) / (2 * o)));
+        });
+  }
+  function historyPlot(ref) {
+    const s = snapshot,
+      canvas = el("width-history"),
+      ctx = canvas.getContext("2d"),
+      w = canvas.width,
+      h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+    const left = 62,
+      right = w - 24,
+      top = 24,
+      bottom = h - 40;
+    const a = s.scales.length_um,
+      tmax = Math.max(s.diagnostics.time, s.config.dt) * s.scales.time_ms;
+    const ymax =
+      1.15 * Math.max(...s.history.flatMap((d) => d.widths), ...ref.flat()) * a;
+    ctx.font = "13px sans-serif";
+    ctx.fillStyle = "#687887";
+    ctx.strokeStyle = "#e5e9ee";
+    for (let i = 0; i <= 4; i++) {
+      const y = bottom - ((bottom - top) * i) / 4;
+      ctx.beginPath();
+      ctx.moveTo(left, y);
+      ctx.lineTo(right, y);
+      ctx.stroke();
+      ctx.fillText(f((ymax * i) / 4, 1), 16, y + 4);
+      const x = left + ((right - left) * i) / 4;
+      ctx.fillText(f((tmax * i) / 4, 2), x - 10, h - 18);
+    }
+    ctx.fillText("RMS / µm", 12, 14);
+    ctx.fillText("time / ms", w - 90, h - 2);
+    const colors = ["#3672dd", "#178e87", "#b58227"];
+    for (let axis = 0; axis < 3; axis++)
+      for (const theoretical of [false, true]) {
+        ctx.strokeStyle = colors[axis];
+        ctx.lineWidth = theoretical ? 1.8 : 2.4;
+        ctx.setLineDash(theoretical ? [7, 5] : []);
+        ctx.beginPath();
+        s.history.forEach((d, i) => {
+          const x =
+            left + ((d.time * s.scales.time_ms) / tmax) * (right - left);
+          const y =
+            bottom -
+            (((theoretical ? ref[i][axis] : d.widths[axis]) * a) / ymax) *
+              (bottom - top);
+          if (i) ctx.lineTo(x, y);
+          else ctx.moveTo(x, y);
+        });
+        ctx.stroke();
+      }
+    ctx.setLineDash([]);
+  }
+  function render() {
+    if (!snapshot) return;
+    const s = snapshot,
+      d = s.diagnostics,
+      c = s.config,
+      a = s.scales.length_um,
+      p = s.preparation;
+    el("surface-empty").hidden = true;
+    el("results").hidden = false;
+    if (!renderer) renderer = new window.DensitySurface3D(el("surface"));
+    renderer.update(s, Number(el("iso").value) / 100);
+    el("trap").textContent = d.released
+      ? "All axes released"
+      : "Harmonic trap on · x / y / z";
+    el("scene-units").textContent =
+      `Box side ${f(c.length * a, 1)} µm · x / y / z`;
+    el("render-note").textContent =
+      `Numerical isodensity surface at ${f((renderer.level * c.atoms) / a ** 3, 2)} atoms / µm³. ${c.n}³ field → ${s.volume_n}³ ${s.volume_stride > 1 ? "block-averaged" : "rendering"} volume. Threshold is relative to the displayed volume peak; the box and scale stay fixed during expansion.`;
+    el("time").textContent = f(d.time * s.scales.time_ms);
+    ["x", "y", "z"].forEach((axis, i) => {
+      el(`width-${axis}`).textContent = f(d.widths[i] * a);
+    });
+    el("norm").textContent = `Norm ${d.norm.toFixed(10)}`;
+    el("energy").textContent =
+      `Energy per atom / h ${f(d.energy * s.scales.energy_hz, 2)} Hz`;
+    el("aspect").textContent =
+      `Aspect x/z ${f(d.aspect_xz)} · y/z ${f(d.aspect_yz)}`;
+    el("boundary").textContent =
+      `Boundary probability ${(100 * d.edge_probability).toExponential(2)}%`;
+    el("warning").hidden = !s.warning;
+    el("warning").textContent = s.warning;
+    el("prepare-note").textContent =
+      `Prepared in ${f(p.elapsed_seconds, 1)} s. Parameter edits take effect on Prepare. Duration is measured from release, or from preparation while trapped.`;
+    const ref = theory(),
+      last = ref.at(-1);
+    el("theory-title").textContent = s.tf
+      ? "Absolute TF RMS / µm"
+      : "Exact Gaussian RMS / µm";
+    el("theory-table").innerHTML = ["x", "y", "z"]
+      .map(
+        (axis, i) =>
+          `<tr><td>${axis}</td><td>${f(d.widths[i] * a, 4)}</td><td>${f(last[i] * a, 4)}</td><td>${f(100 * (d.widths[i] / last[i] - 1), 3)}%</td><td>${s.tf ? f(s.history[0].widths[i] * s.tf.scales.at(-1)[i] * a, 4) : "—"}</td></tr>`,
+      )
+      .join("");
+    el("theory-note").textContent = s.tf
+      ? `Castin–Dum Thomas–Fermi approximation: initial Ekin/Eint = ${f(s.tf_kinetic_ratio, 3)}, minimum µTF/(ℏωᵢ) = ${f((s.tf.chemical_potential / Math.max(c.fx_hz, c.fy_hz, c.fz_hz)) * c.reference_hz, 1)}. ${s.tf_kinetic_ratio > 0.1 ? "Kinetic energy is appreciable; TF is only a rough comparison here." : "Finite kinetic energy still causes physical differences from TF scaling."} Percentages compare with theory, not experimental data. Before release the reference stays at its initial width.`
+      : "Exact noninteracting Gaussian reference (aₛ = 0). Width agreement tests free evolution; it is not experimental validation.";
+    el("theory-note").textContent +=
+      ` Reference aspect ratios: x/z ${f(last[0] / last[2])}, y/z ${f(last[1] / last[2])}. Numerical deviations: ${f(100 * (d.aspect_xz / (last[0] / last[2]) - 1), 2)}%, ${f(100 * (d.aspect_yz / (last[1] / last[2]) - 1), 2)}%.`;
+    el("performance").textContent =
+      `${p.kind}; ${p.iterations} iterations at Δτ=${p.dt}; relative stationary residual ${p.relative_stationary_residual.toExponential(2)}. Preparation ${f(p.elapsed_seconds, 2)} s; last evolution batch ${f(s.last_batch_seconds, 3)} s. Persistent numerical arrays ${f(p.persistent_array_bytes / 1024 ** 2, 1)} MiB; excludes temporary FFT arrays, Python/JSON and browser memory. Rendering uses ${renderer.triangles.length} triangles.`;
+    const gas = d.peak_density * c.atoms * ((c.scattering_nm * 0.001) / a) ** 3;
+    el("physical").textContent =
+      `Norm-one convention; g₃D=${f(s.scales.interaction, 3)}; a₀=${f(a, 4)} µm; 1/ω₀=${f(s.scales.time_ms, 4)} ms. Current peak gas parameter n aₛ³=${gas.toExponential(2)}. Zero-temperature mean field with contact repulsion; no thermal cloud, losses or calibrated imaging. No transverse trap remains after release.`;
+    images();
+    historyPlot(ref);
+  }
+  el("form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    action("prepare", {
+      config: Object.fromEntries(keys.map((k) => [k, Number(el(k).value)])),
+    });
+  });
+  keys.forEach((k) =>
+    el(k).addEventListener("input", () => {
+      dirty = true;
+      controls();
+    }),
+  );
+  el("load").addEventListener("click", () => {
+    const preset = el("preset").value;
+    setConfig(presets[preset]);
+    dirty = true;
+    controls();
+    el("preset-note").textContent =
+      preset === "tf"
+        ? "150,000 atoms, 96³ grid, full release. Preparation may take over a minute. TF remains an approximation; this is not a paper reproduction."
+        : preset === "gaussian"
+          ? "Interactions set to zero. Compare all three numerical widths with the exact free Gaussian solution."
+          : "Repulsive Rb-87 gas. The three-axis field evolves numerically.";
+  });
+  el("release").addEventListener("click", () => action("release"));
+  el("step").addEventListener("click", () => action("step", { count: 1 }));
+  el("reset").addEventListener("click", () => action("reset"));
+  el("run").addEventListener("click", () => {
+    running = !running;
+    controls();
+    if (running && !busy) tick();
+  });
+  el("iso").addEventListener("input", () => {
+    el("iso-value").textContent = `${el("iso").value}% of peak`;
+    if (snapshot) render();
+  });
+  el("zoom").addEventListener("input", () => {
+    if (renderer) {
+      renderer.zoom = Number(el("zoom").value);
+      renderer.draw();
+    }
+  });
+  el("home").addEventListener("click", () => {
+    el("zoom").value = 1;
+    if (renderer) {
+      renderer.zoom = 1;
+      renderer.home();
+    }
+  });
+  for (const mode of ["slices", "columns"])
+    el(mode).addEventListener("click", () => {
+      view = mode;
+      for (const key of ["slices", "columns"]) {
+        el(key).classList.toggle("selected", key === mode);
+        el(key).setAttribute("aria-pressed", String(key === mode));
+      }
+      images();
+    });
+  el("export").addEventListener("click", async () => {
+    busy = true;
+    controls();
+    try {
+      const data = await request("export"),
+        url = URL.createObjectURL(
+          new Blob([JSON.stringify(data)], { type: "application/json" }),
+        );
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "coldatomlab-3d-run.json";
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      error(err);
+    } finally {
+      busy = false;
+      controls();
+    }
+  });
+  window.showLab3D = () => {
+    if (!renderer) renderer = new window.DensitySurface3D(el("surface"));
+    controls();
+  };
+  controls();
+})();

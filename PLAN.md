@@ -51,7 +51,7 @@ Acceptance criteria:
 - Validate actual cloud splitting, lower excitation for a controlled slower ramp, sign and approximate magnitude of bias-induced phase, norm preservation, dynamic time-step/grid/domain convergence, partial and complete replay, and invalid-sequence handling.
 - Exercise the actual browser timeline and comparison workflows, including mobile layouts. Preserve the original single/two-cloud tests.
 
-Status: implemented; see `docs/VALIDATION.md` for measured evidence and limitations. Full three-dimensional evolution remains a future milestone.
+Status: implemented; see `docs/VALIDATION.md` for measured evidence and limitations. The separate fifth milestone supplies full three-dimensional single-cloud evolution.
 
 ## Third milestone: laboratory scales and literature-backed examples
 
@@ -83,8 +83,21 @@ Compare a Gaussian-envelope sinusoidal fit of the numerical line density with th
 
 Status: implemented and verified. See `docs/BENCHMARK.md` for method, values and limits; `docs/SHIN_REFERENCE.md` for the source audit; and `docs/VALIDATION.md` for numerical and browser evidence.
 
-## Future model work
+## Fifth milestone: interacting 3D single-cloud expansion
 
-Dashboard interface: implemented with a light navigation shell, searchable experiment cards, grid/list views and direct workspace/measurement/camera links. Template illustrations are explicitly labeled; selecting a template stages its experiment type for preparation. Navigation preserves the solver session, pending settings and pinned comparisons. Desktop and mobile browser evidence is recorded in `docs/VALIDATION.md`. This interface change retains the effective 2D model; three-dimensional evolution is a separate future milestone.
+- Add an independent norm-one 3D GPE solver, with x/y/z array order, harmonic preparation and complete three-axis release. Use `a0=sqrt(hbar/(m omega0))`, time `1/omega0`, and `g3D=4 pi N as/a0`. Rb-87 physical controls and a zero-interaction analytic reference must be explicit. No retained axial confinement applies in this experiment.
+- Separate numerical state, snapshot projections and rendering. Real-time Strang split-step Fourier evolution must preserve norm without renormalization. Imaginary-time preparation must report its step, convergence and iteration count. Finite periodic domains must warn/stop near boundaries.
+- Benchmark CPU time and array memory; use a bounded grid suitable for local operation, and retain grid/domain/time/preparation-step refinement controls for verification.
+- Provide a rotatable isodensity surface derived from the numerical volume, orthogonal central slices and three column-density projections. Label any coarsened rendering grid, selected isolevel, units and projected axes. No sodium/Rb camera inference from these ideal projections.
+- Complete Prepare / Release / Run / Pause / Step / Reset, widths x/y/z, aspect ratios, norm, energy and boundary monitoring. Preserve separate 2D state through navigation. Export the complete final complex wavefunction and reconstruct it via the existing replay command.
+- Validate 3D noninteracting ground-state energy/density and released Gaussian widths, interacting stationary-state residual, norm, time/space/domain/preparation-step refinement, projection integrals, exact release/replay, invalid-input recovery and boundary stopping.
+- Compare a declared strong-interaction case against Castin-Dum Thomas-Fermi scaling, showing all three widths/aspect ratios and deviations. Distinguish the approximation's finite-kinetic-energy error from numerical error. Also show when the TF approximation is not applicable; no claim of experimental reproduction.
+- Exercise actual 3D browser rendering, rotation, selectors, controls, export/replay, errors, navigation and mobile layouts. Report this separately from numerical checks.
+
+Status: implemented and verified. See `docs/MODEL3D.md` for numerical convergence, TF comparison, performance, replay and browser evidence, and `docs/3D_REFERENCE.md` for the primary-source audit.
+
+## Later extensions
+
+Dashboard interface: implemented with a light navigation shell, searchable experiment cards, grid/list views and direct workspace/measurement/camera links. Template illustrations are explicitly labeled; selecting a template stages its experiment type for preparation. Navigation preserves the solver session, pending settings and pinned comparisons. Desktop and mobile browser evidence is recorded in `docs/VALIDATION.md`. The dashboard now also links to the independent three-dimensional single-cloud experiment.
 
 vortices and stirring; additional experiment protocols. These are separate from the first-release acceptance criteria.

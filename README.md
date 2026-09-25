@@ -17,7 +17,7 @@ Open **http://127.0.0.1:8765**. Stop the server with `Ctrl+C`. Use `--port 8766`
 
 ## Try an experiment
 
-The home page is an **Experiments** dashboard. Search the three experiment templates, switch between grid and list views, or choose **Set up expansion / interference / sequence**. Choosing a card stages the experiment type in the existing controls; review the settings and click **Prepare experiment** to apply them. It keeps the other current parameters. **Open workspace** resumes the current experiment without changing settings.
+The home page is an **Experiments** dashboard. Search four templates or switch between grid and list views. **3D expansion** opens its own experiment and preparation controls. The original **Set up expansion / interference / sequence** cards stage the experiment type in the 2D workspace; review the settings and click **Prepare experiment** to apply them. **Open workspace** resumes the 2D experiment without changing settings.
 
 The left navigation opens the workspace, measurements, virtual camera and reference guides. On narrow screens, use the menu button. Navigation keeps the current solver session, pending settings and pinned run/image comparisons; it does not pause a running experiment. Reloading still starts a new session and clears pinned records. Template diagrams are labeled illustrations, while workspace plots come from the numerical state. Direct links to `/#workspace`, `/#measurements` and `/#camera-lab` are supported.
 
@@ -68,6 +68,18 @@ uv run python -m scripts.benchmark_figure
 
 Both write to ignored `artifacts/`. The report has its own `coldatomlab-shin-benchmark-v1` schema; reproduce it with the benchmark command rather than the experiment replay command.
 
+## Interacting 3D expansion (v0.5)
+
+Open **3D expansion** in the sidebar, or visit **http://127.0.0.1:8765/#lab3d**. Choose a reference example, **Load settings**, then **Prepare 3D experiment**. Preparation can take tens of seconds or several minutes on the largest grids. **Release all axes**, then **Run**. **Pause**, **Step**, and **Reset** act on this independent 3D session; navigation preserves both it and the original 2D workspace.
+
+Drag the numerical density surface or use arrow keys to rotate it. Zoom and isodensity change only the view. Switch between **Central slices** (atoms/µm³) and **Column density** (atoms/µm²); all three planes use the full solver grid, while the surface states its rendering-grid coarsening. These projections have no absorption-camera model.
+
+The **Noninteracting analytic check** compares widths with the exact Gaussian result. **Interacting cloud** demonstrates finite-interaction expansion. **Thomas–Fermi expansion** uses 150,000 Rb-87 atoms on a 96³ grid and compares all three widths against Castin–Dum scaling, including shape inversion. The absolute TF prediction and scaling anchored to numerical initial widths are shown separately. Finite kinetic energy prevents exact TF agreement; this is a theory benchmark, not a reproduction of measured experimental data.
+
+The panels report norm, energy per atom, aspect ratios, boundary population, preparation residual and measured performance. Advanced controls support time/preparation-step, grid and domain refinement up to 128³. **Export 3D run** saves the full complex field; the same replay command below verifies it. The four-session 3D server limit bounds retained memory; re-preparing an existing page reuses its session.
+
+See [3D conventions and measured checks](docs/MODEL3D.md) and the [Castin–Dum / Dalfovo source audit](docs/3D_REFERENCE.md). Reproduce the extended numerical comparisons with `uv run python -m scripts.validate_3d` (about 15–20 minutes for all refinement cases on the measured machine; writes ignored `artifacts/3d-validation.json`). Then `uv run python -m scripts.three_figure` renders the widths, aspect ratios and numerical checks as a standalone figure.
+
 ## Save and reproduce
 
 Pause and click **Export run** to download a JSON record containing parameters, preparation metadata, the release protocol, diagnostics, and the final complex wavefunction.
@@ -100,15 +112,17 @@ uv run python -X utf8 -m scripts.physical_browser_check
 uv run python -X utf8 -m scripts.camera_browser_check
 uv run python -X utf8 -m scripts.dashboard_browser_check
 uv run python -X utf8 -m scripts.benchmark_browser_check
+uv run python -X utf8 -m scripts.three_browser_check
+uv run python -X utf8 -m scripts.three_tf_browser_check
 ```
 
 Browser checks exercise the actual controls, download and replay a run, compare interference phases, verify invalid-setting recovery and boundary stopping, and capture desktop/mobile screenshots. Reports and generated experiment files go to ignored `artifacts/`. See [validation evidence](docs/VALIDATION.md) for tested cases and limits.
 
 ## Model scope
 
-This is an effective two-dimensional Gross–Pitaevskii model of an already prepared, dilute, weakly interacting condensate. In-plane release retains tight transverse confinement. The two-cloud initial state is an ideal coherent Gaussian pair. Dimensionless mode leaves physical scales unspecified. Laboratory mode derives coupling from physical parameters and reports conservative frozen-axial applicability checks.
+The original workspace uses an effective two-dimensional Gross–Pitaevskii model of an already prepared, dilute, weakly interacting condensate. In-plane release retains tight transverse confinement. The two-cloud initial state is an ideal coherent Gaussian pair. Dimensionless mode leaves physical scales unspecified. Laboratory mode derives coupling from physical parameters and reports conservative frozen-axial applicability checks. The separate v0.5 single-cloud experiment evolves a genuine 3D field with complete trap release and its own coupling convention.
 
-Laser cooling, condensation formation, a thermal component, full 3D expansion, and full optical/atomic imaging dynamics are outside this release. The main density/phase views are model diagnostics; the separate camera panel produces explicitly simplified synthetic images. Numerical accuracy depends on the chosen grid, step, and domain; passing reference cases does not validate every parameter combination.
+Laser cooling, condensation formation, a thermal component, interacting 3D splitting/interference, and full optical/atomic imaging dynamics are outside this release. The density/phase views are model diagnostics; the separate 2D camera panel produces explicitly simplified synthetic images. Numerical accuracy depends on the chosen grid, step, and domain; passing reference cases does not validate every parameter combination.
 
 See [the model and conventions](docs/MODEL.md), [implementation plan](PLAN.md), and [agent guidance](AGENTS.md).
 

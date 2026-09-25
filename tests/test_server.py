@@ -56,6 +56,37 @@ def test_http_rejects_foreign_origin_and_path_traversal(endpoint):
     assert exc.value.code == 404
 
 
+def test_3d_api_isolation_invalid_recovery_and_assets(endpoint):
+    def post3d(data):
+        request = Request(
+            endpoint + "/api3d",
+            data=json.dumps(data).encode(),
+            headers={"Content-Type": "application/json"},
+        )
+        with urlopen(request) as response:
+            return json.load(response)
+
+    old = post(endpoint, {"action": "prepare", "config": {"experiment": "double", "n": 64}})
+    run = post3d({"action": "prepare", "config": {"n": 32, "length": 16, "scattering_nm": 0}})
+    key = run["session"]
+    post3d({"action": "release", "session": key})
+    advanced = post3d({"action": "step", "session": key, "count": 3})
+    assert advanced["result"]["diagnostics"]["steps"] == 3
+    with pytest.raises(HTTPError) as error:
+        post3d({"action": "prepare", "session": key, "config": {"n": 17}})
+    assert error.value.code == 400
+    assert post3d({"action": "state", "session": key})["result"]["diagnostics"]["steps"] == 3
+    assert post(endpoint, {"action": "state", "session": old["session"]}) == old
+    assert post3d({"action": "export", "session": key})["result"]["schema"] == "coldatomlab-3d-v1"
+    assert post3d({"action": "reset", "session": key})["result"]["diagnostics"]["steps"] == 0
+    for path in ("/lab3d.js", "/surface3d.js", "/lab3d.css", "/model3d"):
+        with urlopen(endpoint + path) as response:
+            assert response.status == 200
+    with pytest.raises(HTTPError) as error:
+        urlopen(Request(endpoint + "/api3d", data=b"{}", headers={"Origin": "https://other.test"}))
+    assert error.value.code == 403
+
+
 def test_camera_endpoint_keeps_state_and_recovers_after_invalid_settings(endpoint):
     run = post(
         endpoint,

@@ -1,0 +1,209 @@
+#lab3d-page {
+  width: 100%;
+  min-width: 0;
+  max-width: 1500px;
+  margin: auto;
+}
+#three-results {
+  min-width: 0;
+}
+.three-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 26px;
+  align-items: start;
+}
+.three-observation {
+  min-width: 0;
+  background: white;
+  border: 1px solid #dfe5eb;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.three-observation .panel-heading {
+  padding: 22px 24px;
+}
+#three-trap {
+  font-size: 12px;
+  color: #58707a;
+}
+.three-scene {
+  position: relative;
+  background: #0e2028;
+}
+#three-surface {
+  width: 100%;
+  height: auto;
+  display: block;
+  touch-action: none;
+  cursor: grab;
+}
+#three-surface:active {
+  cursor: grabbing;
+}
+#three-surface-empty {
+  position: absolute;
+  top: 42%;
+  width: 100%;
+  text-align: center;
+  color: #bdced4;
+  pointer-events: none;
+}
+.three-scene-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: #a6bbc5;
+  padding: 0 20px 16px;
+  font-size: 11px;
+}
+.three-view-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px 0;
+  gap: 12px;
+}
+.three-view-controls label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  font-size: 12px;
+}
+.three-view-controls input {
+  width: 100px;
+  padding: 0;
+}
+.three-note {
+  font-size: 12px;
+  line-height: 1.7;
+  color: #657688;
+}
+.three-observation > .three-note {
+  margin: 12px 20px;
+}
+.three-observation .transport {
+  padding: 16px 20px;
+}
+.three-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid #e5e9ee;
+  padding: 20px;
+  gap: 12px;
+}
+.three-metrics span {
+  display: block;
+  font-size: 10px;
+  color: #788794;
+  letter-spacing: 0.06em;
+}
+.three-metrics strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 22px;
+  font-weight: 500;
+}
+.three-controls {
+  border: 1px solid #dfe5eb;
+  border-radius: 10px;
+}
+.three-controls .numerics {
+  margin: 18px 0;
+}
+.three-controls .numerics .pair {
+  margin-top: 12px;
+}
+.three-section-heading {
+  margin: 38px 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.three-section-heading h2 {
+  margin: 4px 0;
+}
+.three-image-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+.three-image-grid figure {
+  margin: 0;
+  min-width: 0;
+}
+.three-image-grid figcaption {
+  font-size: 12px;
+  color: #596e7a;
+  margin-bottom: 10px;
+}
+.three-image-grid canvas {
+  width: 100%;
+  display: block;
+  border-radius: 6px;
+}
+.three-diagnostics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 25px;
+  padding: 16px 0;
+  font-size: 12px;
+  color: #456177;
+}
+#three-width-history {
+  width: 100%;
+  display: block;
+  background: white;
+  border: 1px solid #e1e6ec;
+  border-radius: 6px;
+}
+#three-results .table-scroll {
+  overflow: auto;
+}
+#three-results table {
+  min-width: 640px;
+}
+#three-results details p {
+  font-size: 12px;
+  line-height: 1.8;
+}
+.open-experiment-link {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+}
+@media (max-width: 1100px) {
+  .three-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .three-controls {
+    max-width: none;
+  }
+}
+@media (max-width: 600px) {
+  .three-image-grid {
+    grid-template-columns: 1fr;
+  }
+  .three-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .three-scene-label {
+    flex-direction: column;
+  }
+  .three-observation .transport {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .three-observation .transport-buttons {
+    flex-wrap: wrap;
+  }
+  .three-observation .panel-heading {
+    padding: 16px;
+  }
+}

@@ -10,10 +10,13 @@
     <title>Cold Atom Lab — Matter in motion</title>
     <link rel="stylesheet" href="/style.css" />
     <link rel="stylesheet" href="/dashboard.css" />
+    <link rel="stylesheet" href="/lab3d.css" />
     <script src="/physical.js" defer></script>
     <script src="/camera.js" defer></script>
     <script src="/app.js" defer></script>
     <script src="/benchmark.js" defer></script>
+    <script src="/surface3d.js" defer></script>
+    <script src="/lab3d.js" defer></script>
     <script src="/dashboard.js" defer></script>
   </head>
   <body class="weblab">
@@ -30,24 +33,29 @@
       <nav aria-label="Laboratory">
         <a href="#experiments" data-route="experiments"><span aria-hidden="true">▦</span>Experiments</a>
         <a href="#workspace" data-route="workspace"><span aria-hidden="true">◉</span>Experiment workspace</a>
+        <a href="#lab3d" data-route="lab3d"><span aria-hidden="true">◇</span>3D expansion <small>NEW</small></a>
         <a href="#measurements" data-route="measurements"><span aria-hidden="true">⌁</span>Measurements</a>
         <a href="#camera-lab" data-route="camera-lab"><span aria-hidden="true">▣</span>Virtual camera</a>
       </nav>
       <p class="nav-heading">Resources</p>
       <nav aria-label="Resources">
         <a href="#benchmark" data-route="benchmark"><span aria-hidden="true">≋</span>Paper benchmark</a>
-        <button id="nav-model"><span aria-hidden="true">◎</span>Model & assumptions</button>
+        <button id="nav-model"><span aria-hidden="true">◎</span>2D model & limits</button>
         <a href="/physical-units" target="_blank" rel="noopener"><span aria-hidden="true">↗</span>Units & literature</a>
         <a href="/imaging" target="_blank" rel="noopener"><span aria-hidden="true">↗</span>Imaging guide</a>
       </nav>
-      <div class="sidebar-bottom"><span class="model-pill">Effective 2D model</span><p>Explore coherent matter.<br>One experiment at a time.</p><small>Cold Atom Lab · v0.4</small></div>
+      <div class="sidebar-bottom"><span class="model-pill">2D & 3D condensates</span><p>Explore coherent matter.<br>One experiment at a time.</p><small>Cold Atom Lab · v0.5</small></div>
     </aside>
     <main id="main-content" tabindex="-1">
       <section id="experiment-library" aria-labelledby="library-title">
         <div class="library-heading"><div><h1 id="library-title">Experiments</h1><p>Prepare, evolve and measure a Bose–Einstein condensate.</p></div><div class="library-actions"><a class="button-link" href="/physical-units" target="_blank" rel="noopener">Documentation ↗</a><a class="button-link primary" href="#workspace">Open workspace →</a></div></div>
         <div class="library-toolbar"><label class="experiment-search"><span aria-hidden="true">⌕</span><input type="search" id="experiment-search" placeholder="Search experiments…" aria-label="Search experiments" /></label><div class="library-view" role="group" aria-label="Experiment layout"><button id="grid-layout" aria-label="Grid view" aria-pressed="true">▦</button><button id="list-layout" aria-label="List view" aria-pressed="false">☰</button></div></div>
-        <p class="library-count" id="library-count" aria-live="polite">3 experiments</p>
+        <p class="library-count" id="library-count" aria-live="polite">4 experiments</p>
         <div class="experiment-cards" id="experiment-cards">
+          <article class="experiment-card" data-search="3d three dimensional expansion full release interacting cloud thomas fermi castin dum">
+            <div class="card-diagram" aria-hidden="true"><svg viewBox="0 0 320 140"><g fill="none" stroke="#9ab3cc"><ellipse cx="160" cy="70" rx="72" ry="45"/><ellipse cx="160" cy="70" rx="72" ry="17"/><ellipse cx="160" cy="70" rx="24" ry="45"/><path d="m110 99 100-58M160 15v110M72 70h176" stroke-dasharray="3 5"/></g><circle cx="160" cy="70" r="4" fill="#2373d7"/></svg><span>Illustrative diagram</span></div>
+            <div class="card-copy"><div class="card-category">04 <span>Full 3D · New</span></div><h2>Three-dimensional expansion</h2><p>Release all three axes. Rotate the density surface and compare with scaling theory.</p><div class="card-tags"><span>3D GPE</span><span>Castin–Dum</span></div><a class="open-experiment-link" href="#lab3d">Open 3D experiment →</a></div>
+          </article>
           <article class="experiment-card" data-search="condensate expansion single cloud trap release width">
             <div class="card-diagram" aria-hidden="true"><svg viewBox="0 0 320 140"><g fill="none" stroke="#9ab3cc"><ellipse cx="160" cy="72" rx="104" ry="48"/><ellipse cx="160" cy="72" rx="78" ry="36"/><ellipse cx="160" cy="72" rx="49" ry="23"/><ellipse cx="160" cy="72" rx="23" ry="11"/></g><path d="M28 72h264M160 13v118" stroke="#dce4ed" stroke-dasharray="3 5"/><circle cx="160" cy="72" r="4" fill="#2373d7"/></svg><span>Illustrative diagram</span></div>
             <div class="card-copy"><div class="card-category">01 <span>Single cloud</span></div><h2>Condensate expansion</h2><p>Release a trapped cloud and follow its density and width over time.</p><div class="card-tags"><span>Density</span><span>RMS widths</span></div><button class="open-experiment" data-experiment="single">Set up expansion <span aria-hidden="true">→</span></button></div>
@@ -62,9 +70,45 @@
           </article>
         </div>
         <div id="library-empty" hidden><h2>No matching experiments</h2><p>Try “phase”, “expansion” or “barrier”.</p><button id="clear-search">Clear search</button></div>
-        <div class="library-note"><span aria-hidden="true">ⓘ</span><p>All experiments use an effective 2D condensate model. Release removes the in-plane trap; transverse confinement remains. <button id="library-model">Read the assumptions →</button></p></div>
+        <div class="library-note"><span aria-hidden="true">ⓘ</span><p>The original three experiments retain transverse confinement in an effective 2D model. The new 3D experiment evolves all axes and releases the entire trap. <button id="library-model">Read the 2D assumptions →</button></p></div>
         <div class="library-session"><div><span class="eyebrow">CURRENT WORKSPACE</span><p id="library-session-status">Preparing your first cloud…</p></div><a href="#workspace">Continue experiment →</a></div>
         <div class="library-session"><div><span class="eyebrow">COMPARE WITH LITERATURE</span><p>Shin et al. · A published fringe spacing and a reduced model.</p></div><a href="#benchmark">View paper benchmark →</a></div>
+      </section>
+      <section id="lab3d-page" aria-labelledby="lab3d-title" hidden>
+        <div class="library-heading"><div><p class="eyebrow">EXPERIMENT 04 / THREE DIMENSIONS</p><h1 id="lab3d-title">A cloud, released in space.</h1><p>Prepare an interacting condensate. Release all three axes. Measure its expansion.</p></div><a class="button-link" href="/model3d" target="_blank" rel="noopener">3D model & papers ↗</a></div>
+        <div class="three-layout">
+          <section class="three-observation" aria-label="3D observation">
+            <div class="panel-heading"><div><span class="eyebrow">NUMERICAL DENSITY / ISOSURFACE</span><h2>Condensate in 3D</h2></div><span id="three-trap">Not prepared</span></div>
+            <div class="three-scene"><canvas id="three-surface" width="900" height="600" tabindex="0" role="img" aria-label="Rotatable three-dimensional condensate density isosurface. Drag or use arrow keys to rotate."></canvas><p id="three-surface-empty">Choose a preset and prepare the cloud.</p><div class="three-scene-label"><span id="three-scene-units">x / y / z · µm</span><span>Drag to orbit · arrows to rotate</span></div></div>
+            <div class="three-view-controls"><label>Isodensity <input id="three-iso" type="range" min="5" max="70" value="20" step="5"/><output id="three-iso-value">20% of peak</output></label><label>Zoom <input id="three-zoom" type="range" min="1" max="5" value="1" step="0.25" aria-label="3D view zoom"/></label><button id="three-home">Reset view</button></div>
+            <p id="three-render-note" class="three-note">The surface will be extracted from the computed density. It is not a particle trajectory or an absorption image.</p>
+            <div class="transport"><span class="status" id="three-status" role="status" aria-live="polite">Not prepared</span><div class="transport-buttons"><button id="three-reset" disabled>↺ Reset</button><button id="three-step" disabled>Step</button><button id="three-release" disabled>Release all axes</button><button id="three-run" class="primary" disabled>▶ Run</button></div></div>
+            <div class="three-metrics"><div><span>TIME / ms</span><strong id="three-time">—</strong></div><div><span>RMS x / µm</span><strong id="three-width-x">—</strong></div><div><span>RMS y / µm</span><strong id="three-width-y">—</strong></div><div><span>RMS z / µm</span><strong id="three-width-z">—</strong></div></div>
+            <p id="three-warning" class="warning" role="alert" hidden></p>
+          </section>
+          <aside class="controls three-controls" aria-label="3D experiment controls"><p class="eyebrow">PREPARATION / RB-87</p><h2>Set the conditions</h2>
+            <form id="three-form"><fieldset id="three-parameters"><label>Reference example<select id="three-preset"><option value="interacting">Interacting cloud</option><option value="gaussian">Noninteracting analytic check</option><option value="tf">Thomas–Fermi expansion</option></select></label><button type="button" id="three-load">Load settings</button>
+            <p class="three-note" id="three-preset-note">Repulsive Rb-87 gas. The three-axis field evolves numerically.</p>
+            <div class="pair"><label>Atoms N<input id="three-atoms" type="number" value="20000" min="10" max="300000" step="1" required/></label><label>aₛ / nm<input id="three-scattering_nm" type="number" value="5.3" min="0" max="10" step="any" required/></label></div>
+            <div class="pair"><label>f₀ / Hz<input id="three-reference_hz" type="number" value="30" min="10" max="100" step="any" required/></label><label>fₓ / Hz<input id="three-fx_hz" type="number" value="30" min="5" max="200" step="any" required/></label></div>
+            <div class="pair"><label>fᵧ / Hz<input id="three-fy_hz" type="number" value="42" min="5" max="200" step="any" required/></label><label>f_z / Hz<input id="three-fz_hz" type="number" value="21" min="5" max="200" step="any" required/></label></div>
+            <label>Evolution duration / ω₀⁻¹<input id="three-duration" type="number" value="2" min="0.1" max="4" step="any" required/></label>
+            <details class="numerics"><summary>3D numerical resolution</summary><div class="pair"><label>Grid<select id="three-n"><option>32</option><option>48</option><option selected>64</option><option>96</option><option>128</option></select></label><label>Box side / a₀<select id="three-length"><option>16</option><option selected>24</option><option>32</option><option>48</option><option>64</option></select></label></div><div class="pair"><label>Time step<input id="three-dt" type="number" value="0.004" min="0.0005" max="0.01" step="any" required/></label><label>Preparation step<input id="three-preparation_dt" type="number" value="0.002" min="0.0005" max="0.004" step="any" required/></label></div></details>
+            </fieldset><button id="three-prepare" class="prepare" type="submit">Prepare 3D experiment ↗</button><p class="prepare-note" id="three-prepare-note">3D preparation can take tens of seconds. This replaces only the 3D run.</p><p id="three-error" class="error" role="alert" hidden></p></form>
+            <div class="model-note"><p><b>Full 3D GPE · zero temperature</b><br>Norm-one wavefunction; g = 4πNaₛ/a₀. Repulsive contact interactions, no thermal cloud, losses or quantum depletion. aₛ = 0 is an ideal reference.</p></div>
+          </aside>
+        </div>
+        <div id="three-results" hidden>
+          <div class="three-section-heading"><div><p class="eyebrow">LOOK INSIDE / PROJECT THROUGH</p><h2>Three views of the same state</h2></div><div class="view-switch" aria-label="3D image type"><button id="three-slices" class="selected" aria-pressed="true">Central slices</button><button id="three-columns" aria-pressed="false">Column density</button></div></div>
+          <p id="three-image-note" class="three-note"></p><div class="three-image-grid"><figure><figcaption id="three-xy-label">XY · z = 0</figcaption><canvas id="three-xy" width="360" height="360" role="img" aria-label="XY numerical density view"></canvas></figure><figure><figcaption id="three-xz-label">XZ · y = 0</figcaption><canvas id="three-xz" width="360" height="360" role="img" aria-label="XZ numerical density view"></canvas></figure><figure><figcaption id="three-yz-label">YZ · x = 0</figcaption><canvas id="three-yz" width="360" height="360" role="img" aria-label="YZ numerical density view"></canvas></figure></div>
+          <div class="three-section-heading"><div><p class="eyebrow">MEASURE / COMPARE WITH THEORY</p><h2>Widths and shape</h2></div><button id="three-export">Export 3D run ↓</button></div>
+          <div class="three-diagnostics"><span id="three-norm"></span><span id="three-energy"></span><span id="three-aspect"></span><span id="three-boundary"></span></div>
+          <p id="three-theory-note" class="three-note"></p>
+          <canvas id="three-width-history" width="1100" height="310" role="img" aria-label="Three-dimensional RMS widths versus time, with applicable theory curves"></canvas>
+          <div class="table-scroll"><table class="benchmark-table"><thead><tr><th>Axis</th><th>Numerical RMS / µm</th><th id="three-theory-title">Theory RMS / µm</th><th>Difference</th><th>Initial-width scaling / µm</th></tr></thead><tbody id="three-theory-table"></tbody></table></div>
+          <p class="three-note">Blue x · Teal y · Amber z. Solid curves: numerical field. Dashed curves: absolute theory. The table also shows TF scaling anchored to the prepared numerical widths, separately from the absolute TF prediction.</p>
+          <details class="benchmark-checks"><summary>Preparation, numerical limits & performance</summary><p id="three-performance"></p><p id="three-physical"></p><p>Periodic FFT boundaries are monitored. A boundary warning stops the run at the first step exceeding 0.1% probability in the outer band. A conserved norm alone does not establish spatial or time accuracy. Refine grid, domain, time step and preparation step for quantitative use.</p><p><a href="/model3d" target="_blank" rel="noopener">Conventions, validation cases and Castin–Dum references ↗</a></p></details>
+        </div>
       </section>
       <section id="paper-benchmark" aria-labelledby="benchmark-title" hidden>
         <div class="library-heading"><div><p class="eyebrow">LITERATURE / SHIN ET AL. · FIGURE 2</p><h1 id="benchmark-title">Does the fringe spacing match?</h1><p>A numerical comparison with a published measurement.</p></div><a class="button-link" href="https://arxiv.org/abs/cond-mat/0306305v2" target="_blank" rel="noopener">Read the paper ↗</a></div>
@@ -818,7 +862,7 @@
       </section>
       </div>
       <footer>
-        <span>COLD ATOM LAB <span class="muted">/ 0.4</span></span>
+        <span>COLD ATOM LAB <span class="muted">/ 0.5</span></span>
         <span>A small window into coherent matter.</span
         ><a
           href="https://arxiv.org/abs/cond-mat/0303239"
@@ -836,8 +880,9 @@
       >
         ✕
       </button>
-      <p class="eyebrow">THE MODEL</p>
+      <p class="eyebrow">THE 2D WORKSPACE MODEL</p>
       <h2>One wave. Many atoms.</h2>
+      <p>The separate <a href="/model3d" target="_blank" rel="noopener">3D expansion model</a> evolves all three axes with complete trap release.</p>
       <p>
         We evolve a dilute, weakly interacting condensate with an effective
         two-dimensional Gross–Pitaevskii equation:

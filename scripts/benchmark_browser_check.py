@@ -45,7 +45,7 @@ def main():
         assert data["published"]["measurement_uncertainty_um"] is None
         assert data["base"]["analytic_wavefunction_l2_error"] < 1e-7
         assert data["comparison"][0]["period_um"] == data["base"]["fit"]["period_um"]
-        page.locator(".benchmark-checks summary").click()
+        page.locator("#paper-benchmark .benchmark-checks summary").click()
         expect(page.locator("#benchmark-checks tr")).to_have_count(5)
         page.evaluate("window.scrollTo(0, 0)")
         page.screenshot(path=str(out / "benchmark-desktop.png"), full_page=True)

@@ -8,6 +8,7 @@ import numpy as np
 
 from .imaging import Camera, form_image
 from .solver import Config, replay
+from .solver3d import replay3d
 
 
 def verify_run(data):
@@ -22,6 +23,19 @@ def verify_run(data):
 
 
 def verify_export(data):
+    if data.get("schema") == "coldatomlab-3d-v1":
+        sim = replay3d(data)
+        real, imag = np.asarray(data["psi_real"]), np.asarray(data["psi_imag"])
+        if real.shape != sim.psi.shape or imag.shape != sim.psi.shape:
+            raise ValueError("Saved 3D wavefunction shape does not match the grid.")
+        if data.get("array_order") != "x,y,z" or not np.array_equal(data["x"], sim.x):
+            raise ValueError("Saved 3D coordinate/array convention does not match the grid.")
+        if data.get("scales") != sim.config.scales:
+            raise ValueError("Saved 3D physical scales do not match the configuration.")
+        error = float(np.max(abs(sim.psi - (real + 1j * imag))))
+        if not np.isfinite(error) or error > 1e-8:
+            raise ValueError("3D replay differs from the saved wavefunction.")
+        return {"replayed": True, "max_wavefunction_error": error, "diagnostics": sim.diagnostics()}
     if data.get("schema") == "coldatomlab-camera-comparison-v1":
         return {key: verify_export(data[key]) for key in ("reference", "current")}
     if data.get("schema") == "coldatomlab-camera-v1":

@@ -11,6 +11,7 @@ from uuid import uuid4
 from .benchmark import report as benchmark_report
 from .imaging import Camera, capture
 from .solver import Config, Solver
+from .solver3d import Config3D, Solver3D
 
 WEB = Path(__file__).parent / "web"
 
@@ -20,6 +21,8 @@ class LabServer(ThreadingHTTPServer):
         super().__init__(address, Handler)
         self.sessions = {}
         self.lock = threading.Lock()
+        self.sessions3d = {}
+        self.lock3d = threading.Lock()
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -47,6 +50,10 @@ class Handler(BaseHTTPRequestHandler):
             "/dashboard.js": ("dashboard.js", "text/javascript; charset=utf-8"),
             "/dashboard.css": ("dashboard.css", "text/css; charset=utf-8"),
             "/benchmark.js": ("benchmark.js", "text/javascript; charset=utf-8"),
+            "/lab3d.js": ("lab3d.js", "text/javascript; charset=utf-8"),
+            "/surface3d.js": ("surface3d.js", "text/javascript; charset=utf-8"),
+            "/lab3d.css": ("lab3d.css", "text/css; charset=utf-8"),
+            "/model3d": ("model3d.html", "text/html; charset=utf-8"),
             "/physical-units": ("physical-units.html", "text/html; charset=utf-8"),
             "/app.js": ("app.js", "text/javascript; charset=utf-8"),
             "/camera.js": ("camera.js", "text/javascript; charset=utf-8"),
@@ -69,6 +76,8 @@ class Handler(BaseHTTPRequestHandler):
         }
         if self.headers.get("Origin") and self.headers["Origin"] not in allowed:
             return self.respond(403, {"error": "Use the local experiment page."})
+        if self.path == "/api3d":
+            return self.post3d()
         if self.path != "/api":
             return self.respond(404, {"error": "Not found"})
         try:
@@ -109,6 +118,46 @@ class Handler(BaseHTTPRequestHandler):
                     result = capture(sim, Camera(**data.get("camera", {})))
                 else:
                     result = sim.export() if action == "export" else sim.snapshot()
+                self.respond(200, {"session": key, "result": result})
+        except (ValueError, TypeError, KeyError) as exc:
+            self.respond(400, {"error": str(exc)})
+
+    def post3d(self):
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+            if not 0 < length <= 8192:
+                raise ValueError("Request is empty or too large.")
+            data = json.loads(self.rfile.read(length))
+            if not isinstance(data, dict):
+                raise ValueError("Request must be an object.")
+            with self.server.lock3d:
+                now = time.monotonic()
+                sessions = self.server.sessions3d
+                for key, (_, touched) in list(sessions.items()):
+                    if now - touched > 3600:
+                        del sessions[key]
+                key, action = data.get("session"), data.get("action")
+                if action == "prepare":
+                    if key not in sessions and len(sessions) >= 4:
+                        raise ValueError(
+                            "All four 3D sessions are in use. Close unused experiments and restart the server."
+                        )
+                    sim = Solver3D(Config3D(**data.get("config", {})))
+                    key = key if key in sessions else uuid4().hex
+                else:
+                    if key not in sessions:
+                        raise ValueError("3D session expired. Prepare an experiment again.")
+                    sim = sessions[key][0]
+                    if action == "step":
+                        sim.advance(data.get("count", 4))
+                    elif action == "release":
+                        sim.release()
+                    elif action == "reset":
+                        sim.reset()
+                    elif action not in ("state", "export"):
+                        raise ValueError("Unknown 3D experiment action.")
+                sessions[key] = (sim, now)
+                result = sim.export() if action == "export" else sim.snapshot()
                 self.respond(200, {"session": key, "result": result})
         except (ValueError, TypeError, KeyError) as exc:
             self.respond(400, {"error": str(exc)})
