@@ -4,7 +4,7 @@ Validated locally on Windows with Python 3.12, NumPy 2.5.3, and Playwright Chrom
 
 ## Numerical and HTTP checks
 
-`uv run pytest -q`: **18 passed**.
+`uv run pytest -q`: **28 passed**. The first-release checks remain in place alongside ten sequence checks, described below.
 
 | Check | Acceptance criterion |
 | --- | --- |
@@ -38,6 +38,21 @@ The resolution cases are `(n,L,dt) = (128,32,.01), (128,32,.005), (256,32,.005),
 - No browser page errors were reported.
 
 Generated evidence lives in ignored `artifacts/`: `browser-report.json`, screenshots, and exported runs. Screenshots were visually inspected for labels, clipped content, and mobile layout. `docs/preview.png` is a representative desktop capture.
+
+## Sequence milestone (v0.2)
+
+The added numerical checks cover:
+
+- Actual splitting from one trapped ground state. In a noninteracting reference with a 4-unit ramp, the central density falls below 1% of the peak; left/right populations stay symmetric, norm is preserved to `1e-10`, and the sequence stops on its exact configured step.
+- Fast versus slow preparation at the same final potential. A ramp of `0.2` leaves energy about `9.586`, versus `4.895` for a ramp of `4`, in units of `hbar*omega0`. This is one controlled noninteracting comparison, not a universal monotonicity claim.
+- Hold-phase accumulation for bias `−0.5`, `0`, and `+0.5` over one time unit. The measured mirror phase is approximately `+0.483`, `0`, and `−0.483` rad, within `0.03` rad of the isolated-arm approximation. Reversing the bias reverses phase and population imbalance.
+- Driven evolution with `g=20`, ramp 1, hold 0.5, expansion 0.5: time steps `0.02`, `0.01`, and `0.005` exhibit decreasing density error; the medium/fine error is below 0.35 of the coarse/fine error. Grid and domain refinements at coincident coordinates keep relative density L2 differences below 1%.
+- A known sinusoidal profile returns spacing 2 and contrast 0.6. Single-peak, flat, and low-contrast profiles return unavailable estimates.
+- Rounded timing, zero-length hold, partial and complete replay, comparison-bundle verification, manual-release rejection in an automatic sequence, and invalid timing/barrier configurations.
+
+`scripts/sequence_browser_check.py` additionally verifies the actual timeline, potential overlay, pause during Hold, automatic release at step 300, and exact completion at step 450 for a `2 / 1 / 1.5` sequence with `dt=0.01`. Replacing the hold bias `+0.5` with `−0.5` yields final left fractions about `0.5263` and `0.4737`, and opposite mirror phases. The pinned reference stays unchanged through preparation, playback, and reset. Both downloaded records replay with observed maximum complex-field error `0.0`.
+
+The comparison workflow also passes invalid-duration recovery and 390px/320px mobile overflow checks, with no reported browser page errors. New evidence is saved to ignored `artifacts/sequence-browser-report.json`, `sequence-comparison.json`, and `sequence-*.png`. The phase and contrast diagnostics are labeled approximations; these checks do not establish many-body coherence, experimental metrology accuracy, or 3D validity.
 
 ## Additional checks and limits
 

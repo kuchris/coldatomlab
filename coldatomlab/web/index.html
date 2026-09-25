@@ -43,6 +43,28 @@
               ><button id="phase-view" aria-pressed="false">Phase</button>
             </div>
           </div>
+          <div id="sequence-timeline" class="sequence-timeline" hidden>
+            <div class="timeline-heading">
+              <span id="sequence-stage">Prepared</span
+              ><span id="sequence-clock">0 / 9 ω₀⁻¹</span>
+            </div>
+            <ol class="stages">
+              <li id="stage-split">
+                01 Split <small id="split-end">0–4</small>
+              </li>
+              <li id="stage-hold">02 Hold <small id="hold-end">4–6</small></li>
+              <li id="stage-expand">
+                03 Expand <small id="expand-end">6–9</small>
+              </li>
+            </ol>
+            <progress
+              id="sequence-progress"
+              value="0"
+              max="9"
+              aria-label="Sequence progress"
+            ></progress>
+            <p id="sequence-live">Barrier 0 · Bias 0 ℏω₀</p>
+          </div>
           <div class="field-wrap">
             <canvas
               id="field"
@@ -63,6 +85,10 @@
               </div>
             </div>
           </div>
+          <label class="overlay-toggle"
+            ><input type="checkbox" id="potential-overlay" />Potential contours
+            · 2 / 4 / 8 / 16 ℏω₀</label
+          >
           <div class="transport">
             <span class="status" id="status" role="status" aria-live="polite"
               >Preparing…</span
@@ -102,6 +128,7 @@
               ><select id="experiment" name="experiment">
                 <option value="single">01 — Single-cloud expansion</option>
                 <option value="double">02 — Two-cloud interference</option>
+                <option value="sequence">03 — Split / hold / release</option>
               </select>
               <p class="experiment-note" id="experiment-note">
                 Prepare the ground state in a harmonic trap. Release it to watch
@@ -173,6 +200,69 @@
                   ><button type="button" data-phase="1">Opposite · π</button>
                 </div>
               </div>
+              <div id="sequence-controls" hidden>
+                <div class="pair">
+                  <label
+                    >Barrier height · ℏω₀<input
+                      id="barrier_height"
+                      type="number"
+                      min="0"
+                      max="30"
+                      step="1"
+                      value="12" /></label
+                  ><label
+                    >Barrier width · a₀<input
+                      id="barrier_width"
+                      type="number"
+                      min="0.5"
+                      max="1.5"
+                      step="0.1"
+                      value="0.7"
+                  /></label>
+                </div>
+                <div class="pair">
+                  <label
+                    >Split time · ω₀⁻¹<input
+                      id="split_time"
+                      type="number"
+                      min="0.1"
+                      max="8"
+                      step="0.1"
+                      value="4" /></label
+                  ><label
+                    >Hold time · ω₀⁻¹<input
+                      id="hold_time"
+                      type="number"
+                      min="0"
+                      max="6"
+                      step="0.1"
+                      value="2"
+                  /></label>
+                </div>
+                <div class="pair">
+                  <label
+                    >Expansion · ω₀⁻¹<input
+                      id="expansion_time"
+                      type="number"
+                      min="0.1"
+                      max="8"
+                      step="0.1"
+                      value="3" /></label
+                  ><label
+                    >Hold bias · ℏω₀<input
+                      id="bias"
+                      type="number"
+                      min="-3"
+                      max="3"
+                      step="0.1"
+                      value="0.5"
+                  /></label>
+                </div>
+                <p class="hint">
+                  Positive bias raises the right well during Hold. Release and
+                  stopping are automatic. Total time ≤ 18.
+                </p>
+              </div>
               <details class="numerics">
                 <summary>Numerical resolution</summary>
                 <div class="pair">
@@ -229,7 +319,55 @@
               <span class="eyebrow">03 / MEASUREMENTS</span>
               <h2>Read the experiment</h2>
             </div>
-            <button id="export" class="quiet">Export run ↓</button>
+            <div class="measurement-actions">
+              <button id="pin">Pin reference</button
+              ><button id="clear-reference" hidden>Clear reference</button
+              ><button id="export" class="quiet">Export run ↓</button>
+            </div>
+          </div>
+          <div class="readouts">
+            <div>
+              <span>LEFT / RIGHT POPULATION</span
+              ><strong id="populations">—</strong>
+            </div>
+            <div>
+              <span>MIRROR PHASE · RIGHT − LEFT</span
+              ><strong id="relative-phase">—</strong>
+            </div>
+            <div>
+              <span>FRINGE SPACING</span><strong id="fringe-spacing">—</strong>
+            </div>
+            <div>
+              <span>PROFILE CONTRAST</span
+              ><strong id="fringe-contrast">—</strong>
+            </div>
+          </div>
+          <p class="diagnostic-note">
+            Phase is a mirror-weighted diagnostic. Fringe estimates require ≥3
+            regular, resolved peaks after release; — means unavailable.
+          </p>
+          <div id="comparison" class="comparison" hidden>
+            <p id="comparison-caption"></p>
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Measurement</th>
+                    <th>Reference A</th>
+                    <th>Current B</th>
+                  </tr>
+                </thead>
+                <tbody id="comparison-body"></tbody>
+              </table>
+            </div>
+            <details>
+              <summary>Compare settings</summary>
+              <pre id="comparison-settings"></pre>
+            </details>
+            <p class="diagnostic-note">
+              Profiles share axes. Snapshots can have different times and
+              settings; check both before interpreting differences.
+            </p>
           </div>
           <div class="plots">
             <div>
@@ -261,6 +399,32 @@
               ></canvas>
             </div>
           </div>
+          <div id="sequence-plots" class="plots sequence-plots" hidden>
+            <div>
+              <div class="plot-title">
+                Current applied potential <span>V(x, 0) / ℏω₀</span>
+              </div>
+              <canvas
+                id="potential-profile"
+                width="560"
+                height="210"
+                role="img"
+                aria-label="Applied central potential versus x"
+              ></canvas>
+            </div>
+            <div>
+              <div class="plot-title">
+                Population balance <span>Left fraction</span>
+              </div>
+              <canvas
+                id="population-history"
+                width="560"
+                height="210"
+                role="img"
+                aria-label="Left population fraction versus time"
+              ></canvas>
+            </div>
+          </div>
           <div class="measurement-foot">
             <span id="boundary">Boundary population: —</span
             ><span>Model diagnostics · not a camera image</span>
@@ -268,8 +432,8 @@
         </section>
       </div>
       <footer>
-        <span>COLD ATOM LAB <span class="muted">/ 0.1</span></span
-        ><span>A small window into coherent matter.</span
+        <span>COLD ATOM LAB <span class="muted">/ 0.2</span></span>
+        <span>A small window into coherent matter.</span
         ><a
           href="https://arxiv.org/abs/cond-mat/0303239"
           target="_blank"
@@ -307,6 +471,22 @@
         trap. <b>Two clouds:</b> a normalized, coherent sum of two Gaussian
         packets with a controlled relative phase, initially released. This is an
         idealized initial state, not a simulation of splitting or condensation.
+      </p>
+      <p>
+        <b>Split / hold / release:</b> begin with one trapped ground state. A
+        smoothstep ramp raises a Gaussian barrier. During Hold, a smooth
+        left/right bias changes the relative phase; the sequence then removes
+        all in-plane potential and stops after the chosen expansion time. Stage
+        durations are rounded to solver steps; the timeline shows the actual
+        boundaries. Energy changes when the applied potential changes.
+      </p>
+      <p>
+        Left and right populations share the x = 0 column equally. Mirror phase
+        compares the two mirrored half-planes and is not a fitted experimental
+        phase. Fringe spacing and contrast are conservative estimates from at
+        least three regular profile peaks; they are unavailable when the pattern
+        is unresolved. Pin reference retains a snapshot for comparison and
+        exports both runs together.
       </p>
       <p>
         Real-time evolution uses a second-order split-step Fourier method.

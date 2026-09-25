@@ -8,6 +8,7 @@ let session = null,
 let disconnected = false,
   view = "density",
   timer = null;
+let reference = null;
 const fields = [
   "experiment",
   "n",
@@ -18,6 +19,12 @@ const fields = [
   "omega_y",
   "separation",
   "phase",
+  "barrier_height",
+  "barrier_width",
+  "split_time",
+  "hold_time",
+  "expansion_time",
+  "bias",
 ];
 
 function config() {
@@ -34,14 +41,21 @@ function config() {
 function controls() {
   $("parameters").disabled = busy || running;
   $("prepare").disabled = busy || running;
-  for (const id of ["step", "reset", "release", "export"]) {
+  for (const id of ["step", "reset", "release", "export", "pin"]) {
     $(id).disabled =
       !state || busy || running || disconnected || (dirty && id !== "reset");
   }
-  $("release").disabled ||= !!state?.diagnostics.released || !!state?.warning;
-  $("step").disabled ||= !!state?.warning;
+  $("release").disabled ||=
+    !!state?.diagnostics.released || !!state?.warning || !!state?.protocol;
+  $("step").disabled ||= !!state?.warning || !!state?.complete;
   $("run").disabled =
-    !running && (!state || busy || dirty || disconnected || !!state?.warning);
+    !running &&
+    (!state ||
+      busy ||
+      dirty ||
+      disconnected ||
+      !!state?.warning ||
+      !!state?.complete);
   $("run").textContent = running ? "Ⅱ Pause" : "▶ Run";
   $("status").textContent = disconnected
     ? "Connection lost"
@@ -53,9 +67,11 @@ function controls() {
           ? "Parameters changed"
           : state?.warning
             ? "Stopped"
-            : state?.diagnostics.steps
-              ? "Paused"
-              : "Ready";
+            : state?.complete
+              ? "Complete"
+              : state?.diagnostics.steps
+                ? "Paused"
+                : "Ready";
   $("prepare-note").textContent = dirty
     ? "Changes pending. Prepare to apply them, or reset to restore the saved settings."
     : "Preparation replaces the current experiment.";
@@ -81,7 +97,7 @@ async function request(action, extra = {}) {
     if (action !== "export") {
       state = data.result;
       if (action === "prepare" || action === "reset") dirty = false;
-      if (state.warning) running = false;
+      if (state.warning || state.complete) running = false;
       render();
     }
     return data.result;
@@ -107,10 +123,14 @@ function labels() {
     Number($("separation").value).toFixed(1) + " a₀";
   $("phase-value").textContent = Number($("phase").value).toFixed(2) + " π";
   const two = $("experiment").value === "double";
+  const sequence = $("experiment").value === "sequence";
   $("double-controls").hidden = !two;
-  $("experiment-note").textContent = two
-    ? "Prepare two coherent Gaussian packets, already released. Change the relative phase to move the fringes."
-    : "Prepare the ground state in a harmonic trap. Release it to watch the cloud expand.";
+  $("sequence-controls").hidden = !sequence;
+  $("experiment-note").textContent = sequence
+    ? "Start with one trapped condensate. Raise a barrier, hold with a bias, then release and measure interference."
+    : two
+      ? "Prepare two coherent Gaussian packets, already released. Change the relative phase to move the fringes."
+      : "Prepare the ground state in a harmonic trap. Release it to watch the cloud expand.";
 }
 
 $("config-form").addEventListener("input", () => {
@@ -164,14 +184,40 @@ $("reset").addEventListener("click", async () => {
 $("export").addEventListener("click", async () => {
   const data = await request("export");
   if (!data) return;
+  const exported = reference
+    ? {
+        schema: "coldatomlab-comparison-v1",
+        reference: reference.export,
+        current: data,
+      }
+    : data;
   const url = URL.createObjectURL(
-    new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }),
+    new Blob([JSON.stringify(exported, null, 2)], { type: "application/json" }),
   );
   const link = document.createElement("a");
   link.href = url;
-  link.download = `coldatomlab-${data.config.experiment}-${data.steps}.json`;
+  link.download = `coldatomlab-${reference ? "comparison" : data.config.experiment}-${data.steps}.json`;
   link.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+$("pin").addEventListener("click", async () => {
+  const data = await request("export");
+  if (!data) return;
+  reference = { snapshot: structuredClone(state), export: data };
+  $("clear-reference").hidden = false;
+  $("pin").textContent = "Replace reference";
+  $("export").textContent = "Export comparison ↓";
+  render();
+});
+$("clear-reference").addEventListener("click", () => {
+  reference = null;
+  $("clear-reference").hidden = true;
+  $("pin").textContent = "Pin reference";
+  $("export").textContent = "Export run ↓";
+  render();
+});
+$("potential-overlay").addEventListener("change", () => {
+  if (state) drawField();
 });
 for (const name of ["density", "phase"])
   $(name + "-view").addEventListener("click", () => {
@@ -247,6 +293,8 @@ function drawField() {
   rc.putImageData(pixels, 0, 0);
   ctx.imageSmoothingEnabled = false;
   ctx.drawImage(raw, left, top, side, side);
+  if ($("potential-overlay").checked)
+    drawContours(ctx, state.potential, left, top, side);
   ctx.strokeStyle = "#82988c25";
   ctx.lineWidth = 1;
   for (let i = 0; i <= 4; i++) {
@@ -292,7 +340,7 @@ function drawField() {
       : `linear-gradient(90deg,${Array.from({ length: 13 }, (_, i) => `rgb(${phaseColor(-Math.PI + (i * Math.PI) / 6).join(",")})`).join(",")})`;
 }
 
-function plot(id, series, xmin, xmax, ymax, xlabel, ylabel) {
+function plot(id, series, xmin, xmax, ymax, xlabel, ylabel, ymin = 0) {
   const { ctx, w, h } = surface(id),
     left = 55,
     right = w - 16,
@@ -310,7 +358,11 @@ function plot(id, series, xmin, xmax, ymax, xlabel, ylabel) {
     ctx.lineTo(right, y);
     ctx.stroke();
     ctx.textAlign = "right";
-    ctx.fillText(((ymax * i) / 3).toPrecision(2), left - 9, y + 3);
+    ctx.fillText(
+      (ymin + ((ymax - ymin) * i) / 3).toPrecision(2),
+      left - 9,
+      y + 3,
+    );
     const x = left + ((right - left) * i) / 3;
     ctx.textAlign = "center";
     ctx.fillText((xmin + ((xmax - xmin) * i) / 3).toFixed(1), x, bottom + 17);
@@ -330,7 +382,7 @@ function plot(id, series, xmin, xmax, ymax, xlabel, ylabel) {
     ctx.beginPath();
     s.points.forEach(([x, y], i) => {
       const px = left + ((x - xmin) / (xmax - xmin)) * (right - left),
-        py = bottom - (y / ymax) * (bottom - top);
+        py = bottom - ((y - ymin) / (ymax - ymin)) * (bottom - top);
       if (i === 0) ctx.moveTo(px, py);
       else ctx.lineTo(px, py);
     });
@@ -341,7 +393,7 @@ function plot(id, series, xmin, xmax, ymax, xlabel, ylabel) {
       ctx.beginPath();
       ctx.arc(
         left + ((x - xmin) / (xmax - xmin)) * (right - left),
-        bottom - (y / ymax) * (bottom - top),
+        bottom - ((y - ymin) / (ymax - ymin)) * (bottom - top),
         3,
         0,
         2 * Math.PI,
@@ -355,9 +407,11 @@ function plot(id, series, xmin, xmax, ymax, xlabel, ylabel) {
 function render() {
   const d = state.diagnostics;
   $("experiment-title").textContent =
-    state.config.experiment === "single"
-      ? "Condensate expansion"
-      : "Matter-wave interference";
+    state.config.experiment === "sequence"
+      ? "Split, hold & interfere"
+      : state.config.experiment === "single"
+        ? "Condensate expansion"
+        : "Matter-wave interference";
   $("time").innerHTML = `${d.time.toFixed(3)} <small>ω₀⁻¹</small>`;
   $("width").innerHTML = `${d.width_x.toFixed(3)} <small>a₀</small>`;
   $("norm").textContent = d.norm.toFixed(8);
@@ -372,6 +426,20 @@ function render() {
   $("boundary").textContent =
     `Boundary population: ${(100 * d.edge_mass).toExponential(2)}% / stop at 0.1%`;
   drawField();
+  renderProtocol();
+  renderComparison();
+  $("populations").textContent =
+    `${(100 * d.left_fraction).toFixed(1)}% / ${(100 * d.right_fraction).toFixed(1)}%`;
+  $("relative-phase").textContent =
+    d.relative_phase === null
+      ? "—"
+      : `${(d.relative_phase / Math.PI).toFixed(3)} π`;
+  $("fringe-spacing").textContent =
+    d.fringe_spacing === null ? "—" : `${d.fringe_spacing.toFixed(3)} a₀`;
+  $("fringe-contrast").textContent =
+    d.fringe_contrast === null ? "—" : d.fringe_contrast.toFixed(3);
+  const ref = reference?.snapshot;
+  const extent = Math.max(state.config.length, ref?.config.length || 0) / 2;
   plot(
     "profile",
     [
@@ -379,10 +447,19 @@ function render() {
         color: "#c3e2a0",
         points: state.x.map((x, i) => [x, state.cross_section[i]]),
       },
+      ...(ref
+        ? [
+            {
+              color: "#e3ae76",
+              dashed: true,
+              points: ref.x.map((x, i) => [x, ref.cross_section[i]]),
+            },
+          ]
+        : []),
     ],
-    -state.config.length / 2,
-    state.config.length / 2,
-    Math.max(...state.cross_section) * 1.15,
+    -extent,
+    extent,
+    Math.max(...state.cross_section, ...(ref?.cross_section || [])) * 1.15,
     "x / a₀",
     "|ψ(x, 0)|² / a₀⁻²",
   );
@@ -396,13 +473,188 @@ function render() {
         dashed: true,
         points: history.map((p) => [p.time, p.width_y]),
       },
+      ...(ref
+        ? [
+            {
+              color: "#e3ae76",
+              points: ref.history.map((p) => [p.time, p.width_x]),
+            },
+            {
+              color: "#b98e69",
+              dashed: true,
+              points: ref.history.map((p) => [p.time, p.width_y]),
+            },
+          ]
+        : []),
     ],
     0,
-    Math.max(1, d.time),
-    Math.max(...history.map((p) => Math.max(p.width_x, p.width_y))) * 1.15,
+    Math.max(1, d.time, ref?.diagnostics.time || 0),
+    Math.max(
+      ...[...history, ...(ref?.history || [])].map((p) =>
+        Math.max(p.width_x, p.width_y),
+      ),
+    ) * 1.15,
     "t / ω₀⁻¹",
     "RMS width / a₀",
   );
+}
+
+function drawContours(ctx, potential, left, top, side) {
+  const n = potential.length,
+    cell = side / n;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(left, top, side, side);
+  ctx.clip();
+  ctx.strokeStyle = "#e3ae7680";
+  ctx.lineWidth = 0.8;
+  ctx.setLineDash([3, 3]);
+  for (const level of [2, 4, 8, 16]) {
+    ctx.beginPath();
+    for (let y = 0; y < n - 1; y++)
+      for (let x = 0; x < n - 1; x++) {
+        const vertices = [
+          [x, y],
+          [x + 1, y],
+          [x + 1, y + 1],
+          [x, y + 1],
+        ];
+        const points = [];
+        for (let edge = 0; edge < 4; edge++) {
+          const a = vertices[edge],
+            b = vertices[(edge + 1) % 4];
+          const va = potential[a[1]][a[0]],
+            vb = potential[b[1]][b[0]];
+          if ((va <= level && vb > level) || (vb <= level && va > level)) {
+            const u = (level - va) / (vb - va);
+            points.push([
+              left + (a[0] + u * (b[0] - a[0]) + 0.5) * cell,
+              top + (n - 0.5 - a[1] - u * (b[1] - a[1])) * cell,
+            ]);
+          }
+        }
+        for (let k = 0; k + 1 < points.length; k += 2) {
+          ctx.moveTo(...points[k]);
+          ctx.lineTo(...points[k + 1]);
+        }
+      }
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function renderProtocol() {
+  const p = state.protocol;
+  $("sequence-timeline").hidden = !p;
+  $("sequence-plots").hidden = !p;
+  if (!p) return;
+  const d = state.diagnostics;
+  $("sequence-stage").textContent = state.warning
+    ? "Stopped before completion"
+    : d.steps === 0
+      ? "Prepared · ready to split"
+      : {
+          split: "Splitting the condensate",
+          hold: "Holding · accumulating phase",
+          expand: "Released · expanding",
+          complete: "Sequence complete",
+        }[p.stage];
+  $("sequence-clock").textContent =
+    `${d.time.toFixed(2)} / ${p.end_time.toFixed(2)} ω₀⁻¹`;
+  $("split-end").textContent = `0–${p.split_end.toFixed(2)}`;
+  $("hold-end").textContent =
+    `${p.split_end.toFixed(2)}–${p.release_time.toFixed(2)}`;
+  $("expand-end").textContent =
+    `${p.release_time.toFixed(2)}–${p.end_time.toFixed(2)}`;
+  for (const stage of ["split", "hold", "expand"])
+    $("stage-" + stage).classList.toggle("active", p.stage === stage);
+  $("sequence-progress").max = p.end_time;
+  $("sequence-progress").value = d.time;
+  $("sequence-live").textContent =
+    `Barrier ${p.barrier_height.toFixed(2)} · Hold bias ${p.bias.toFixed(2)} ℏω₀ · Mirror phase ${d.relative_phase === null ? "—" : (d.relative_phase / Math.PI).toFixed(3) + " π"}`;
+  const samples = state.x
+    .map((x, i) => [x, state.potential_profile[i]])
+    .filter(([x]) => Math.abs(x) <= 6);
+  plot(
+    "potential-profile",
+    [{ color: "#e3ae76", points: samples }],
+    -6,
+    6,
+    Math.max(1, ...samples.map((p) => p[1])) * 1.1,
+    "x / a₀",
+    "V / ℏω₀",
+    Math.min(0, ...samples.map((p) => p[1])),
+  );
+  const series = [
+    {
+      color: "#c3e2a0",
+      points: state.history.map((p) => [p.time, p.left_fraction]),
+    },
+  ];
+  if (reference)
+    series.push({
+      color: "#e3ae76",
+      dashed: true,
+      points: reference.snapshot.history.map((p) => [p.time, p.left_fraction]),
+    });
+  plot(
+    "population-history",
+    series,
+    0,
+    Math.max(p.end_time, reference?.snapshot.diagnostics.time || 0),
+    1,
+    "t / ω₀⁻¹",
+    "Left / total",
+  );
+}
+
+function renderComparison() {
+  $("comparison").hidden = !reference;
+  if (!reference) return;
+  const a = reference.snapshot,
+    b = state;
+  $("comparison-caption").textContent =
+    `Reference A: ${a.config.experiment} at t=${a.diagnostics.time.toFixed(3)}. Current B: ${b.config.experiment} at t=${b.diagnostics.time.toFixed(3)}. Overlaid data: reference in amber, current in green/cyan. Widths: solid x, dashed y.`;
+  const rows = [
+    ["Time / ω₀⁻¹", "time"],
+    ["RMS width x / a₀", "width_x"],
+    ["Left population fraction", "left_fraction"],
+    ["Mirror phase / rad", "relative_phase"],
+    ["Fringe spacing / a₀", "fringe_spacing"],
+    ["Profile contrast", "fringe_contrast"],
+    ["Energy / ℏω₀", "energy"],
+  ];
+  const body = $("comparison-body");
+  body.replaceChildren();
+  for (const [label, key] of rows) {
+    const tr = document.createElement("tr");
+    for (const val of [label, a.diagnostics[key], b.diagnostics[key]]) {
+      const td = document.createElement("td");
+      td.textContent = typeof val === "number" ? val.toFixed(4) : (val ?? "—");
+      tr.append(td);
+    }
+    body.append(tr);
+  }
+  const labels = {
+    experiment: "Experiment",
+    interaction: "Interaction g",
+    omega_x: "Trap x / ω₀",
+    omega_y: "Trap y / ω₀",
+    separation: "Packet separation / a₀",
+    phase: "Preset phase / rad",
+    barrier_height: "Barrier / ℏω₀",
+    barrier_width: "Barrier width / a₀",
+    split_time: "Split time",
+    hold_time: "Hold time",
+    expansion_time: "Expansion time",
+    bias: "Hold bias / ℏω₀",
+    n: "Grid",
+    length: "Domain side / a₀",
+    dt: "Time step",
+  };
+  $("comparison-settings").textContent = Object.entries(labels)
+    .map(([key, label]) => `${label}: A ${a.config[key]} · B ${b.config[key]}`)
+    .join("\n");
 }
 
 let resizeTimer;

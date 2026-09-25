@@ -6,6 +6,7 @@ from dataclasses import asdict, dataclass
 import numpy as np
 
 from . import __version__
+from .protocol import SplitProtocol, fringe_metrics
 
 
 @dataclass(frozen=True)
@@ -19,10 +20,16 @@ class Config:
     omega_y: float = 1.4
     separation: float = 6.0
     phase: float = 0.0
+    barrier_height: float = 12.0
+    barrier_width: float = 0.7
+    split_time: float = 4.0
+    hold_time: float = 2.0
+    expansion_time: float = 3.0
+    bias: float = 0.5
 
     def __post_init__(self):
-        if self.experiment not in ("single", "double"):
-            raise ValueError("Choose a single-cloud or two-cloud experiment.")
+        if self.experiment not in ("single", "double", "sequence"):
+            raise ValueError("Choose a single-cloud, two-cloud, or split/hold/release experiment.")
         if type(self.n) is not int or self.n not in (64, 128, 256):
             raise ValueError("Grid size must be 64, 128, or 256.")
         for name, low, high in (
@@ -33,6 +40,12 @@ class Config:
             ("omega_y", 0.5, 2),
             ("separation", 2, 12),
             ("phase", -math.pi, math.pi),
+            ("barrier_height", 0, 30),
+            ("barrier_width", 0.5, 1.5),
+            ("split_time", 0.1, 8),
+            ("hold_time", 0, 6),
+            ("expansion_time", 0.1, 8),
+            ("bias", -3, 3),
         ):
             value = getattr(self, name)
             if isinstance(value, bool) or not isinstance(value, (int, float)):
@@ -41,6 +54,11 @@ class Config:
                 raise ValueError(f"{name} must be between {low:g} and {high:g}.")
         if self.length / self.n > 0.5:
             raise ValueError("Use a finer grid for this domain (spacing must be at most 0.5).")
+        if self.experiment == "sequence":
+            if self.split_time + self.hold_time + self.expansion_time > 18:
+                raise ValueError("Sequence duration must not exceed 18 time units.")
+            if self.barrier_width < 2 * self.length / self.n:
+                raise ValueError("Resolve the barrier with a finer grid or a wider barrier.")
 
 
 class Solver:
@@ -54,8 +72,11 @@ class Solver:
         self.trap = 0.5 * ((config.omega_x * self.X) ** 2 + (config.omega_y * self.Y) ** 2)
         self.kinetic_step = np.exp(-0.5j * config.dt * self.k2)
         self.potential = self.trap.copy()
+        self.protocol = (
+            SplitProtocol(config, self.trap, self.X) if config.experiment == "sequence" else None
+        )
         self.preparation = {"kind": "analytic coherent Gaussian pair", "iterations": 0}
-        if config.experiment == "single":
+        if config.experiment != "double":
             self.psi = self.gaussian().astype(complex)
             self.normalize()
             self.prepare_ground_state()
@@ -110,6 +131,7 @@ class Solver:
         self.release_step = 0 if self.config.experiment == "double" else None
         self.potential = np.zeros_like(self.trap) if self.released else self.trap.copy()
         self.warning = ""
+        self.complete = False
         self.history = []
         self.record()
 
@@ -122,6 +144,8 @@ class Solver:
         return self.steps * self.config.dt
 
     def release(self):
+        if self.protocol:
+            raise ValueError("The sequence releases the trap automatically after Hold.")
         if not self.released:
             self.release_step = self.steps
             self.potential = np.zeros_like(self.trap)
@@ -130,10 +154,13 @@ class Solver:
     def advance(self, count=10):
         if type(count) is not int or not 1 <= count <= 100:
             raise ValueError("Step count must be an integer between 1 and 100.")
-        if self.warning:
+        if self.warning or self.complete:
             return
         c = self.config
         for _ in range(count):
+            if self.protocol:
+                # Midpoint evaluation maintains second-order time integration within stages.
+                self.potential = self.protocol.potential(self.steps + 0.5)
             self.psi *= np.exp(
                 -0.5j * c.dt * (self.potential + c.interaction * np.abs(self.psi) ** 2)
             )
@@ -142,11 +169,23 @@ class Solver:
                 -0.5j * c.dt * (self.potential + c.interaction * np.abs(self.psi) ** 2)
             )
             self.steps += 1
+            if self.protocol:
+                if self.steps in (self.protocol.split_end, self.protocol.release_at):
+                    # Preserve both sides of externally imposed potential jumps.
+                    self.potential = self.protocol.potential(self.steps - 1e-9)
+                    self.record()
+                if self.steps >= self.protocol.release_at:
+                    self.release_step = self.protocol.release_at
+                self.potential = self.protocol.potential(self.steps)
+                if self.steps >= self.protocol.end:
+                    self.complete = True
             if self.edge_mass() > 0.001:
                 self.warning = "Cloud reached the boundary region. Reset with a larger domain."
                 break
             if self.time >= 20:
                 self.warning = "Reached the experiment time limit (20). Reset to start another run."
+                break
+            if self.complete:
                 break
         self.record()
 
@@ -175,6 +214,14 @@ class Solver:
         )
         potential = float((rho * self.potential).sum() * self.dx**2)
         interaction = float(0.5 * self.config.interaction * (rho**2).sum() * self.dx**2)
+        mid = self.config.n // 2
+        center = rho[:, mid].sum() * 0.5
+        left_fraction = float((rho[:, :mid].sum() + center) * self.dx**2 / norm)
+        left = self.psi[:, mid - 1 : 0 : -1]
+        right = self.psi[:, mid + 1 :]
+        overlap = np.vdot(left, right)
+        denominator = np.linalg.norm(left) * np.linalg.norm(right)
+        similarity = float(abs(overlap) / denominator) if denominator > 1e-15 else 0.0
         return {
             "time": self.time,
             "steps": self.steps,
@@ -184,6 +231,15 @@ class Solver:
             "energy": kinetic + potential + interaction,
             "edge_mass": self.edge_mass(),
             "released": self.released,
+            "left_fraction": left_fraction,
+            "right_fraction": 1 - left_fraction,
+            "relative_phase": float(np.angle(overlap)) if similarity > 0.1 else None,
+            "mirror_similarity": similarity,
+            **(
+                fringe_metrics(self.x, rho[mid])
+                if self.released
+                else {"fringe_spacing": None, "fringe_contrast": None}
+            ),
         }
 
     def record(self):
@@ -206,6 +262,10 @@ class Solver:
             "initial_peak": float((np.abs(self.initial) ** 2).max()),
             "history": self.history,
             "release_step": self.release_step,
+            "complete": self.complete,
+            "protocol": self.protocol.summary(self.steps) if self.protocol else None,
+            "potential": self.potential.tolist(),
+            "potential_profile": self.potential[self.config.n // 2].tolist(),
         }
 
     def export(self):
@@ -230,6 +290,7 @@ class Solver:
             "psi_real": self.psi.real.tolist(),
             "psi_imag": self.psi.imag.tolist(),
             "warning": self.warning,
+            "protocol": self.protocol.summary(self.steps) if self.protocol else None,
         }
 
 
@@ -244,6 +305,15 @@ def replay(data):
         raise ValueError("Invalid replay step count.")
     if release is not None and (type(release) is not int or not 0 <= release <= target):
         raise ValueError("Invalid release step.")
+    if sim.protocol:
+        expected_release = sim.protocol.release_at if target >= sim.protocol.release_at else None
+        if target > sim.protocol.end or release != expected_release:
+            raise ValueError("Saved release or end step disagrees with the configured sequence.")
+        while sim.steps < target:
+            sim.advance(min(100, target - sim.steps))
+            if sim.warning and sim.steps < target:
+                raise ValueError("Replay reached a boundary before the saved step.")
+        return sim
     while sim.steps < target:
         if release is not None and sim.steps == release:
             sim.release()

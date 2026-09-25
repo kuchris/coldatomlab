@@ -11,7 +11,7 @@ Build a local interactive experiment that lets a user prepare, release, and meas
 - Begin with dimensionless variables and wavefunction normalization integral |psi|^2 dx dy = 1. The interaction coefficient includes the chosen particle-number convention.
 - Use imaginary-time propagation for trapped stationary states and split-step Fourier evolution for real time.
 - Distinguish a coherent split condensate with a controlled relative phase from independently prepared clouds.
-- The first two-cloud experiment uses an explicitly defined, normalized superposition of separated wave packets. Dynamically raising a barrier to split a trapped condensate is a later extension.
+- The ideal two-cloud experiment uses an explicitly defined, normalized superposition of separated wave packets. A separate sequence experiment dynamically raises a barrier to split a single trapped condensate.
 - Treat phase as a model diagnostic; mask it where density is too small for meaningful interpretation.
 - Explain periodic FFT boundaries and choose a domain and duration that keep expanding clouds away from boundary artifacts.
 - Monitor boundary density and warn or stop when the cloud approaches the periodic domain edges.
@@ -37,6 +37,21 @@ First-release status: implemented and validated. See `docs/VALIDATION.md` for th
 - Symmetric coherent clouds with relative phase zero and pi produce the expected central constructive and destructive interference in the suitable noninteracting reference case.
 - Browser controls change the actual simulated state; pause holds simulation time, reset restores the initial state, and exported metadata reproduces the experiment.
 - Report numerical checks and live browser checks separately.
+
+## Second milestone: 2D split / hold / release
+
+The next milestone remains two-dimensional. Implement a real time-dependent Gaussian barrier, a finite-duration left/right bias, automatic release, and a fixed expansion duration, starting from the same trapped ground state as the single-cloud experiment.
+
+Acceptance criteria:
+
+- A visible timeline follows actual solver steps and reports rounded stage boundaries. Preparation, pause, single-step, reset, automatic release, boundary stopping, and exact end-of-sequence stopping remain reproducible.
+- Plot the applied potential and optional potential contours over the field. Expose barrier height/width, split time, hold time, expansion time, and hold bias.
+- Report left/right population fractions, a clearly labeled mirror-weighted phase diagnostic, and conservative fringe-spacing/profile-contrast estimates with an unavailable state for unresolved patterns.
+- Pin one immutable reference run, prepare a second run, and compare profiles, width histories, settings, and measurements on shared axes. Export both complete records and replay both.
+- Validate actual cloud splitting, lower excitation for a controlled slower ramp, sign and approximate magnitude of bias-induced phase, norm preservation, dynamic time-step/grid/domain convergence, partial and complete replay, and invalid-sequence handling.
+- Exercise the actual browser timeline and comparison workflows, including mobile layouts. Preserve the original single/two-cloud tests.
+
+Status: implemented; see `docs/VALIDATION.md` for measured evidence and limitations. Full three-dimensional evolution remains a future milestone.
 
 ## Later extensions
 
