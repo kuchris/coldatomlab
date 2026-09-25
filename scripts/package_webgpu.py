@@ -11,6 +11,8 @@ def main():
     files = (
         "gpu.html",
         "gpu3d.js",
+        "scan3d.js",
+        "scan3d-ui.js",
         "camera3d.js",
         "camera3d-ui.js",
         "interferometry3d.js",

@@ -45,6 +45,8 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         files = {
+            "/scan3d.js": ("scan3d.js", "text/javascript; charset=utf-8"),
+            "/scan3d-ui.js": ("scan3d-ui.js", "text/javascript; charset=utf-8"),
             "/camera3d.js": ("camera3d.js", "text/javascript; charset=utf-8"),
             "/camera3d-ui.js": ("camera3d-ui.js", "text/javascript; charset=utf-8"),
             "/interferometry3d.js": ("interferometry3d.js", "text/javascript; charset=utf-8"),

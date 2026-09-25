@@ -35,6 +35,14 @@ Use **Density / Phase** to switch the observation view. Parameter edits remain p
 
 The English interface provides density and masked phase maps, central density profiles, RMS width histories, norm, energy, and boundary population. It adapts to desktop and narrow mobile layouts.
 
+## Automated phase scans (v0.9)
+
+In the **3D lab**, open **Measure a phase curve** and click **Run scan**. Start with **Known pair phase · calibration** to compare input phase with image-only measurements. Then try **Interacting split · hold bias** or **Interacting split · hold time**. Every parameter point gets a fresh WebGPU evolution; repeated exposures measure detector-noise scatter on its frozen field. The manual experiment is preserved.
+
+Choose points, exposure count and optics; pause/resume or cancel while keeping finished results. Plots show circular phase means, detector scatter, ideal-image fits and wrapped differences, including unavailable points and failure rates. **Compare 64³ / 128³** adds separate field-width/norm and ideal-image phase sensitivity tables. Two grids do not establish convergence, and these detector repeats do not model condensate phase fluctuations.
+
+**Export CSV** saves the summary; **Export reproducible data** saves compact JSON with the recipes, final projections, timing, raw camera frames and statistics. The existing replay command independently evolves the CPU fields and verifies projected observables, camera regeneration and statistics. Compact scans omit full complex wavefunctions; verification scope and all tolerances are documented in [3D scan methods, paper provenance and measured evidence](docs/SCANS3D.md). Both entry pages and the static WebGPU package include scans; no site is published automatically.
+
 ## 3D virtual camera (v0.8)
 
 Open the **3D lab**, choose **Camera-friendly pair · 2,000 atoms**, then **Load settings → Prepare 3D experiment → Run**. In **What would the camera see?**, capture ideal optics, pin the image, then try FWHM 4 or 8 µm, photon/read noise, or a different viewing axis. Compare reconstructed density, ROI atoms and image-only fringe phase/period/contrast with the independently fitted ideal projection. Unresolved measurements remain unavailable.
@@ -108,13 +116,15 @@ Pause and click **Export run** to download a JSON record containing parameters, 
 uv run python -m coldatomlab.replay "path/to/coldatomlab-single-100.json"
 ```
 
-Replay computes the experiment again and reports the maximum difference from the saved wavefunction. It exits with an error for a discrepancy above `1e-8`.
+Replay computes the experiment again. Full float64 field exports use a maximum wavefunction difference of `1e-8`; GPU, camera and compact scan exports use their separately documented verification scopes and tolerances.
 
 **Export image** saves the source simulation, full camera settings, seed, raw frames and measurements. With an image pinned it exports both acquisitions. The same replay command verifies source evolution and camera regeneration, including noise. The 3D browser camera uses independent numerical comparison with documented tolerances.
 
 With a reference pinned, **Export comparison** saves both complete experiments. The same replay command verifies both records. Sequence timing and bias are included; no manual release action needs to be recreated.
 
 ## Validate
+
+The test suite also requires Node.js on `PATH` for Python/browser-JavaScript parity and scan lifecycle checks. The application itself does not require Node or a frontend build.
 
 ```powershell
 uv run pytest -q
@@ -135,6 +145,7 @@ uv run python -X utf8 -m scripts.benchmark_browser_check
 uv run python -X utf8 -m scripts.three_browser_check
 uv run python -X utf8 -m scripts.three_tf_browser_check
 uv run python -X utf8 -m scripts.webgpu_check
+uv run python -X utf8 -m scripts.scan3d_browser_check --url http://127.0.0.1:8765/gpu.html --refine --verify
 ```
 
 Browser checks exercise the actual controls, download and replay a run, compare interference phases, verify invalid-setting recovery and boundary stopping, and capture desktop/mobile screenshots. Reports and generated experiment files go to ignored `artifacts/`. See [validation evidence](docs/VALIDATION.md) for tested cases and limits.
@@ -145,7 +156,7 @@ The WebGPU check requires installed Chrome with a hardware adapter. GPU exports 
 
 The original workspace uses an effective two-dimensional Gross–Pitaevskii model of an already prepared, dilute, weakly interacting condensate. In-plane release retains tight transverse confinement. The two-cloud initial state is an ideal coherent Gaussian pair. Dimensionless mode leaves physical scales unspecified. Laboratory mode derives coupling from physical parameters and reports conservative frozen-axial applicability checks. The separate v0.5 single-cloud experiment evolves a genuine 3D field with complete trap release and its own coupling convention.
 
-Laser cooling, condensation formation, a thermal component, interacting 3D splitting/interference, and full optical/atomic imaging dynamics are outside this release. The density/phase views are model diagnostics; the separate 2D camera panel produces explicitly simplified synthetic images. Numerical accuracy depends on the chosen grid, step, and domain; passing reference cases does not validate every parameter combination.
+The v0.7 extension supplies interacting 3D splitting/interference; v0.8/v0.9 add three-axis synthetic imaging and parameter scans. Laser cooling, condensation formation, a thermal component, and full optical/atomic imaging dynamics remain outside this release. The density/phase views are model diagnostics; both camera panels produce explicitly simplified synthetic images. Numerical accuracy depends on the chosen grid, step, and domain; passing reference cases does not validate every parameter combination.
 
 See [the model and conventions](docs/MODEL.md), [implementation plan](PLAN.md), and [agent guidance](AGENTS.md).
 

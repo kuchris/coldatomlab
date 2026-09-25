@@ -205,6 +205,50 @@ lambda = 0.780241209 µm; s = I0/Isat; Isat = 16.69 W/m²</pre>
       formulas, fitting gates, seed convention, tolerances and separate
       browser/numerical evidence.
     </p>
+    <h2 id="scans">Automated phase scans</h2>
+    <p>
+      Measure a phase curve runs fresh WebGPU evolutions for known pair phases,
+      interacting hold times or hold biases. Each completed field is frozen for
+      repeated virtual detector exposures; the manually prepared experiment is
+      preserved. Pause/cancel take effect between preparation, step batches and
+      exposures. Cancel retains completed points. Numerical boundary/norm stops
+      and rejected image fits remain visible as failures.
+    </p>
+    <p>
+      Fixed teaching recipes use 2,000 Rb-87 atoms and frequencies x/y/z =
+      30/42/21 Hz, reference 30 Hz. Pair calibration uses zero interactions,
+      separation 6 a₀, a 32 a₀ box and evolution time 3/ω₀. Dynamic scans use
+      scattering length 5.3 nm, a 24 a₀ box, Gaussian barrier height 12 ℏω₀ and
+      width 0.8 a₀, split time 3/ω₀ and expansion 2/ω₀. Actual hold duration is
+      rounded to numerical steps and exported. The isolated-well guide −bias ×
+      actual hold time neglects coupling and interaction imbalance; it does not
+      constrain the image fit. These Rb-87 recipes are inspired by Shin et al.
+      (2004), not a reproduction of their sodium experiment.
+    </p>
+    <p>
+      Circular mean = atan2(mean sin φ, mean cos φ). Circular scatter = sqrt(−2
+      ln R), where R is the magnitude of that mean vector. Means are unavailable
+      when R &lt; 0.1; scatter also requires two valid exposures. Differences
+      wrap to ±π. Bars describe valid detector exposures, not confidence
+      intervals or thermal/quantum condensate phase fluctuations. Rejected fits
+      contribute to the failure rate; surviving fits may be biased.
+    </p>
+    <p>
+      Optional 64³/128³ runs keep box, timing and physical settings fixed.
+      Width/norm differences describe the field; ideal-image phase differences
+      also include sampling and estimator sensitivity. Native detector pixels
+      become smaller with finer grids. Two grids are a sensitivity check, not a
+      convergence proof. Camera noise is shown separately.
+    </p>
+    <p>
+      CSV exports the summary. Compact JSON retains recipes, actual timing,
+      source projections/widths/norm and raw images, but omits complex fields.
+      The replay command independently evolves CPU fields and checks projected
+      observables, camera frames and statistics. Projection/width relative
+      tolerances are 0.5%, with a 0.1% norm-drift limit. Stopped runs lack saved
+      projections and are explicitly unverified. See docs/SCANS3D.md in the
+      repository for the complete contract and measured evidence.
+    </p>
     <h2>WebGPU execution</h2>
     <p>
       The browser GPU backend uses complex float32 and workgroup radix-two FFTs

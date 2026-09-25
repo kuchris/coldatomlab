@@ -23,6 +23,10 @@ def verify_run(data):
 
 
 def verify_export(data):
+    if data.get("schema") == "coldatomlab-scan3d-v1":
+        from .scan3d import verify_scan
+
+        return verify_scan(data)
     if data.get("schema") == "coldatomlab-camera3d-comparison-v1":
         return {key: verify_export(data[key]) for key in ("reference", "current")}
     if data.get("schema") == "coldatomlab-camera3d-v1":

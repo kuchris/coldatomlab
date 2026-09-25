@@ -84,9 +84,14 @@
       controls();
     },
   );
+  const scanPanel = new window.Scan3DPanel(el("results"), (locked) => {
+    busy = locked;
+    controls();
+  });
   const f = (x, n = 3) => Number(x).toFixed(n);
   function controls() {
     cameraPanel.update(snapshot, running, busy, generation);
+    scanPanel.update(running || busy);
     const experiment = el("experiment").value;
     for (const node of el("duration").closest("label").childNodes) {
       if (

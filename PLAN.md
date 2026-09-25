@@ -125,6 +125,19 @@ Status: implemented; numerical and browser evidence is recorded in `docs/INTERFE
 
 Status: implemented. See `docs/IMAGING3D.md` for model conventions, primary references, numerical checks, browser workflows and standalone packaging evidence.
 
+## v0.9: automated interferometer scans
+
+Deliver an independent browser WebGPU scan workspace without changing the manually prepared cloud. Complete known pair-phase calibration first, then interacting hold-time and hold-bias scans using the declared Rb-87 teaching protocols. Keep the existing GPE and camera conventions; do not fit source phase into camera measurements.
+
+- Provide bounded point ranges, explicit fixed physical/numerical/camera settings, repeated seeded camera exposures, progress, pause/resume/cancel, partial results and visible failure counts. Scan computation uses fresh numerical evolution for each parameter/grid; repeated camera exposures reuse the frozen field and must be labeled as detector noise only.
+- Plot input versus recovered circular phase with detector-noise scatter, ideal image fit and declared input/isolated-well guide. Report wrapped phase differences, failures, contrast and period; no artificial phase unwrapping through missing points or claims of many-body phase fluctuations.
+- Offer matched 64³/128³ runs at the same box/time/physical settings; compare widths/norm and ideal-image phase separately from noisy estimates. Identify estimator/pixel sampling as part of image-phase grid sensitivity; two grids are not a convergence proof.
+- Export English CSV summary and a versioned compact JSON containing recipes, actual stage times, source projections/diagnostics, raw camera frames, fits and seeds. Verify source projection/width agreement against independently rerun float64 fields and camera/statistical regeneration in Python. State precisely what compact exports verify; they do not retain full complex GPU fields.
+- Reference Shin et al. (2004) for controlled phase evolution and existing absorption-imaging sources; distinguish teaching protocols, image-fit bias, detector noise and numerical grid effects from a reproduction of experimental data.
+- Validate circular statistics, invalid/unresolved data, recipe integrity, noise repeatability, pair calibration, interacting bias sign/hold response, refinement, tampering, resource cleanup, manual-state isolation, actual browser controls, responsive layouts and extracted standalone packaging. Keep README and model/reference evidence current.
+
+Status: implemented and verified. See `docs/SCANS3D.md` for recipes, statistics, compact-export verification scope, literature, numerical evidence and live browser checks.
+
 ## Later extensions
 
 Dashboard interface: implemented with a light navigation shell, searchable experiment cards, grid/list views and direct workspace/measurement/camera links. Template illustrations are explicitly labeled; selecting a template stages its experiment type for preparation. Navigation preserves the solver session, pending settings and pinned comparisons. Desktop and mobile browser evidence is recorded in `docs/VALIDATION.md`. The dashboard now also links to the independent three-dimensional single-cloud experiment.

@@ -167,8 +167,14 @@ def fit_profile(x, y, errors=None):
 
 def acquire_reference(source, c):
     density, fine_x, axes = project(source, c["axis"])
+    return acquire_projection(density, fine_x, axes, c, source["config"]["atoms"])
+
+
+def validate_camera(c, n):
+    """Validate browser-camera settings without acquiring a frame."""
+    if c["axis"] not in ("x", "y", "z"):
+        raise ValueError("Invalid camera direction.")
     b = c["binning"]
-    n = len(fine_x)
     if type(b) is not int or b not in (1, 2, 4, 8, 16) or n % b or n // b < 8:
         raise ValueError("Invalid binning.")
     for key, lo, hi in [
@@ -193,6 +199,13 @@ def acquire_reference(source, c):
         or not 0 <= c["seed"] <= 2**32 - 1
     ):
         raise ValueError("Invalid noise settings.")
+
+
+def acquire_projection(density, fine_x, axes, c, atom_number):
+    """Independent optical acquisition from a verified physical column density."""
+    b = c["binning"]
+    n = len(fine_x)
+    validate_camera(c, n)
     dx = fine_x[1] - fine_x[0]
     pitch = dx * b
     x = fine_x.reshape(-1, b).mean(axis=1)
@@ -276,7 +289,7 @@ def acquire_reference(source, c):
         truth_atoms_roi=truth[roi].sum() * pitch**2,
         atom_standard_error=None if invalid else math.sqrt(variance[roi].sum()) * pitch**2,
         invalid_roi_pixels=invalid,
-        scattered_per_atom=fluence * (1 - t).sum() * dx**2 / source["config"]["atoms"],
+        scattered_per_atom=fluence * (1 - t).sum() * dx**2 / atom_number,
         roi_bounds_um=[x[selection][0] - pitch / 2, x[selection][-1] + pitch / 2],
         strip_bounds_um=[x[strip][0] - pitch / 2, x[strip][-1] + pitch / 2],
     )
@@ -287,6 +300,11 @@ def verify_camera(data):
         raise ValueError("Unknown 3D camera model.")
     saved = data["image"]
     regenerated = acquire_reference(data["source"], saved["camera"])
+    return verify_image(saved, regenerated)
+
+
+def verify_image(saved, regenerated):
+    """Check numerical images and fits; reason/warning prose is not verified."""
     if saved["axes"] != regenerated["axes"]:
         raise ValueError("Camera plane axes do not match the projection.")
     for key, value in regenerated.items():

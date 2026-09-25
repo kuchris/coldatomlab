@@ -314,3 +314,17 @@
     padding: 14px;
   }
 }
+
+.scan3d svg {
+  width: 100%;
+  height: auto;
+  font: 12px sans-serif;
+  fill: #53677a;
+}
+.scan3d-summary {
+  font-weight: 600;
+  color: #173e67;
+  border-left: 3px solid #2373d7;
+  padding: 12px;
+  background: #edf4fa;
+}
