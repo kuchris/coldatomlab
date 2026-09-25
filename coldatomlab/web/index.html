@@ -24,6 +24,7 @@
     <script src="/scan3d-ui.js" defer></script>
     <script src="/lab3d.js" defer></script>
     <script src="/dashboard.js" defer></script>
+    <script src="/quantum-host.js" defer></script>
   </head>
   <body class="weblab">
     <a class="skip-link" href="#main-content">Skip to content</a>
@@ -40,7 +41,7 @@
         <a href="#experiments" data-route="experiments"><span aria-hidden="true">▦</span>Experiments</a>
         <a href="#workspace" data-route="workspace"><span aria-hidden="true">◉</span>2D workspace · CPU</a>
         <a href="#lab3d" data-route="lab3d"><span aria-hidden="true">◇</span>3D lab <small>WebGPU</small></a>
-        <a href="quantum.html"><span aria-hidden="true">ψ</span>Quantum coherence</a>
+        <a href="#quantum" data-route="quantum"><span aria-hidden="true">ψ</span>Quantum coherence</a>
         <a href="#measurements" data-route="measurements"><span aria-hidden="true">⌁</span>Measurements</a>
         <a href="#camera-lab" data-route="camera-lab"><span aria-hidden="true">▣</span>Virtual camera</a>
       </nav>
@@ -77,13 +78,16 @@
           </article>
           <article class="experiment-card" data-search="quantum two mode tunnelling number squeezing coherence phase diffusion bose hubbard">
             <div class="card-diagram" aria-hidden="true"><svg viewBox="0 0 320 140"><path d="M35 108h250" stroke="#dce4ed"/><g fill="#76a99d"><path d="M98 108V94h12v14zM116 108V76h12v32zM134 108V50h12v58zM152 108V34h12v74zM170 108V50h12v58zM188 108V76h12v32zM206 108V94h12v14z"/></g><path d="M55 106q35-2 55-28t50-55q30 29 50 55t55 28" fill="none" stroke="#7297bd" stroke-dasharray="4 4"/></svg><span>Illustrative probability diagram</span></div>
-            <div class="card-copy"><div class="card-category">05 <span>Two-mode · browser</span></div><h2>Quantum coherence</h2><p>Watch atoms tunnel, compare quantum count distributions and follow coherence through an interacting hold.</p><div class="card-tags"><span>Fixed-N quantum state</span><span>Estève · Gross</span></div><a class="open-experiment-link" href="quantum.html">Open quantum experiment →</a></div>
+            <div class="card-copy"><div class="card-category">05 <span>Two-mode · browser</span></div><h2>Quantum coherence</h2><p>Watch atoms tunnel, compare quantum count distributions and follow coherence through an interacting hold.</p><div class="card-tags"><span>Fixed-N quantum state</span><span>Estève · Gross</span></div><a class="open-experiment-link" href="#quantum">Open quantum experiment →</a></div>
           </article>
         </div>
         <div id="library-empty" hidden><h2>No matching experiments</h2><p>Try “phase”, “expansion” or “barrier”.</p><button id="clear-search">Clear search</button></div>
         <div class="library-note"><span aria-hidden="true">ⓘ</span><p>The original three experiments retain transverse confinement in an effective 2D model. The 3D experiment releases all axes. Quantum coherence is a separate fixed-N, two-mode model without spatial expansion. <button id="library-model">Read the 2D assumptions →</button></p></div>
         <div class="library-session"><div><span class="eyebrow">CURRENT WORKSPACE</span><p id="library-session-status">Preparing your first cloud…</p></div><a href="#workspace">Continue experiment →</a></div>
         <div class="library-session"><div><span class="eyebrow">COMPARE WITH LITERATURE</span><p>Shin et al. · A published fringe spacing and a reduced model.</p></div><a href="#benchmark">View paper benchmark →</a></div>
+      </section>
+      <section id="quantum-page" aria-label="Quantum coherence" hidden>
+        <iframe id="quantum-frame" title="Quantum coherence experiment" style="width:100%;min-height:900px;border:0;display:block"></iframe>
       </section>
       <section id="lab3d-page" aria-labelledby="lab3d-title" hidden>
         <div class="library-heading"><div><p class="eyebrow">EXPERIMENT 04 / THREE DIMENSIONS</p><h1 id="lab3d-title">Matter waves in three dimensions.</h1><p>Prepare, split and release a condensate. Measure its expansion and interference.</p></div><a class="button-link" href="/model3d" target="_blank" rel="noopener">3D model & papers ↗</a></div>

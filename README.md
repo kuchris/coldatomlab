@@ -17,7 +17,7 @@ Open **http://127.0.0.1:8765**. Stop the server with `Ctrl+C`. Use `--port 8766`
 
 ## Try an experiment
 
-The home page is an **Experiments** dashboard. Search five templates or switch between grid and list views. **3D expansion & interferometry** opens its own experiment and preparation controls. **Quantum coherence** opens the two-mode experiment in the same tab. The Cold Atom Lab logo returns to the experiment library from every entry page. The original **Set up expansion / interference / sequence** cards stage the experiment type in the 2D workspace; review the settings and click **Prepare experiment** to apply them. **Open workspace** resumes the 2D experiment without changing settings.
+The home page is an **Experiments** dashboard. Search five templates or switch between grid and list views. **3D expansion & interferometry** opens its own experiment and preparation controls. **Quantum coherence** opens inside the dashboard at `/#quantum`, retaining its sidebar and current experiment state across dashboard navigation. The Cold Atom Lab logo returns to the experiment library from every entry page. The original **Set up expansion / interference / sequence** cards stage the experiment type in the 2D workspace; review the settings and click **Prepare experiment** to apply them. **Open workspace** resumes the 2D experiment without changing settings.
 
 The left navigation opens the workspace, measurements, virtual camera and reference guides. On narrow screens, use the menu button. Navigation within the dashboard keeps the current solver session, pending settings and pinned run/image comparisons; it does not pause a running experiment. Reloading still starts a new session and clears pinned records. Template diagrams are labeled illustrations, while workspace plots come from the numerical state. Direct links to `/#workspace`, `/#measurements` and `/#camera-lab` are supported.
 
@@ -37,7 +37,7 @@ The English interface provides density and masked phase maps, central density pr
 
 ## Two-mode quantum coherence (v0.10)
 
-Open **Quantum coherence** from the dashboard/sidebar, or visit **http://127.0.0.1:8765/quantum.html**. This small fixed-N many-body model runs entirely in browser float64; it needs neither WebGPU nor a simulation API. The static WebGPU ZIP includes the same page, an experiment library and a link from its 3D lab. Page-to-page navigation starts a fresh experiment; use exports to keep a run before leaving.
+Open **Quantum coherence** from the dashboard/sidebar, or visit **http://127.0.0.1:8765/#quantum**. Old `quantum.html` links redirect to this dashboard route. This small fixed-N many-body model runs entirely in browser float64; it needs neither WebGPU nor a simulation API. The static WebGPU ZIP includes the same page, an experiment library and a link from its 3D lab. Returning to the library and reopening Quantum coherence preserves its state and pinned reference. Reloading the page starts a fresh experiment.
 
 Start with **Watch atoms tunnel → Prepare experiment → Run**. Compare the mean left/right populations with the probability distribution of individual atom counts. Pause and **Sample atom counts** to draw repeated, seeded ideal measurements from independent copies of that state. This is intrinsic number uncertainty, without camera noise or continuous measurement collapse.
 

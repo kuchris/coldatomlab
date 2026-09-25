@@ -1,5 +1,6 @@
 "use strict";
 (() => {
+  if (window.self === window.top) return;
   const $ = id => document.getElementById(`tm-${id}`);
   const keys = Object.keys(TwoMode.presets.tunnelling);
   const historyKeys = ["time_ms", "mean_left", "mean_right", "coherence", "variance_left", "norm", "energy_hz"];
@@ -55,7 +56,7 @@
     $("clear").disabled = !pinned;
   }
   function chart(id, xmax, ymax, xlabel, ylabel, draw) {
-    const width = Math.max(260, Math.min(700, $(id).clientWidth)), height = 230;
+    const width = Math.max(200, Math.min(700, $(id).clientWidth)), height = 230;
     const left = 42, right = width - 12, top = 20, bottom = height - 38;
     const X = x => left + x / xmax * (right - left), Y = y => bottom - y / ymax * (bottom - top);
     let svg = `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${ylabel} against ${xlabel}"><title>${ylabel} against ${xlabel}</title>`;
@@ -144,5 +145,11 @@
     download("coldatomlab-quantum-history.csv", rows.join("\n") + "\n", "text/csv");
   };
   new ResizeObserver(renderCharts).observe($("distribution"));
+  const resizeHost = () => parent.postMessage({ type: "quantum-height", height: Math.ceil(document.body.getBoundingClientRect().height) + 4 }, location.origin);
+  new ResizeObserver(resizeHost).observe(document.body);
+  document.querySelector('footer a[href="gpu.html"]').onclick = event => {
+    event.preventDefault();
+    parent.postMessage({ type: "quantum-route", route: "lab3d" }, location.origin);
+  };
   stage("tunnelling"); prepare();
 })();

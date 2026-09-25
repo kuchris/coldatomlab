@@ -4,6 +4,7 @@
     <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Experiments · Cold Atom Lab</title>
     <link rel="stylesheet" href="style.css"><link rel="stylesheet" href="dashboard.css">
+    <script src="quantum-host.js" defer></script>
     <style>
       .weblab.browser-home main {margin:58px auto 0;max-width:1100px;padding:40px 24px}
       .browser-home .app-header {justify-content:space-between}
@@ -28,10 +29,13 @@
         </article>
         <article class="experiment-card">
           <div class="card-diagram" aria-hidden="true"><svg viewBox="0 0 320 140"><path d="M35 108h250" stroke="#dce4ed"/><g fill="#76a99d"><path d="M98 108V94h12v14zM116 108V76h12v32zM134 108V50h12v58zM152 108V34h12v74zM170 108V50h12v58zM188 108V76h12v32zM206 108V94h12v14z"/></g></svg><span>Illustrative probability diagram</span></div>
-          <div class="card-copy"><div class="card-category">05 <span>Two-mode · browser</span></div><h2>Quantum coherence</h2><p>Watch atoms tunnel, compare quantum count distributions and follow coherence through an interacting hold.</p><div class="card-tags"><span>Fixed-N quantum state</span><span>Estève · Gross</span></div><a class="open-experiment-link" href="quantum.html">Open quantum experiment →</a></div>
+          <div class="card-copy"><div class="card-category">05 <span>Two-mode · browser</span></div><h2>Quantum coherence</h2><p>Watch atoms tunnel, compare quantum count distributions and follow coherence through an interacting hold.</p><div class="card-tags"><span>Fixed-N quantum state</span><span>Estève · Gross</span></div><a class="open-experiment-link" href="#quantum">Open quantum experiment →</a></div>
         </article>
       </div>
       <div class="library-note"><span aria-hidden="true">ⓘ</span><p>This browser package contains experiments 04 and 05. Experiments 01–03 use the Python solver and are available in the full local application.</p></div>
+    </main>
+    <main id="quantum-page" aria-label="Quantum coherence" hidden>
+      <iframe id="quantum-frame" title="Quantum coherence experiment" style="width:100%;min-height:900px;border:0;display:block"></iframe>
     </main>
   </body>
 </html>

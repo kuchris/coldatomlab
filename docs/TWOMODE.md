@@ -2,10 +2,13 @@
 
 ## Experiment and controls
 
-Open `quantum.html` from the experiment library, sidebar or standalone GPU page.
-Experiment links use the same tab. The Cold Atom Lab logo returns to the local
-experiment library or, in the static package, its 04/05 library. Moving between
-pages starts a fresh experiment; exported records retain runs for later replay. The page uses
+Open `/#quantum` from the experiment library, sidebar or standalone GPU page.
+The workspace stays inside the dashboard shell, with the local sidebar retained.
+Direct `quantum.html` links redirect to this route. The Cold Atom Lab logo returns
+to the local experiment library or the static package's 04/05 library. Library
+navigation preserves the quantum state and pinned reference; a reload starts a
+fresh experiment. An isolated embedded workspace keeps its styles and solver
+state separate from the host, and grows to fit its contents. The workspace uses
 only local static assets and browser float64 arithmetic. There is no GPU, Python
 simulation request, remote font or external script dependency.
 

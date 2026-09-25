@@ -9,6 +9,7 @@ def main():
     out = Path("artifacts/coldatomlab-webgpu.zip")
     out.parent.mkdir(exist_ok=True)
     files = (
+        "quantum-host.js",
         "quantum.html",
         "twomode.js",
         "twomode-ui.js",

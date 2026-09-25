@@ -10,6 +10,7 @@
     "camera-lab": "Virtual camera",
     benchmark: "Paper benchmark",
     lab3d: "3D expansion",
+    quantum: "Quantum coherence",
   };
   const nav = $("lab-navigation");
   const toggle = $("nav-toggle");
@@ -23,10 +24,12 @@
     const library = route === "experiments";
     const benchmark = route === "benchmark";
     const three = route === "lab3d";
+    const quantum = route === "quantum";
     $("experiment-library").hidden = !library;
-    $("lab-workbench").hidden = library || benchmark || three;
+    $("lab-workbench").hidden = library || benchmark || three || quantum;
     $("paper-benchmark").hidden = !benchmark;
     $("lab3d-page").hidden = !three;
+    $("quantum-page").hidden = !quantum;
     $("page-label").textContent = routes[route];
     document.title = `${routes[route]} · Cold Atom Lab`;
     document.querySelectorAll("[data-route]").forEach((link) => {
@@ -34,7 +37,7 @@
       else link.removeAttribute("aria-current");
     });
     closeNavigation();
-    if (!library && !benchmark && !three && state) render();
+    if (!library && !benchmark && !three && !quantum && state) render();
     if (benchmark) window.loadBenchmark();
     if (three) window.showLab3D();
     requestAnimationFrame(() => {

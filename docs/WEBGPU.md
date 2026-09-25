@@ -71,3 +71,8 @@ The packaged `index.html` is the experiment library, with 04 (3D WebGPU) and
 05 (two-mode quantum) in project order. Both experiments open in the same tab.
 The Cold Atom Lab logo returns to that library; in the full local app it returns
 to the complete dashboard. Experiments 01–03 require the local Python solver.
+
+Quantum coherence opens inside the library shell at `/#quantum`; direct
+`quantum.html` bookmarks redirect there. Returning to the library and reopening
+05 preserves its state and pins until reload. The full local application retains
+its sidebar while showing this workspace.
