@@ -75,7 +75,15 @@ Status: implemented and verified. Numerical and browser evidence is recorded in 
 
 Status: implemented and verified. See `docs/IMAGING.md` for model/provenance and `docs/VALIDATION.md` for numerical and browser evidence.
 
-## Later extensions
+## Paper benchmark: Shin et al., Fig. 2
+
+Implement a separate, reproducible comparison of the reported Na-23 fringe spacing (41.5 um after 30 ms expansion from 13 um separation). Use a normalized, noninteracting coherent Gaussian pair and free Fourier propagation of its separable x component. This is a reduced ballistic benchmark, not the paper's interacting 3D splitting experiment or its absorption camera. The initial packet width is a declared harmonic-ground-state surrogate derived from 615 Hz, not a measured condensate width.
+
+Compare a Gaussian-envelope sinusoidal fit of the numerical line density with the exact finite-width Gaussian prediction, the point-source prediction recomputed from rounded paper inputs, the paper's quoted prediction (39.8 um), and the reported measurement. Keep numerical error separate from discrepancy with experiment; no experimental confidence or agreement test is possible without uncertainty/raw data. Verify norm, analytic field agreement, grid/domain refinement, two-half-step equivalence, and width sensitivity without tuning to the measurement. Provide an English benchmark page, source/assumption map, downloadable report and runnable CLI. Preserve the existing experiments and their sessions.
+
+Status: implemented and verified. See `docs/BENCHMARK.md` for method, values and limits; `docs/SHIN_REFERENCE.md` for the source audit; and `docs/VALIDATION.md` for numerical and browser evidence.
+
+## Future model work
 
 Dashboard interface: implemented with a light navigation shell, searchable experiment cards, grid/list views and direct workspace/measurement/camera links. Template illustrations are explicitly labeled; selecting a template stages its experiment type for preparation. Navigation preserves the solver session, pending settings and pinned comparisons. Desktop and mobile browser evidence is recorded in `docs/VALIDATION.md`. This interface change retains the effective 2D model; three-dimensional evolution is a separate future milestone.
 

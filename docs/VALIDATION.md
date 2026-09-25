@@ -4,7 +4,7 @@ Validated locally on Windows with Python 3.12, NumPy 2.5.3, and Playwright Chrom
 
 ## Numerical and HTTP checks
 
-`uv run pytest -q`: **61 passed**. The original 42 checks remain in place alongside 18 camera checks and one camera HTTP workflow check, described below.
+`uv run pytest -q`: **66 passed**. The original 42 checks remain in place alongside 18 camera checks, one camera HTTP workflow check, and five reduced-ballistic benchmark test cases, described below.
 
 | Check | Acceptance criterion |
 | --- | --- |
@@ -87,6 +87,14 @@ Evidence is in ignored `artifacts/camera-browser-report.json`, `camera-compariso
 The dashboard browser check covers all three template selections, staged settings without replacing the source state, search and no-results recovery, grid/list switching, model dialog, direct workspace links, browser Back, measurements/camera navigation, running-state guards, and 390px/320px layouts. Navigation preserves the complete solver state and pinned run. The camera browser check additionally verifies that both captured and pinned image records survive library/camera navigation unchanged. Re-selecting the current navigation item closes the mobile menu; Escape returns focus to its toggle.
 
 All five browser workflows pass against the dashboard: library/navigation, original single/two-cloud, sequence, physical units and camera. The original workflow initially exceeded its five-second assertion timeout when all four numerical browser suites competed for the server lock; its isolated rerun passed. These are browser checks using the existing solver, not new 3D physics validation. Screenshots were inspected for desktop and mobile layout. Evidence is saved to ignored `artifacts/dashboard-browser-report.json` and `dashboard-*.png`; `docs/dashboard-preview.png` is the homepage capture.
+
+## Shin Fig. 2 reduced benchmark
+
+The five benchmark test cases independently check the free Gaussian analytic field, norm preservation without evolution renormalization, full-step/two-half-step equivalence, recovery of two synthetic profiles with different periods/centers/phases, rejection of a nonfringing profile, and grid/domain refinement plus width-sensitivity boundary control. Every reported case has analytic field L2 error below `1e-7`, norm error below `1e-12`, and edge probability below `1e-10`. Numerical refinements change fitted period by less than `1e-5 um`. The independent fitter tests do not use the paper's measured period.
+
+The actual benchmark gives fitted spacing 40.057375321 um versus the reported 41.5 um, a -3.476204% discrepancy. This is not an experimental pass/fail test. See `docs/BENCHMARK.md` for the distinct quoted theory, recomputation, model assumptions and fit residual.
+
+The live benchmark browser workflow verifies the calculated values, five-row source comparison, JSON download, refinement panel, direct link, 503 error/retry recovery and unchanged workspace/session/pinned reference. Desktop and 390px/320px layouts have no page errors or horizontal page overflow; tables intentionally scroll. The existing dashboard navigation workflow also passes. The exported scientific figure was rendered with Matplotlib and visually inspected separately from the browser. Evidence is in ignored `artifacts/shin-benchmark.json`, `shin-browser-export.json`, `shin-benchmark.png`, `benchmark-browser-report.json` and `benchmark-*.png`.
 
 ## Additional checks and limits
 

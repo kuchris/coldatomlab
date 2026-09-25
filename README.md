@@ -53,6 +53,21 @@ The camera uses an ideal resonant Rb-87 D2 transition, saturation-corrected abso
 
 ![Virtual camera comparison](docs/camera-preview.png)
 
+## Compare with a paper
+
+Open **Paper benchmark** in the sidebar, or visit **http://127.0.0.1:8765/#benchmark**. This separate calculation compares Shin et al.'s Fig. 2 reported fringe spacing with free expansion of a noninteracting Na-23 Gaussian pair at the reported 13 µm separation and 30 ms expansion time. It does not change the current workspace or use its Rb-87 camera.
+
+The numerical fit gives **40.0574 µm**, compared with the published **41.5 µm** (−3.476%, using the measurement as denominator). The page separates the fit, exact finite-width formula, rounded-input point-source formula and the paper's quoted prediction. This is a one-observable comparison, not experimental validation: the initial width is a surrogate, interactions and 3D preparation are omitted, and the paper supplies no raw numerical profile or period uncertainty. See [reference audit and limitations](docs/SHIN_REFERENCE.md) and [benchmark method](docs/BENCHMARK.md).
+
+**Export benchmark** downloads inputs, provenance, computed/fitted profiles, discrepancies, numerical refinement checks and width sensitivity. Recalculate the report and render a standalone scientific figure with:
+
+```powershell
+uv run python -m coldatomlab.benchmark
+uv run python -m scripts.benchmark_figure
+```
+
+Both write to ignored `artifacts/`. The report has its own `coldatomlab-shin-benchmark-v1` schema; reproduce it with the benchmark command rather than the experiment replay command.
+
 ## Save and reproduce
 
 Pause and click **Export run** to download a JSON record containing parameters, preparation metadata, the release protocol, diagnostics, and the final complex wavefunction.
@@ -84,6 +99,7 @@ uv run python -X utf8 -m scripts.sequence_browser_check
 uv run python -X utf8 -m scripts.physical_browser_check
 uv run python -X utf8 -m scripts.camera_browser_check
 uv run python -X utf8 -m scripts.dashboard_browser_check
+uv run python -X utf8 -m scripts.benchmark_browser_check
 ```
 
 Browser checks exercise the actual controls, download and replay a run, compare interference phases, verify invalid-setting recovery and boundary stopping, and capture desktop/mobile screenshots. Reports and generated experiment files go to ignored `artifacts/`. See [validation evidence](docs/VALIDATION.md) for tested cases and limits.

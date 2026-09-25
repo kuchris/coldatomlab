@@ -13,6 +13,7 @@
     <script src="/physical.js" defer></script>
     <script src="/camera.js" defer></script>
     <script src="/app.js" defer></script>
+    <script src="/benchmark.js" defer></script>
     <script src="/dashboard.js" defer></script>
   </head>
   <body class="weblab">
@@ -34,6 +35,7 @@
       </nav>
       <p class="nav-heading">Resources</p>
       <nav aria-label="Resources">
+        <a href="#benchmark" data-route="benchmark"><span aria-hidden="true">≋</span>Paper benchmark</a>
         <button id="nav-model"><span aria-hidden="true">◎</span>Model & assumptions</button>
         <a href="/physical-units" target="_blank" rel="noopener"><span aria-hidden="true">↗</span>Units & literature</a>
         <a href="/imaging" target="_blank" rel="noopener"><span aria-hidden="true">↗</span>Imaging guide</a>
@@ -62,6 +64,24 @@
         <div id="library-empty" hidden><h2>No matching experiments</h2><p>Try “phase”, “expansion” or “barrier”.</p><button id="clear-search">Clear search</button></div>
         <div class="library-note"><span aria-hidden="true">ⓘ</span><p>All experiments use an effective 2D condensate model. Release removes the in-plane trap; transverse confinement remains. <button id="library-model">Read the assumptions →</button></p></div>
         <div class="library-session"><div><span class="eyebrow">CURRENT WORKSPACE</span><p id="library-session-status">Preparing your first cloud…</p></div><a href="#workspace">Continue experiment →</a></div>
+        <div class="library-session"><div><span class="eyebrow">COMPARE WITH LITERATURE</span><p>Shin et al. · A published fringe spacing and a reduced model.</p></div><a href="#benchmark">View paper benchmark →</a></div>
+      </section>
+      <section id="paper-benchmark" aria-labelledby="benchmark-title" hidden>
+        <div class="library-heading"><div><p class="eyebrow">LITERATURE / SHIN ET AL. · FIGURE 2</p><h1 id="benchmark-title">Does the fringe spacing match?</h1><p>A numerical comparison with a published measurement.</p></div><a class="button-link" href="https://arxiv.org/abs/cond-mat/0306305v2" target="_blank" rel="noopener">Read the paper ↗</a></div>
+        <p class="benchmark-scope"><strong>Reduced ballistic benchmark.</strong> We compare one observable from a noninteracting sodium wavepacket model. This is not a reproduction of the interacting 3D experiment or its camera image.</p>
+        <div class="benchmark-status"><p id="benchmark-status" role="status" aria-live="polite">Ready to calculate.</p><button id="benchmark-retry" hidden>Retry calculation</button><button id="benchmark-export" disabled>Export benchmark ↓</button></div>
+        <div id="benchmark-result" hidden>
+          <div class="benchmark-metrics"><div><span>NUMERICAL FIT</span><strong id="benchmark-fit">—</strong><small>Free Gaussian wavepacket pair</small></div><div><span>PUBLISHED MEASUREMENT</span><strong>41.5 <small>µm</small></strong><small>Shin et al., Fig. 2 text</small></div><div><span>DIFFERENCE / MEASUREMENT</span><strong id="benchmark-difference">—</strong><small>No experimental uncertainty reported</small></div></div>
+          <div class="benchmark-profile"><h2>Computed line density and its fitted fringes</h2><p>Blue: numerical profile · Amber dashed: Gaussian-envelope sinusoidal fit. Both curves are computed; experimental profile data is not included.</p><canvas id="benchmark-profile" width="1100" height="340" role="img" aria-label="Computed sodium line density and fitted profile, with x in micrometers"></canvas></div>
+          <h2 class="benchmark-section-title">Five values, different meanings</h2>
+          <p class="benchmark-scroll-hint">Swipe the table horizontally to see all columns.</p>
+          <div class="table-scroll"><table class="benchmark-table"><thead><tr><th>Source</th><th>Spacing / µm</th><th>Δ / µm</th><th>Δ / measured</th></tr></thead><tbody id="benchmark-comparison"></tbody></table></div>
+          <p class="benchmark-note">Δ = value − 41.5 µm. The paper quotes 39.8 µm for its point-source prediction. Recalculating h t / (m d) using the rounded inputs 13 µm and 30 ms gives a different value; we preserve both. Neither discrepancy is a statistical agreement test.</p>
+          <div class="benchmark-columns"><section><h2>What is matched?</h2><dl><dt>Species</dt><dd>Na-23 (sodium), not the Rb-87 camera</dd><dt>Source separation</dt><dd>13 µm · reported</dd><dt>Expansion time</dt><dd>30 ms · reported</dd><dt>Initial RMS packet width</dt><dd id="benchmark-width">—</dd><dt>Source phase and interaction</dt><dd>Zero relative phase; interactions omitted</dd><dt>Fit window</dt><dd>−200 to +200 µm · chosen aperture</dd></dl></section><section><h2>What is simplified?</h2><ul id="benchmark-limitations"></ul></section></div>
+          <details class="benchmark-checks"><summary>Numerical checks and packet-width sensitivity</summary><p>Refining a numerical calculation checks its accuracy within this model. Changing the packet width explores a modeling assumption; it is not experimental uncertainty.</p><p id="benchmark-verification"></p><div class="table-scroll"><table class="benchmark-table"><thead><tr><th>Case</th><th>Fit / µm</th><th>Change / µm</th><th>Field L2 error</th><th>Edge probability</th></tr></thead><tbody id="benchmark-checks"></tbody></table></div><p>Free propagation uses the exact Fourier kinetic propagator. Two half steps should equal one full step; this is not a convergence test of interacting GPE dynamics. No real-time renormalization is applied.</p></details>
+          <p class="benchmark-note">Method: normalize a separable Gaussian pair, evolve its x wavefunction using the free Schrödinger propagator, then fit the numerical marginal density. The transverse factors integrate to one. Density is probability per µm, not an atom count or absorption signal. The fit is initialized from the numerical profile, without using 41.5 µm as an input.</p>
+          <p class="benchmark-note">References: <a href="https://arxiv.org/abs/cond-mat/0306305v2" target="_blank" rel="noopener">Shin et al., PRL 92, 050405 (2004), Fig. 2 & Eq. (1) ↗</a> · <a href="https://physics.nist.gov/cgi-bin/Compositions/stand_alone.pl?ele=Na" target="_blank" rel="noopener">NIST sodium mass ↗</a>. A numerical profile and uncertainty for the measured period are not supplied in the cited paper. No parameters have been tuned to its measured spacing.</p>
+        </div>
       </section>
       <div id="lab-workbench" hidden>
       <section class="intro">

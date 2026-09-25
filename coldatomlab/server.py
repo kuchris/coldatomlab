@@ -8,6 +8,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from uuid import uuid4
 
+from .benchmark import report as benchmark_report
 from .imaging import Camera, capture
 from .solver import Config, Solver
 
@@ -45,6 +46,7 @@ class Handler(BaseHTTPRequestHandler):
             "/physical.js": ("physical.js", "text/javascript; charset=utf-8"),
             "/dashboard.js": ("dashboard.js", "text/javascript; charset=utf-8"),
             "/dashboard.css": ("dashboard.css", "text/css; charset=utf-8"),
+            "/benchmark.js": ("benchmark.js", "text/javascript; charset=utf-8"),
             "/physical-units": ("physical-units.html", "text/html; charset=utf-8"),
             "/app.js": ("app.js", "text/javascript; charset=utf-8"),
             "/camera.js": ("camera.js", "text/javascript; charset=utf-8"),
@@ -53,6 +55,8 @@ class Handler(BaseHTTPRequestHandler):
         }
         if self.path == "/health":
             return self.respond(200, {"status": "ok"})
+        if self.path == "/api/benchmark":
+            return self.respond(200, benchmark_report())
         if self.path not in files:
             return self.respond(404, {"error": "Not found"})
         name, mime = files[self.path]

@@ -8,6 +8,7 @@
     workspace: "Experiment workspace",
     measurements: "Measurements",
     "camera-lab": "Virtual camera",
+    benchmark: "Paper benchmark",
   };
   const nav = $("lab-navigation");
   const toggle = $("nav-toggle");
@@ -19,8 +20,10 @@
     const route = Object.hasOwn(routes, location.hash.slice(1))
       ? location.hash.slice(1) : "experiments";
     const library = route === "experiments";
+    const benchmark = route === "benchmark";
     $("experiment-library").hidden = !library;
-    $("lab-workbench").hidden = library;
+    $("lab-workbench").hidden = library || benchmark;
+    $("paper-benchmark").hidden = !benchmark;
     $("page-label").textContent = routes[route];
     document.title = `${routes[route]} · Cold Atom Lab`;
     document.querySelectorAll("[data-route]").forEach((link) => {
@@ -28,7 +31,8 @@
       else link.removeAttribute("aria-current");
     });
     closeNavigation();
-    if (!library && state) render();
+    if (!library && !benchmark && state) render();
+    if (benchmark) window.loadBenchmark();
     requestAnimationFrame(() => {
       const target = route === "measurements" || route === "camera-lab"
         ? $(route) : $("main-content");
