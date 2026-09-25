@@ -162,16 +162,11 @@ def main():
             page = browser.new_page()
             page.goto(url, wait_until="networkidle")
             expect(page.locator("#status")).to_have_text("Ready", timeout=30000)
-            frozen = page.evaluate("JSON.stringify({session,state,reference})")
             page.locator("#experiment-search").fill("quantum")
             expect(page.locator("#library-count")).to_have_text("1 experiment")
-            with page.expect_popup() as popup:
-                page.get_by_role("link", name="Open quantum experiment").click()
-            popup.value.wait_for_load_state("networkidle")
-            expect(popup.value.locator("#tm-status")).to_contain_text("Ready")
-            popup.value.close()
-            assert page.url == url + "/"
-            assert page.evaluate("JSON.stringify({session,state,reference})") == frozen
+            page.get_by_role("link", name="Open quantum experiment").click()
+            expect(page.locator("#tm-status")).to_contain_text("Ready")
+            assert len(page.context.pages) == 1
             page.close()
         with tempfile.TemporaryDirectory() as tmp:
             with ZipFile("artifacts/coldatomlab-webgpu.zip") as archive:
@@ -180,10 +175,9 @@ def main():
                 static = exercise(browser, url, "static")
                 page = browser.new_page()
                 page.goto(url + "/gpu.html", wait_until="networkidle")
-                with page.expect_popup() as popup:
-                    page.get_by_role("link", name="Quantum coherence lab").click()
-                expect(popup.value.locator("#tm-status")).to_contain_text("Ready")
-                popup.value.close()
+                page.get_by_role("link", name="Quantum coherence lab").click()
+                expect(page.locator("#tm-status")).to_contain_text("Ready")
+                assert len(page.context.pages) == 1
                 page.close()
         browser.close()
     (OUT / "browser.json").write_text(

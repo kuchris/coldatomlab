@@ -64,3 +64,10 @@ uv run python -m scripts.package_webgpu
 ```
 
 This creates ignored `artifacts/coldatomlab-webgpu.zip` containing only the listed HTML/CSS/JS assets and instructions. Extract and serve it locally (`python -m http.server 8000`) or upload the files to a static HTTPS host. The Python command here is just a file server. No public deployment is performed by packaging.
+
+## Browser package navigation
+
+The packaged `index.html` is the experiment library, with 04 (3D WebGPU) and
+05 (two-mode quantum) in project order. Both experiments open in the same tab.
+The Cold Atom Lab logo returns to that library; in the full local app it returns
+to the complete dashboard. Experiments 01–03 require the local Python solver.

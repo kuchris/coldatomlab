@@ -17,9 +17,9 @@ Open **http://127.0.0.1:8765**. Stop the server with `Ctrl+C`. Use `--port 8766`
 
 ## Try an experiment
 
-The home page is an **Experiments** dashboard. Search five templates or switch between grid and list views. **3D expansion & interferometry** opens its own experiment and preparation controls. **Quantum coherence** opens an independent two-mode experiment in a new tab, preserving the existing workspace. The original **Set up expansion / interference / sequence** cards stage the experiment type in the 2D workspace; review the settings and click **Prepare experiment** to apply them. **Open workspace** resumes the 2D experiment without changing settings.
+The home page is an **Experiments** dashboard. Search five templates or switch between grid and list views. **3D expansion & interferometry** opens its own experiment and preparation controls. **Quantum coherence** opens the two-mode experiment in the same tab. The Cold Atom Lab logo returns to the experiment library from every entry page. The original **Set up expansion / interference / sequence** cards stage the experiment type in the 2D workspace; review the settings and click **Prepare experiment** to apply them. **Open workspace** resumes the 2D experiment without changing settings.
 
-The left navigation opens the workspace, measurements, virtual camera and reference guides. On narrow screens, use the menu button. Navigation keeps the current solver session, pending settings and pinned run/image comparisons; it does not pause a running experiment. Reloading still starts a new session and clears pinned records. Template diagrams are labeled illustrations, while workspace plots come from the numerical state. Direct links to `/#workspace`, `/#measurements` and `/#camera-lab` are supported.
+The left navigation opens the workspace, measurements, virtual camera and reference guides. On narrow screens, use the menu button. Navigation within the dashboard keeps the current solver session, pending settings and pinned run/image comparisons; it does not pause a running experiment. Reloading still starts a new session and clears pinned records. Template diagrams are labeled illustrations, while workspace plots come from the numerical state. Direct links to `/#workspace`, `/#measurements` and `/#camera-lab` are supported.
 
 **Expansion:** the initial screen prepares a trapped condensate. Click **Release trap**, then **Run**. Watch the density spread and the RMS widths grow. **Pause** holds the state after the current batch finishes; **Step** advances one numerical step. **Reset** returns to the prepared initial state and restores its settings.
 
@@ -37,7 +37,7 @@ The English interface provides density and masked phase maps, central density pr
 
 ## Two-mode quantum coherence (v0.10)
 
-Open **Quantum coherence** from the dashboard/sidebar, or visit **http://127.0.0.1:8765/quantum.html**. This small fixed-N many-body model runs entirely in browser float64; it needs neither WebGPU nor a simulation API. The static WebGPU ZIP includes the same page and a link from its 3D lab.
+Open **Quantum coherence** from the dashboard/sidebar, or visit **http://127.0.0.1:8765/quantum.html**. This small fixed-N many-body model runs entirely in browser float64; it needs neither WebGPU nor a simulation API. The static WebGPU ZIP includes the same page, an experiment library and a link from its 3D lab. Page-to-page navigation starts a fresh experiment; use exports to keep a run before leaving.
 
 Start with **Watch atoms tunnel → Prepare experiment → Run**. Compare the mean left/right populations with the probability distribution of individual atom counts. Pause and **Sample atom counts** to draw repeated, seeded ideal measurements from independent copies of that state. This is intrinsic number uncertainty, without camera noise or continuous measurement collapse.
 
@@ -53,7 +53,7 @@ In the **3D lab**, open **Measure a phase curve** and click **Run scan**. Start 
 
 Choose points, exposure count and optics; pause/resume or cancel while keeping finished results. Plots show circular phase means, detector scatter, ideal-image fits and wrapped differences, including unavailable points and failure rates. **Compare 64³ / 128³** adds separate field-width/norm and ideal-image phase sensitivity tables. Two grids do not establish convergence, and these detector repeats do not model condensate phase fluctuations.
 
-**Export CSV** saves the summary; **Export reproducible data** saves compact JSON with the recipes, final projections, timing, raw camera frames and statistics. The existing replay command independently evolves the CPU fields and verifies projected observables, camera regeneration and statistics. Compact scans omit full complex wavefunctions; verification scope and all tolerances are documented in [3D scan methods, paper provenance and measured evidence](docs/SCANS3D.md). Both entry pages and the static WebGPU package include scans; no site is published automatically.
+**Export CSV** saves the summary; **Export reproducible data** saves compact JSON with the recipes, final projections, timing, raw camera frames and statistics. The existing replay command independently evolves the CPU fields and verifies projected observables, camera regeneration and statistics. Compact scans omit full complex wavefunctions; verification scope and all tolerances are documented in [3D scan methods, paper provenance and measured evidence](docs/SCANS3D.md). Both 3D entry pages and the static WebGPU package include scans; no site is published automatically.
 
 ## 3D virtual camera (v0.8)
 
@@ -108,7 +108,7 @@ Both write to ignored `artifacts/`. The report has its own `coldatomlab-shin-ben
 
 **v0.6 adds WebGPU acceleration.** The 3D page now defaults to **WebGPU · browser GPU · float32**; select **CPU reference · float64** to use the original local solver. On the measured RTX 5070 Ti, fresh interacting 64³ preparation fell from about 28 s to 0.4–0.5 s, with matching-case width differences below 0.0015%. Precision and stopping tolerances differ; see [GPU performance, accuracy and limits](docs/WEBGPU.md). Hardware Chrome and Edge were tested; an embedded browser may not expose WebGPU.
 
-For a **browser-only, shareable version**, open **http://127.0.0.1:8765/gpu.html**. All 3D preparation/evolution runs in the browser without simulation API calls. `uv run python -m scripts.package_webgpu` creates `artifacts/coldatomlab-webgpu.zip` for an ordinary static HTTPS host. No site is published automatically. WebGPU supports 32³/64³/128³; loading its TF preset explicitly uses 128³ instead of the CPU preset's 96³.
+For a **browser-only, shareable version**, open **http://127.0.0.1:8765/gpu.html**. All 3D preparation/evolution runs in the browser without simulation API calls. `uv run python -m scripts.package_webgpu` creates `artifacts/coldatomlab-webgpu.zip` for an ordinary static HTTPS host. Its index page is an experiment library linking to 04 (3D) and 05 (quantum); experiments 01–03 require the full Python application. No site is published automatically. WebGPU supports 32³/64³/128³; loading its TF preset explicitly uses 128³ instead of the CPU preset's 96³.
 
 Open **3D lab** in the sidebar, or visit **http://127.0.0.1:8765/#lab3d**. Choose a reference example, **Load settings**, then **Prepare 3D experiment**. Preparation can take tens of seconds or several minutes on the largest grids. **Release all axes**, then **Run**. **Pause**, **Step**, and **Reset** act on this independent 3D session; navigation preserves both it and the original 2D workspace.
 
@@ -169,6 +169,7 @@ The two-mode browser check requires installed Chrome and manages temporary loopb
 ```powershell
 uv run python -m scripts.package_webgpu
 uv run python -m scripts.twomode_browser_check
+uv run python -m scripts.navigation_browser_check
 ```
 
 ## Model scope

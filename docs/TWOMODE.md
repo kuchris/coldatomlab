@@ -3,7 +3,9 @@
 ## Experiment and controls
 
 Open `quantum.html` from the experiment library, sidebar or standalone GPU page.
-It opens in a new tab so the existing 2D/3D session remains intact. The page uses
+Experiment links use the same tab. The Cold Atom Lab logo returns to the local
+experiment library or, in the static package, its 04/05 library. Moving between
+pages starts a fresh experiment; exported records retain runs for later replay. The page uses
 only local static assets and browser float64 arithmetic. There is no GPU, Python
 simulation request, remote font or external script dependency.
 
@@ -175,7 +177,7 @@ from the quantum page. It covered all four recipes, pause/step/reset, pending an
 invalid settings, unchanged source state during sampling, equal/different seeds,
 immutable comparison, both exports, undefined Fock phase, largest N preparation,
 desktop and 390/320 px layouts without horizontal overflow, dashboard search and
-new-tab entry links. Downloaded complete and partial runs were independently
+same-tab entry links and logo-to-library return paths. Downloaded complete and partial runs were independently
 replayed, including both 201-row comparison histories. Example complex-state L2
 differences were 1.17e-15 (Gaussian comparison), 5.88e-15 (pinned coherent hold)
 and 5.59e-14 (N=100 interacting browser run after one display step).
@@ -186,6 +188,7 @@ Reproduce the checks; browser servers are temporary and closed on exit:
 uv run pytest tests/test_twomode.py -q
 uv run python -m scripts.package_webgpu
 uv run python -m scripts.twomode_browser_check
+uv run python -m scripts.navigation_browser_check
 ```
 
 Generated evidence lives outside version control in `artifacts/twomode/`, including
