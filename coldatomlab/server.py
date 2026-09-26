@@ -45,6 +45,8 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         files = {
+            "/readout.js": ("readout.js", "text/javascript; charset=utf-8"),
+            "/readout-ui.js": ("readout-ui.js", "text/javascript; charset=utf-8"),
             "/pulse.js": ("pulse.js", "text/javascript; charset=utf-8"),
             "/pulse-ui.js": ("pulse-ui.js", "text/javascript; charset=utf-8"),
             "/echo.js": ("echo.js", "text/javascript; charset=utf-8"),

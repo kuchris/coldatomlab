@@ -16,7 +16,7 @@
   window.addEventListener("message", event => {
     if (event.origin !== location.origin || event.source !== frame.contentWindow) return;
     if (event.data?.type === "quantum-height" && Number.isFinite(event.data.height))
-      frame.style.height = `${Math.max(400, Math.min(20000, event.data.height))}px`;
+      frame.style.height = `${Math.max(400, Math.min(40000, event.data.height))}px`;
     if (event.data?.type === "quantum-route" && ["experiments", "lab3d"].includes(event.data.route)) {
       if (standalone && event.data.route === "lab3d") location.href = "gpu.html";
       else location.hash = event.data.route;

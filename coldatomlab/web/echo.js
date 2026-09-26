@@ -62,7 +62,7 @@
     }));
   }
   function report(plan, reference, records, status) {
-    return { schema: "coldatomlab-echo-v1", version: "0.13.0", convention, plan, status, ideal: reference, records, aggregate: aggregate(plan, reference, records) };
+    return { schema: "coldatomlab-echo-v1", version: "0.14.0", convention, plan, status, ideal: reference, records, aggregate: aggregate(plan, reference, records) };
   }
   globalThis.Echo = { defaults, convention, validate, checkpoints, swap, propagate, observe, evolve, ideal, aggregate, report };
 })();

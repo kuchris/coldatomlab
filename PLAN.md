@@ -293,6 +293,45 @@ tests. Local and extracted-static browser checks passed for five-arm controls,
 timeline/zoom, actual pulse population transfer, exports/replay, preservation of
 all earlier panels, navigation and desktop/mobile layouts. See `docs/PULSE.md`.
 
+## v0.14: phase readout from atom counts
+
+Add a separate experiment-05 panel: prepare a fixed-N pure state, isolated hold
+(optional ideal midpoint echo), apply a controlled reference phase, mix, count.
+Retain the existing Hz/ms, on-site U and normalization conventions. For analysis
+phase alpha, apply c_n -> exp[-i(N-n)(alpha+pi/2)] c_n followed by the positive-J
+rotation. Ideal pi/2 mixing gives z=2<NL>/N-1=Re(q exp[-i alpha]), where
+q=2<aL†aR>/N. This explicitly fixes the sign and reference phase convention.
+
+- Compare direct counting, instantaneous ideal mixing and a finite rectangular
+  readout with J>0, duration (1+error)/(8J) seconds. U and bias stay active in
+  the finite pulse. All arms start from the same state; finite readout adds its
+  actual duration, whereas ideal readout takes zero time. The reference phase
+  shift and optional echo remain prescribed instantaneous operations.
+- Scan 8–32 equally spaced reference phases over one full period, with 16–4096
+  independent ideal number measurements per setting/arm, seeded reproducibly.
+  These are newly prepared copies, not repeated measurements of one cloud;
+  omit technical preparation variation, detector effects, losses and 3D coupling.
+- Infer offset, contrast and phase solely from count means using a first-harmonic
+  fit. Show empirical standard errors, count histograms and a local delta-method
+  phase standard error. Mask unresolved phase below a conservative 3-sigma
+  amplitude threshold; label finite-pulse results as apparent fringe phase,
+  with residuals and model-only bias shown separately. Never feed true q into
+  the measured estimator. Partial scans have no fitted phase.
+- Export complete incoming/output states, raw count histograms, recipes, seeds,
+  statistics and fits in JSON, plus a CSV scan summary. Independent Python
+  propagation and statistical replay verifies exports and rejects tampering.
+- Verify analytic coherent-state binomial fringes, both quadratures/sign, Fock
+  and vanishing coherence, interactions, echo, finite-pulse errors, norm, counting
+  statistics, uncertainty scaling and full-state agreement. Check actual browser
+  controls, cancellation, navigation, prior-panel isolation, mobile and extracted
+  static packaging. Cite Gross (2012) for Ramsey readout; identify this as a fixed
+  spatial two-mode teaching model, not reconstruction of a microwave apparatus.
+
+Status: implemented. All 303 repository tests passed, including 33 readout
+tests. Local and extracted-static browser checks passed for count inference,
+controls, exports/replay, prior-panel isolation, navigation and desktop/mobile
+layouts. See `docs/READOUT.md` for conventions, uncertainty limits and evidence.
+
 ## Later extensions
 
 Dashboard interface: implemented with a light navigation shell, searchable experiment cards, grid/list views and direct workspace/measurement/camera links. Template illustrations are explicitly labeled; selecting a template stages its experiment type for preparation. Navigation preserves the solver session, pending settings and pinned comparisons. Desktop and mobile browser evidence is recorded in `docs/VALIDATION.md`. The dashboard now also links to the independent three-dimensional single-cloud experiment.

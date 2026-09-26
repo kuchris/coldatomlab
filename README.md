@@ -35,6 +35,20 @@ Use **Density / Phase** to switch the observation view. Parameter edits remain p
 
 The English interface provides density and masked phase maps, central density profiles, RMS width histories, norm, energy, and boundary population. It adapts to desktop and narrow mobile layouts.
 
+## Phase readout (v0.14)
+
+Open **Quantum coherence → Phase readout ↓ → Run phase readout**. Compare direct
+atom counting, ideal π/2 mixing and a finite readout pulse. Scan the reference
+phase and reconstruct a fringe from repeated ideal number measurements. The
+phase estimator uses counts alone; model truth and pulse bias are shown separately.
+
+Start with **Read a coherent phase**, then **Try a biased pulse** or **Try a
+fixed-number state**. Inspect each setting's count histogram, uncertainty and
+fit residuals. An optional hold/ideal echo connects this readout to earlier
+experiments. Unresolved phase is marked unavailable; partial scans are not fitted.
+Pause/cancel, JSON/CSV, independent Python replay and the static ZIP are supported.
+See [readout conventions, statistics, literature and validation](docs/READOUT.md).
+
 ## Finite tunnelling pulses (v0.13)
 
 Open **Quantum coherence → Finite pulse comparison ↓ → Run finite-pulse comparison**. Compare no pulse, instantaneous exchange, and short/nominal/long rectangular tunnelling pulses using the same preparations and total elapsed time. Bias and interactions remain active during the finite pulse.
