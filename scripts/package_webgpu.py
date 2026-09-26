@@ -9,6 +9,12 @@ def main():
     out = Path("artifacts/coldatomlab-webgpu.zip")
     out.parent.mkdir(exist_ok=True)
     files = (
+        "vortex.html",
+        "vortex.css",
+        "vortex.js",
+        "vortex-gpu.js",
+        "vortex-ui.js",
+        "vortex-host.js",
         "precision.js",
         "precision-ui.js",
         "readout.js",
@@ -46,6 +52,10 @@ def main():
         archive.writestr(
             "README.txt",
             "Cold Atom Lab - standalone WebGPU 3D lab\n\nUpload this folder to an HTTPS static host, or serve it locally:\n  python -m http.server 8000\nThen open http://localhost:8000 in hardware-accelerated Chrome or Edge.\nDo not open index.html directly as a file: WebGPU requires a secure context.\n\nAll 3D preparation and evolution run in the browser. No Python simulation API, CUDA installation, account or remote asset is used. Python above is only an optional static file server.\n\nGPU calculations use float32. Inspect norm drift and compare quantitative results with the float64 CPU reference in the full repository. GPU exports use coldatomlab-webgpu-3d-v1; the repository replay command performs a toleranced CPU comparison, not bitwise GPU replay.\n",
+        )
+        archive.writestr(
+            "VORTEX.txt",
+            "Open /#vortex for experiment 06. Hardware WebGPU required. Full 3D trapped conservative GPE; units, preparation, masking limits and Madison (2000) reference are stated in the page. JSON exports include full initial/final fields and can be checked with uv run python -m coldatomlab.replay path/to/coldatomlab-vortex.json in the full repository. This is a toleranced float64 comparison, not bitwise replay.\n",
         )
         archive.writestr(
             "QUANTUM.txt",

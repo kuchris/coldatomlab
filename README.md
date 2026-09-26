@@ -17,9 +17,9 @@ Open **http://127.0.0.1:8765**. Stop the server with `Ctrl+C`. Use `--port 8766`
 
 ## Try an experiment
 
-The home page is an **Experiments** dashboard. Search five templates or switch between grid and list views. **3D expansion & interferometry** opens its own experiment and preparation controls. **Quantum coherence** opens inside the dashboard at `/#quantum`, retaining its sidebar and current experiment state across dashboard navigation. The Cold Atom Lab logo returns to the experiment library from every entry page. The original **Set up expansion / interference / sequence** cards stage the experiment type in the 2D workspace; review the settings and click **Prepare experiment** to apply them. **Open workspace** resumes the 2D experiment without changing settings.
+The home page is an **Experiments** dashboard. Search six templates or switch between grid and list views. **3D expansion & interferometry** opens its own experiment and preparation controls. **Quantum coherence** opens inside the dashboard at `/#quantum`, retaining its sidebar and current experiment state across dashboard navigation. The Cold Atom Lab logo returns to the experiment library from every entry page. The original **Set up expansion / interference / sequence** cards stage the experiment type in the 2D workspace; review the settings and click **Prepare experiment** to apply them. **Open workspace** resumes the 2D experiment without changing settings.
 
-The left navigation opens the workspace, measurements, virtual camera and reference guides. On narrow screens, use the menu button. Navigation within the dashboard keeps the current solver session, pending settings and pinned run/image comparisons; it does not pause a running experiment. Reloading still starts a new session and clears pinned records. Template diagrams are labeled illustrations, while workspace plots come from the numerical state. Direct links to `/#workspace`, `/#measurements` and `/#camera-lab` are supported.
+The left navigation opens the workspace, measurements, virtual camera and reference guides. On narrow screens, use the menu button. Navigation within the dashboard keeps the current solver session, pending settings and pinned run/image comparisons; the original workspaces do not pause on navigation, while leaving Vortex Lab pauses it after its current batch. Reloading still starts a new session and clears pinned records. Template diagrams are labeled illustrations, while workspace plots come from the numerical state. Direct links to `/#workspace`, `/#measurements` and `/#camera-lab` are supported.
 
 **Expansion:** the initial screen prepares a trapped condensate. Click **Release trap**, then **Run**. Watch the density spread and the RMS widths grow. **Pause** holds the state after the current batch finishes; **Step** advances one numerical step. **Reset** returns to the prepared initial state and restores its settings.
 
@@ -34,6 +34,24 @@ Turn on **Potential contours** to see the changing trap over the density/phase f
 Use **Density / Phase** to switch the observation view. Parameter edits remain pending until **Prepare experiment** is clicked; preparation replaces the current run. Grid, domain size, and time step are under **Numerical resolution**. Numerical warnings stop playback before the cloud significantly reaches the periodic boundary region.
 
 The English interface provides density and masked phase maps, central density profiles, RMS width histories, norm, energy, and boundary population. It adapts to desktop and narrow mobile layouts.
+
+## Vortex Lab (v0.16)
+
+Open **Vortex Lab → Prepare experiment → Run** at `/#vortex`. Inspect a prepared
+positive/negative vortex or a vortex-free cloud, then try **Stir a cloud** to
+create circulation through a moving repulsive beam. The full 3D WebGPU field
+drives the rotatable density surface, central density/phase, current arrows,
+contour winding, circulation and angular momentum.
+
+Run/pause/step/reset, immutable pins and full-state JSON/CSV exports work in both
+the local dashboard and static ZIP. Leaving this experiment pauses it and retains
+its state. Hardware-accelerated Chrome/Edge on HTTPS or localhost is required;
+there is no CPU fallback inside this page. The independent Python reference can
+replay exports with `uv run python -m coldatomlab.replay path/to/coldatomlab-vortex.json`.
+The trap stays on; no damping, finite-temperature noise or real-time
+renormalization is applied. Winding-crossing counts depend on grid and masking.
+See [vortex units, preparations, Madison reference and validation](docs/VORTEX.md).
+Earlier experiments retain their existing export-format versions for compatibility.
 
 ## Phase precision benchmark (v0.15)
 

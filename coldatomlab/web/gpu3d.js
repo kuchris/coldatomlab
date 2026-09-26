@@ -165,6 +165,9 @@ window.GPUCloud3D = class {
     if (data) this.device.queue.writeBuffer(b, 0, data);
     return b;
   }
+  drivenShader(num) {
+    return `fn driven(i:u32)->f32{let x=(f32(coords(i).x)-f32(N)/2.)*DX; let width=${num(this.config.barrier_width)};return trap(i)+ctl[3]*exp(-.5*x*x/(width*width))+.5*ctl[4]*tanh(x/width);}`;
+  }
   async initialize() {
     const c = this.config,
       n = c.n;
@@ -280,7 +283,7 @@ const DK:f32=${num((2 * Math.PI) / c.length)};
 fn multiply(a:vec2f,b:vec2f)->vec2f{return vec2f(a.x*b.x-a.y*b.y,a.x*b.y+a.y*b.x);}
 fn coords(i:u32)->vec3u{return vec3u(i/(N*N),(i/N)%N,i%N);}
 fn trap(i:u32)->f32{let r=(vec3f(coords(i))-vec3f(f32(N)/2.))*DX;return .5*dot(W*r,W*r);}
-fn driven(i:u32)->f32{let x=(f32(coords(i).x)-f32(N)/2.)*DX; let width=${num(c.barrier_width)};return trap(i)+ctl[3]*exp(-.5*x*x/(width*width))+.5*ctl[4]*tanh(x/width);}
+${this.drivenShader(num)}
 fn k2(i:u32)->f32{let q=coords(i);let k=vec3f(select(vec3i(q),vec3i(q)-vec3i(i32(N)),q>=vec3u(N/2u)))*DK;return dot(k,k);}
 fn address(line:u32,t:u32)->u32{
  if(mode.x==0u){return t*N*N+(line/N)*N+line%N;}

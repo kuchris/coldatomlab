@@ -1,0 +1,199 @@
+body {
+  background: transparent;
+}
+main {
+  max-width: none;
+  padding: 0;
+}
+.v-layout {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 28px;
+}
+.v-controls {
+  border: 1px solid #dce5ee;
+  padding: 18px;
+  background: #fff;
+  align-self: start;
+}
+.v-controls h2 {
+  margin-top: 0;
+  font-size: 17px;
+}
+.v-controls label {
+  display: block;
+  margin: 15px 0;
+  color: #496278;
+  font-size: 12px;
+}
+.v-controls input,
+.v-controls select {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 6px;
+  padding: 8px;
+  border: 1px solid #d4e0eb;
+  background: #fafcfe;
+  color: #183853;
+}
+.v-controls button {
+  width: 100%;
+  margin-top: 12px;
+}
+.v-controls p {
+  font-size: 11px;
+  line-height: 1.7;
+  color: #61778d;
+}
+.v-results {
+  min-width: 0;
+}
+.v-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-bottom: 1px solid #dce5ee;
+  margin-bottom: 18px;
+}
+.v-metrics div {
+  padding: 12px 8px;
+}
+.v-metrics small {
+  display: block;
+  font-size: 10px;
+  color: #61778d;
+}
+.v-metrics strong {
+  font-family: Consolas, monospace;
+  font-size: 18px;
+  font-weight: normal;
+  display: block;
+  padding-top: 8px;
+}
+.v-plots {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.v-plots figure,
+.v-history {
+  margin: 0;
+  min-width: 0;
+}
+figcaption {
+  font-size: 12px;
+  color: #244e74;
+  margin: 8px 0;
+}
+figcaption small {
+  display: block;
+  color: #718497;
+  font-size: 10px;
+  margin-top: 4px;
+}
+.v-plots canvas,
+.v-history canvas,
+.v-pin canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+  background: #0c181f;
+  border-radius: 3px;
+}
+.v-caption,
+#v-protocol,
+#v-topology {
+  font-size: 11px;
+  color: #556c80;
+  line-height: 1.8;
+}
+.v-model {
+  margin-top: 40px;
+  border-top: 1px solid #dce5ee;
+  padding-top: 16px;
+  max-width: 1050px;
+}
+.v-model p {
+  font-size: 13px;
+  line-height: 1.9;
+  color: #536c80;
+}
+.v-pin {
+  border: 1px solid #adc6de;
+  padding: 16px;
+  margin-top: 20px;
+  max-width: 480px;
+}
+.v-pin p {
+  font-size: 12px;
+}
+.v-controls summary {
+  font-size: 12px;
+  cursor: pointer;
+}
+.tm-status {
+  overflow-wrap: anywhere;
+}
+.v-plots canvas {
+  touch-action: none;
+}
+.v-history {
+  margin-top: 20px;
+}
+.v-controls details {
+  margin: 14px 0;
+}
+@media (max-width: 1100px) {
+  .v-plots {
+    grid-template-columns: 1fr 1fr;
+  }
+  .v-plots figure:first-child {
+    grid-column: 1/-1;
+    max-width: 480px;
+  }
+}
+@media (max-width: 760px) {
+  .v-layout {
+    grid-template-columns: 1fr;
+  }
+  .v-controls form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 15px;
+  }
+  .v-controls details {
+    grid-column: 1/-1;
+  }
+  .v-controls #v-prepare {
+    grid-column: 1/-1;
+  }
+  .v-metrics {
+    grid-template-columns: 1fr 1fr;
+  }
+  .v-plots {
+    grid-template-columns: 1fr;
+  }
+  .tm-title h1 {
+    font-size: 36px;
+  }
+  .v-controls {
+    padding: 14px;
+  }
+}
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.v-zoom {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+  color: #61778d;
+  margin-top: 10px;
+}
+.v-zoom input {
+  min-width: 0;
+  flex: 1;
+}

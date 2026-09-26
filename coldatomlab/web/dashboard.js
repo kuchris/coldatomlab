@@ -11,6 +11,7 @@
     benchmark: "Paper benchmark",
     lab3d: "3D expansion",
     quantum: "Quantum coherence",
+    vortex: "Vortex Lab",
   };
   const nav = $("lab-navigation");
   const toggle = $("nav-toggle");
@@ -25,11 +26,13 @@
     const benchmark = route === "benchmark";
     const three = route === "lab3d";
     const quantum = route === "quantum";
+    const vortex = route === "vortex";
     $("experiment-library").hidden = !library;
-    $("lab-workbench").hidden = library || benchmark || three || quantum;
+    $("lab-workbench").hidden = library || benchmark || three || quantum || vortex;
     $("paper-benchmark").hidden = !benchmark;
     $("lab3d-page").hidden = !three;
     $("quantum-page").hidden = !quantum;
+    $("vortex-page").hidden = !vortex;
     $("page-label").textContent = routes[route];
     document.title = `${routes[route]} · Cold Atom Lab`;
     document.querySelectorAll("[data-route]").forEach((link) => {
@@ -37,7 +40,7 @@
       else link.removeAttribute("aria-current");
     });
     closeNavigation();
-    if (!library && !benchmark && !three && !quantum && state) render();
+    if (!library && !benchmark && !three && !quantum && !vortex && state) render();
     if (benchmark) window.loadBenchmark();
     if (three) window.showLab3D();
     requestAnimationFrame(() => {

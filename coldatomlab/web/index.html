@@ -24,7 +24,7 @@
     <script src="/scan3d-ui.js" defer></script>
     <script src="/lab3d.js" defer></script>
     <script src="/dashboard.js" defer></script>
-    <script src="/quantum-host.js" defer></script>
+    <script src="/quantum-host.js" defer></script><script src="/vortex-host.js" defer></script>
   </head>
   <body class="weblab">
     <a class="skip-link" href="#main-content">Skip to content</a>
@@ -42,6 +42,7 @@
         <a href="#workspace" data-route="workspace"><span aria-hidden="true">◉</span>2D workspace · CPU</a>
         <a href="#lab3d" data-route="lab3d"><span aria-hidden="true">◇</span>3D lab <small>WebGPU</small></a>
         <a href="#quantum" data-route="quantum"><span aria-hidden="true">ψ</span>Quantum coherence</a>
+        <a href="#vortex" data-route="vortex"><span aria-hidden="true">⟳</span>Vortex Lab</a>
         <a href="#measurements" data-route="measurements"><span aria-hidden="true">⌁</span>Measurements</a>
         <a href="#camera-lab" data-route="camera-lab"><span aria-hidden="true">▣</span>Virtual camera</a>
       </nav>
@@ -52,13 +53,13 @@
         <a href="/physical-units" target="_blank" rel="noopener"><span aria-hidden="true">↗</span>Units & literature</a>
         <a href="/imaging" target="_blank" rel="noopener"><span aria-hidden="true">↗</span>Imaging guide</a>
       </nav>
-      <div class="sidebar-bottom"><span class="model-pill">2D, 3D & two-mode quantum</span><p>Explore coherent matter.<br>One experiment at a time.</p><small>Cold Atom Lab · v0.13</small></div>
+      <div class="sidebar-bottom"><span class="model-pill">2D, 3D & two-mode quantum</span><p>Explore coherent matter.<br>One experiment at a time.</p><small>Cold Atom Lab · v0.16</small></div>
     </aside>
     <main id="main-content" tabindex="-1">
       <section id="experiment-library" aria-labelledby="library-title">
         <div class="library-heading"><div><h1 id="library-title">Experiments</h1><p>Prepare, evolve and measure a Bose–Einstein condensate.</p></div><div class="library-actions"><a class="button-link" href="/physical-units" target="_blank" rel="noopener">Documentation ↗</a><a class="button-link primary" href="#workspace">Open workspace →</a></div></div>
         <div class="library-toolbar"><label class="experiment-search"><span aria-hidden="true">⌕</span><input type="search" id="experiment-search" placeholder="Search experiments…" aria-label="Search experiments" /></label><div class="library-view" role="group" aria-label="Experiment layout"><button id="grid-layout" aria-label="Grid view" aria-pressed="true">▦</button><button id="list-layout" aria-label="List view" aria-pressed="false">☰</button></div></div>
-        <p class="library-count" id="library-count" aria-live="polite">5 experiments</p>
+        <p class="library-count" id="library-count" aria-live="polite">6 experiments</p>
         <div class="experiment-cards" id="experiment-cards">
           <article class="experiment-card" data-search="2d cpu condensate expansion single cloud trap release width">
             <div class="card-diagram" aria-hidden="true"><svg viewBox="0 0 320 140"><g fill="none" stroke="#9ab3cc"><ellipse cx="160" cy="72" rx="104" ry="48"/><ellipse cx="160" cy="72" rx="78" ry="36"/><ellipse cx="160" cy="72" rx="49" ry="23"/><ellipse cx="160" cy="72" rx="23" ry="11"/></g><path d="M28 72h264M160 13v118" stroke="#dce4ed" stroke-dasharray="3 5"/><circle cx="160" cy="72" r="4" fill="#2373d7"/></svg><span>Illustrative diagram</span></div>
@@ -79,14 +80,17 @@
           <article class="experiment-card" data-search="quantum two mode tunnelling number squeezing coherence phase diffusion bose hubbard">
             <div class="card-diagram" aria-hidden="true"><svg viewBox="0 0 320 140"><path d="M35 108h250" stroke="#dce4ed"/><g fill="#76a99d"><path d="M98 108V94h12v14zM116 108V76h12v32zM134 108V50h12v58zM152 108V34h12v74zM170 108V50h12v58zM188 108V76h12v32zM206 108V94h12v14z"/></g><path d="M55 106q35-2 55-28t50-55q30 29 50 55t55 28" fill="none" stroke="#7297bd" stroke-dasharray="4 4"/></svg><span>Illustrative probability diagram</span></div>
             <div class="card-copy"><div class="card-category">05 <span>Two-mode · browser</span></div><h2>Quantum coherence</h2><p>Watch atoms tunnel, compare quantum count distributions and follow coherence through an interacting hold.</p><div class="card-tags"><span>Fixed-N quantum state</span><span>Estève · Gross</span></div><a class="open-experiment-link" href="#quantum">Open quantum experiment →</a></div>
-          </article>
+          </article><article class="experiment-card" data-search="vortex vortices stirring phase winding circulation 3d webgpu madison">
+<div class="card-diagram" aria-hidden="true"><svg viewBox="0 0 320 140"><g fill="none" stroke="#76a99d"><ellipse cx="160" cy="70" rx="70" ry="45"/><ellipse cx="160" cy="70" rx="45" ry="29"/><ellipse cx="160" cy="70" rx="14" ry="9"/><path d="M210 40l12 6-4-13" stroke="#2373d7"/></g></svg><span>Illustrative diagram</span></div>
+<div class="card-copy"><div class="card-category">06 <span>Full 3D · WebGPU</span></div><h2>Vortex Lab</h2><p>Follow quantized circulation, reverse a vortex and stir an initially vortex-free condensate.</p><div class="card-tags"><span>Phase winding</span><span>Madison et al.</span></div><a class="open-experiment-link" href="#vortex">Open vortex experiment →</a></div></article>
         </div>
         <div id="library-empty" hidden><h2>No matching experiments</h2><p>Try “phase”, “expansion” or “barrier”.</p><button id="clear-search">Clear search</button></div>
-        <div class="library-note"><span aria-hidden="true">ⓘ</span><p>The original three experiments retain transverse confinement in an effective 2D model. The 3D experiment releases all axes. Quantum coherence is a separate fixed-N, two-mode model without spatial expansion. <button id="library-model">Read the 2D assumptions →</button></p></div>
+        <div class="library-note"><span aria-hidden="true">ⓘ</span><p>The original three experiments retain transverse confinement in an effective 2D model. Experiment 04 releases all axes; Vortex Lab keeps the harmonic trap on. Quantum coherence is a separate fixed-N, two-mode model without spatial expansion. <button id="library-model">Read the 2D assumptions →</button></p></div>
         <div class="library-session"><div><span class="eyebrow">CURRENT WORKSPACE</span><p id="library-session-status">Preparing your first cloud…</p></div><a href="#workspace">Continue experiment →</a></div>
         <div class="library-session"><div><span class="eyebrow">COMPARE WITH LITERATURE</span><p>Shin et al. · A published fringe spacing and a reduced model.</p></div><a href="#benchmark">View paper benchmark →</a></div>
       </section>
-      <section id="quantum-page" aria-label="Quantum coherence" hidden>
+      <section id="vortex-page" aria-label="Vortex Lab" hidden><iframe id="vortex-frame" title="Vortex Lab experiment" style="width:100%;min-height:900px;border:0;display:block"></iframe></section>
+<section id="quantum-page" aria-label="Quantum coherence" hidden>
         <iframe id="quantum-frame" title="Quantum coherence experiment" style="width:100%;min-height:900px;border:0;display:block"></iframe>
       </section>
       <section id="lab3d-page" aria-labelledby="lab3d-title" hidden>

@@ -9,8 +9,8 @@
     section.hidden = !active;
     if (active && !frame.hasAttribute("src")) frame.src = "quantum.html#embedded";
     if (standalone) {
-      document.getElementById("experiments").hidden = active;
-      document.title = `${active ? "Quantum coherence" : "Experiments"} · Cold Atom Lab`;
+      document.getElementById("experiments").hidden = active || location.hash === "#vortex";
+      if (location.hash !== "#vortex") document.title = `${active ? "Quantum coherence" : "Experiments"} · Cold Atom Lab`;
     }
   }
   window.addEventListener("message", event => {

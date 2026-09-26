@@ -372,8 +372,51 @@ tests and 33 readout regression tests. Local and extracted-static browser
 checks passed for repeated scans, independent replay, resource comparisons,
 controls, prior-panel isolation and desktop/mobile layouts. See `docs/PRECISION.md`.
 
+## v0.16: three-dimensional vortex lab
+
+Add experiment 06 in the dashboard and static browser library. Evolve the full
+3D norm-one GPE with WebGPU using the existing FFT infrastructure, independently
+checked against float64 Python. Retain harmonic confinement. In oscillator units
+i dpsi/dt=[-laplacian/2+V+g|psi|²]psi, integral |psi|² d³r=1, g=4pi N as/a0.
+Use Rb-87, reference f0=50 Hz and trap ratios (1,1,2); state a0, 1/omega0 and
+hbar omega0 scales. An orbiting repulsive Gaussian, uniform in z, has smooth
+sin-squared turn-on/off; evaluate it at every physical step midpoint.
+
+- Separate analytic noninteracting charge ±1 oscillator vortices, prescribed
+  interacting phase-imprinted states, and vortex-free interacting ground-state
+  stirring. Do not insert vortices during real evolution or imply that the
+  imprinted interacting state is stationary. Show trap/beam protocol and actual
+  time. No real-time renormalization, damping or noise is added.
+- Show a rotatable 3D density surface, central-z density/phase slices, masked
+  current/velocity arrows, and a declared circular phase-winding contour.
+  Report contour winding/circulation, spectral angular momentum per particle,
+  norm, energy and edge mass. Locate density-qualified winding crossings in the
+  central slice; do not call them a reconstructed 3D vortex-line topology.
+- Provide zero-charge, positive/negative single-vortex and moving-stirrer recipes,
+  with physical-time stepping/run/pause/reset, immutable pin comparison, JSON
+  full-state export and CSV diagnostics. Preserve prior experiments/navigation;
+  direct page links stay inside the dashboard. Include preparation/device failure
+  handling, explicit WebGPU capability errors, exact endpoint stopping, norm and
+  periodic-boundary stopping, and device cleanup.
+- Validate analytic vortex density, energy, Lz, sign and winding; density-hole
+  counterexample; constant-trap norm/energy and time/grid/box refinement. For
+  stirring, verify genuinely emerging resolved windings from a zero-winding
+  initial state and turn-off dynamics, with refinement and CPU/GPU comparison.
+  State sensitivity and detector masking limits instead of promising a critical
+  rotation rate or equilibrium vortex lattice in conservative GPE evolution.
+- Reference Madison et al. (2000) for rotating optical stirring, distinguishing
+  this moving-Gaussian teaching protocol from their apparatus and reported data.
+  Verify real hardware WebGPU, desktop/mobile, local/static packaging and replay;
+  distinguish numerical accuracy, browser behavior and physical-model validity.
+
+Status: implemented. The full suite passed 359 tests, including 26 vortex tests.
+Actual NVIDIA WebGPU, local/static controls, mobile layouts, export replay and
+earlier GPU protocols were checked. Time, 64³/128³ grid and doubled-box
+comparisons confirm emerging contour winding while exposing crossing-count
+resolution limits. See `docs/VORTEX.md` for tolerances and separate evidence.
+
 ## Later extensions
 
 Dashboard interface: implemented with a light navigation shell, searchable experiment cards, grid/list views and direct workspace/measurement/camera links. Template illustrations are explicitly labeled; selecting a template stages its experiment type for preparation. Navigation preserves the solver session, pending settings and pinned comparisons. Desktop and mobile browser evidence is recorded in `docs/VALIDATION.md`. The dashboard now also links to the independent three-dimensional single-cloud experiment.
 
-vortices and stirring; additional experiment protocols. These are separate from the first-release acceptance criteria.
+Additional stirring protocols and many-body experiment extensions. These are separate from the first-release acceptance criteria.

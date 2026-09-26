@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Vortex Lab · Cold Atom Lab</title>
+    <script>
+      if (window.self === window.top) location.replace("./#vortex");
+    </script>
+    <link rel="stylesheet" href="twomode.css" />
+    <link rel="stylesheet" href="vortex.css" />
+  </head>
+  <body>
+    <main>
+      <div class="tm-title">
+        <div>
+          <p class="eyebrow">06 / VORTEX LAB</p>
+          <h1>A hole in density.<br />A turn in phase.</h1>
+          <p>
+            Walk around a vortex and watch the phase complete a full turn. Then
+            stir an initially vortex-free cloud and follow what emerges.
+          </p>
+        </div>
+        <div class="tm-engine">
+          FULL 3D · WEBGPU<strong>Density / phase / flow</strong
+          ><span>Trapped, zero-temperature condensate</span>
+        </div>
+      </div>
+      <nav class="tm-recipes" aria-label="Vortex recipes">
+        <button data-vortex-preset="positive">
+          <b>01</b
+          ><span>One positive vortex<small>Analytic +1 reference</small></span>
+        </button>
+        <button data-vortex-preset="negative">
+          <b>02</b
+          ><span
+            >Reverse its circulation<small>Analytic −1 reference</small></span
+          >
+        </button>
+        <button data-vortex-preset="ground">
+          <b>03</b><span>No vortex<small>Zero-charge reference</small></span>
+        </button>
+        <button data-vortex-preset="stir">
+          <b>04</b
+          ><span>Stir a cloud<small>Vortex-free interacting start</small></span>
+        </button>
+      </nav>
+      <p class="tm-lesson" id="v-lesson">
+        The +1 recipe is a prepared oscillator eigenstate. Its phase winds once
+        counterclockwise; it is not a movie of vortex formation.
+      </p>
+      <div class="v-layout">
+        <aside class="v-controls">
+          <h2>Prepare the cloud</h2>
+          <form id="v-form">
+            <label
+              >Grid<select id="v-n">
+                <option value="32">32³ · coarse reference</option>
+                <option value="64" selected>64³ · standard</option>
+                <option value="128">128³ · refinement</option>
+              </select></label
+            >
+            <label
+              >Initial charge<select id="v-charge">
+                <option value="1">+1 · phase imprint</option>
+                <option value="0">0 · ground state</option>
+                <option value="-1">−1 · phase imprint</option>
+              </select></label
+            >
+            <label
+              >Interaction g<input
+                id="v-g"
+                type="number"
+                min="0"
+                max="1000"
+                step="10"
+                value="0"
+            /></label>
+            <label
+              >Duration / t₀<input
+                id="v-duration"
+                type="number"
+                min="0.1"
+                max="16"
+                step="0.1"
+                value="2"
+            /></label>
+            <details>
+              <summary>Stirrer &amp; numerical settings</summary>
+              <label
+                >Box side / a₀<input
+                  id="v-length"
+                  type="number"
+                  min="16"
+                  max="32"
+                  value="16" /></label
+              ><label
+                >Time step / t₀<input
+                  id="v-dt"
+                  type="number"
+                  min="0.001"
+                  max="0.008"
+                  step="0.001"
+                  value="0.004" /></label
+              ><label
+                >Beam height / ℏω₀<input
+                  id="v-height"
+                  type="number"
+                  min="0"
+                  max="20"
+                  value="0" /></label
+              ><label
+                >Beam width σ / a₀<input
+                  id="v-width"
+                  type="number"
+                  min="0.5"
+                  max="2"
+                  step="0.1"
+                  value="0.8" /></label
+              ><label
+                >Orbit radius / a₀<input
+                  id="v-radius"
+                  type="number"
+                  min="0"
+                  max="4"
+                  step="0.1"
+                  value="2" /></label
+              ><label
+                >Angular speed / ω₀<input
+                  id="v-omega"
+                  type="number"
+                  min="-2"
+                  max="2"
+                  step="0.1"
+                  value="1.2" /></label
+              ><label
+                >Stirring ends / t₀<input
+                  id="v-stir_time"
+                  type="number"
+                  min="1"
+                  max="12"
+                  step="0.1"
+                  value="4" /></label
+              ><label
+                >Each ramp / t₀<input
+                  id="v-ramp"
+                  type="number"
+                  min="0.25"
+                  max="3"
+                  step="0.25"
+                  value="1" /></label
+              ><label
+                >Winding contour radius / a₀<input
+                  id="v-loop_radius"
+                  type="number"
+                  min="0.75"
+                  max="4"
+                  step="0.25"
+                  value="1.5"
+              /></label>
+            </details>
+            <button id="v-prepare" type="submit" class="primary">
+              Prepare experiment
+            </button>
+          </form>
+          <p id="v-applied">Choose a recipe, then prepare.</p>
+          <p id="v-units"></p>
+        </aside>
+        <section class="v-results" aria-label="Vortex results">
+          <div class="tm-actions">
+            <button id="v-run" disabled>Run</button
+            ><button id="v-pause" disabled>Pause</button
+            ><button id="v-step" disabled>Step</button
+            ><button id="v-reset" disabled>Reset</button
+            ><button id="v-pin" disabled>Pin comparison</button
+            ><button id="v-json" disabled>Export JSON ↓</button
+            ><button id="v-csv" disabled>Export CSV ↓</button>
+          </div>
+          <p class="tm-status" id="v-status" role="status">
+            Ready to prepare · a hardware WebGPU browser is required.
+          </p>
+          <div class="v-metrics" id="v-metrics"></div>
+          <div class="v-plots">
+            <figure>
+              <figcaption>
+                3D density surface
+                <small
+                  >20% of current peak · 32³ display grid · drag to
+                  rotate</small
+                >
+              </figcaption>
+              <canvas
+                id="v-surface"
+                width="480"
+                height="410"
+                tabindex="0"
+                aria-label="Rotatable three-dimensional density surface; use arrow keys"
+              ></canvas
+              ><button id="v-home">Reset view</button
+              ><label class="v-zoom"
+                >Surface zoom
+                <input
+                  id="v-zoom"
+                  type="range"
+                  min="1"
+                  max="4"
+                  step="0.1"
+                  value="1"
+              /></label>
+            </figure>
+            <figure>
+              <figcaption>
+                Central slice · density
+                <small>z = 0 · |ψ|² a₀³ · square-root brightness</small>
+              </figcaption>
+              <canvas
+                id="v-density"
+                width="480"
+                height="410"
+                aria-label="Central density, flow arrows and stirrer position"
+              ></canvas>
+            </figure>
+            <figure>
+              <figcaption>
+                Central slice · phase
+                <small>z = 0 · phase / rad · masked below 0.1% of peak</small>
+              </figcaption>
+              <canvas
+                id="v-phase"
+                width="480"
+                height="410"
+                aria-label="Central phase, winding contour and detected crossings"
+              ></canvas>
+            </figure>
+          </div>
+          <p class="v-caption">
+            White dashed circle: counterclockwise winding contour. Blue + /
+            orange −: density-qualified central-plane crossings. Arrows show
+            current direction with fixed display length, masked below 1% of
+            peak; they do not encode speed. Orange beam outline: one Gaussian
+            width. Each slice spans the full box, x right and y up.
+          </p>
+          <p id="v-protocol"></p>
+          <p id="v-topology"></p>
+          <figure class="v-history">
+            <figcaption>
+              Angular momentum per particle / ℏ
+              <small>Actual simulation time / t₀</small>
+            </figcaption>
+            <canvas
+              id="v-history"
+              width="1000"
+              height="220"
+              aria-label="Angular momentum history"
+            ></canvas>
+          </figure>
+          <div id="v-pinned" class="v-pin" hidden>
+            <h3>Pinned comparison</h3>
+            <p id="v-pin-label"></p>
+            <canvas
+              id="v-pin-phase"
+              width="480"
+              height="410"
+              aria-label="Immutable pinned central phase"
+            ></canvas
+            ><button id="v-unpin">Clear pin</button>
+          </div>
+        </section>
+      </div>
+      <section class="v-model" id="model">
+        <h2>What this experiment models</h2>
+        <p>
+          Full 3D conservative Gross–Pitaevskii evolution, i∂ψ/∂t = [−∇²/2 + V +
+          g|ψ|²]ψ, with ∫|ψ|²d³r = 1 and g = 4πNaₛ/a₀. The Rb-87 reference trap
+          is (50, 50, 100) Hz. Length a₀ = √(ℏ/mω₀), time t₀ = 1/ω₀ and energy
+          ℏω₀. The harmonic trap stays on. No thermal cloud, loss, damping,
+          quantum depletion or measurement noise is included.
+        </p>
+        <p>
+          The rotating repulsive Gaussian is uniform along z: V = (x²+y²+4z²)/2
+          + H(t) exp[−((x−R cos Ωt)²+(y−R sin Ωt)²)/(2σ²)]. Its sin² ramps turn
+          it on and off smoothly. No vortices are inserted during real-time
+          evolution. The interacting imprint is a prescribed initial state, not
+          a stationary solution.
+        </p>
+        <p>
+          Phase winding is measured from the complex field around the declared
+          contour. Flow circulation uses spectral derivatives; one circulation
+          quantum is h/m. Lz is integrated over the full 3D field. A
+          central-slice crossing does not reconstruct the complete 3D vortex
+          line. Detection depends on density masking, interpolation and grid
+          resolution. Dark holes alone do not establish a vortex.
+        </p>
+        <p>
+          The split-step Fourier solver uses periodic numerical boundaries and
+          float32 arithmetic. It stops when |norm−1| or boundary probability
+          exceeds 0.001; it never renormalizes real-time evolution. Physical
+          time does not depend on animation speed. Reduce the time step and
+          increase the grid/box to check convergence. Duration is rounded to the
+          nearest full time step.
+        </p>
+        <p>
+          <a
+            href="https://arxiv.org/abs/cond-mat/9912015"
+            target="_blank"
+            rel="noopener"
+            >Madison, Chevy, Wohlleben &amp; Dalibard (2000), Vortex formation
+            in a stirred Bose–Einstein condensate</a
+          >
+          motivates optical stirring. This orbiting-Gaussian teaching protocol
+          is not a reconstruction of their apparatus, measured threshold or
+          vortex lattice.
+        </p>
+      </section>
+    </main>
+    <script>
+      // Do not start the experiment's resource requests while redirecting its direct URL.
+      if (window.self !== window.top) {
+        (async () => {
+          for (const src of [
+            "interferometry3d.js",
+            "gpu3d.js",
+            "surface3d.js",
+            "vortex.js",
+            "vortex-gpu.js",
+            "vortex-ui.js",
+          ]) {
+            await new Promise((resolve, reject) => {
+              const script = document.createElement("script");
+              script.src = src;
+              script.onload = resolve;
+              script.onerror = () =>
+                reject(Error(`Could not load ${src}. Reload to retry.`));
+              document.head.append(script);
+            });
+          }
+        })().catch(
+          (error) =>
+            (document.getElementById("v-status").textContent = error.message),
+        );
+      }
+    </script>
+  </body>
+</html>
