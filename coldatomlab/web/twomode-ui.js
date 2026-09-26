@@ -134,7 +134,7 @@
     catch (e) { message(e.message, true); }
   };
   $("json").onclick = () => download("coldatomlab-quantum.json", JSON.stringify({
-    schema: "coldatomlab-twomode-v1", version: "0.11.0",
+    schema: "coldatomlab-twomode-v1", version: "0.12.0",
     convention: "n_left=0..N; H/h in Hz; time_ms; right-minus-left phase", current, pinned,
   }, null, 2), "application/json");
   $("csv").onclick = () => {
@@ -153,4 +153,13 @@
   };
   stage("tunnelling"); prepare();
   new PreparationPanel(document.getElementById("ensemble-lab"), () => ({ ...current.config }));
+  new EchoPanel(document.getElementById("echo-lab"));
+  document.querySelectorAll("[data-scroll-to]").forEach(button => {
+    button.onclick = () => {
+      const section = document.getElementById(button.dataset.scrollTo);
+      section.setAttribute("tabindex", "-1");
+      section.scrollIntoView({ block: "start" });
+      section.focus({ preventScroll: true });
+    };
+  });
 })();

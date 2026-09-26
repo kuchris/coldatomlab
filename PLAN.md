@@ -208,6 +208,47 @@ Status: implemented. All 191 tests passed (40 preparation tests). Local and
 extracted-static browser controls, exports/replay, manual isolation, dashboard
 persistence and desktop/mobile layouts passed. See `docs/PREPARATION.md`.
 
+## v0.12: ideal spin echo in the two-mode lab
+
+Add a paired no-echo / echo comparison within experiment 05. Use exactly the
+same seeded phase and static-bias offsets in both arms. Retain fixed N and the
+existing Hz/ms, interaction and wavefunction conventions. Require J=0 during
+both holds; reject nonzero J rather than silently changing it. The midpoint
+pulse is the instantaneous mode swap S|n,N-n> = |N-n,n>, omitting only the
+fixed-N global phase of a pi rotation. It is not an electromagnetic or finite
+tunnelling pulse simulation. Hold evolution is exact in the diagonal occupation
+basis and must not renormalize the state.
+
+- Default balanced coherent N=40, U=0, initial phase spread=0, static bias
+  half-range=2 Hz, duration=500 ms, 64 preparations, seed=17.
+- Show paired ensemble-coherence histories and time-selectable individual
+  coherence arrows. Include explicit before/after midpoint snapshots and a
+  visible sequence. Plot 101 physical times plus a second midpoint sample;
+  playback changes only the selected snapshot, never the physics.
+- Offer initial-phase-spread and interacting examples. Initial phase variation
+  is conjugated, not erased. The swap reverses the linear bias term but leaves
+  U(n-N/2)^2 unchanged, so interaction dynamics are not time-reversed.
+- Verify at U=0 and zero initial spread that echo refocuses any sampled static
+  bias exactly at T. For J=0 the infinite uniform-ensemble guides use
+  C_ideal |sinc(A) sinc(2 pi B t)| for no echo and
+  C_ideal,echo |sinc(A) sinc(2 pi B (t-T))| after the pulse (time in seconds).
+  Check nonzero U away from revival times and finite-sample complex averages.
+- Preserve manual/preparation results and dashboard navigation. Support bounded
+  settings, reproducible seeds, pause/resume/cancel completed prefixes,
+  JSON/CSV exports and independent NumPy replay of both arms, pulse snapshots,
+  histories and aggregate observables. Preserve undefined phase handling.
+- Test pulse norm, inverse, population reversal, conjugated coherence, energy
+  change, analytic fields, limits, zero variation, tampering and repeatability.
+  Verify browser controls, slider/playback, mobile layout and static packaging.
+- Reference Hahn (1950) for the echo concept and Gross (2012) section IV.3 for
+  static differential-shift noise. Explicitly label the spatial mode swap and
+  illustrative settings; no experimental apparatus reproduction is claimed.
+
+Status: implemented. All 230 repository tests passed, including 39 echo tests.
+Local and extracted-static browser checks passed for controls, both pulse
+snapshots, timeline, exports/replay, preservation of existing experiments,
+dashboard navigation and desktop/mobile layouts. See `docs/ECHO.md`.
+
 ## Later extensions
 
 Dashboard interface: implemented with a light navigation shell, searchable experiment cards, grid/list views and direct workspace/measurement/camera links. Template illustrations are explicitly labeled; selecting a template stages its experiment type for preparation. Navigation preserves the solver session, pending settings and pinned comparisons. Desktop and mobile browser evidence is recorded in `docs/VALIDATION.md`. The dashboard now also links to the independent three-dimensional single-cloud experiment.

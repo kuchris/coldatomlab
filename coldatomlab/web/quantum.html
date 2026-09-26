@@ -5,7 +5,7 @@
   <title>Quantum coherence · Cold Atom Lab</title>
   <script>if (window.self === window.top) location.replace("./#quantum");</script>
   <link rel="stylesheet" href="twomode.css">
-  <script src="twomode.js" defer></script><script src="preparation.js" defer></script><script src="preparation-ui.js" defer></script><script src="twomode-ui.js" defer></script>
+  <script src="twomode.js" defer></script><script src="preparation.js" defer></script><script src="preparation-ui.js" defer></script><script src="echo.js" defer></script><script src="echo-ui.js" defer></script><script src="twomode-ui.js" defer></script>
   <style>
     .tm-header {display:none}
     body {background:transparent}
@@ -17,6 +17,7 @@
   <header class="tm-header"><a href="./#experiments" aria-label="Cold Atom Lab home">✳ Cold Atom <b>Lab</b></a><span>05 / TWO-MODE QUANTUM LAB</span><a href="#model">Model &amp; papers ↓</a></header>
   <main>
     <div class="tm-title"><div><p class="eyebrow">FROM ONE CLOUD TO MANY POSSIBLE COUNTS</p><h1>Same preparation.<br>Different possible outcomes.</h1><p>Follow a quantum state through two wells. See how its average motion differs from the uncertainty of a single measurement.</p></div><div class="tm-engine">BROWSER · FLOAT64<br><strong>Two spatial modes<br>N + 1 amplitudes</strong><span>No GPU or simulation API needed</span></div></div>
+    <nav class="tm-actions tm-section-links" aria-label="Quantum lab sections"><button data-scroll-to="ensemble-lab">Preparation variation ↓</button><button data-scroll-to="echo-lab">Spin echo comparison ↓</button></nav>
     <nav class="tm-recipes" aria-label="Guided experiments">
       <button data-preset="tunnelling"><b>01</b><span>Watch atoms tunnel<small>All left → all right → back</small></span></button>
       <button data-preset="diffusion"><b>02</b><span>Let coherence evolve<small>Isolated wells · interactions on</small></span></button>
@@ -73,6 +74,7 @@
       </div>
     </div>
     <section id="ensemble-lab" class="tm-panel tm-model" aria-label="Preparation variation"></section>
+    <section id="echo-lab" class="tm-panel tm-model" aria-label="Spin echo comparison"></section>
     <section id="model" class="tm-panel tm-model">
       <p class="eyebrow">MODEL / ASSUMPTIONS / SOURCES</p><h2>A small quantum system, solved in its full occupation basis.</h2>
       <p>The state is Σ c<sub>n</sub>|n, N − n⟩, with Σ|c<sub>n</sub>|² = 1. The two <em>spatial</em> modes are left and right; the many-body state has N + 1 amplitudes. Probabilities and all plots come from those amplitudes.</p>
@@ -82,7 +84,7 @@
       <details><summary>Numerics and physical limits</summary><p>The browser diagonalizes the real symmetric Hamiltonian with float64 Jacobi rotations, checks residuals and orthogonality, then propagates spectrally from the initial state. There is no per-step renormalization. Run displays 200 equally spaced physical times; frame rate changes playback speed only. Export retains complete final amplitudes, settings, history and seeded counts, plus any pinned reference. Python replay uses an independent NumPy eigensolver.</p><p>These fixed spatial orbitals have no 3D shape dynamics. J and U are illustrative inputs, not extracted from the existing GPE cloud. Higher modes, changing orbital shapes, finite temperature, loss, detector noise and apparatus calibration are omitted. The Gaussian number-narrow state is prescribed, not prepared by a simulated splitting ramp. Numerical accuracy within this model does not prove the two-mode approximation applies to an experimental apparatus.</p></details>
       <div class="tm-papers"><a href="https://arxiv.org/abs/0810.0600" target="_blank" rel="noopener"><b>Estève et al. · Nature, 2008 ↗</b><span>Experimental motivation: atom-number difference, relative phase and squeezing. Our teaching states do not reproduce their measured data.</span></a><a href="https://arxiv.org/abs/1203.5359" target="_blank" rel="noopener"><b>Gross · J. Phys. B, 2012 ↗</b><span>Fixed-N collective-spin framework and the distinction between number noise, coherence and spin squeezing.</span></a><a href="https://arxiv.org/abs/cond-mat/9706220" target="_blank" rel="noopener"><b>Smerzi et al. · PRL, 1997 ↗</b><span>Two-mode Josephson dynamics context. Here we evolve occupation amplitudes, rather than only mean-field number and phase.</span></a></div>
     </section>
-    <footer>Cold Atom Lab · v0.11 · Quantum probabilities, not a 3D density image. <a href="gpu.html">Open 3D lab →</a></footer>
+    <footer>Cold Atom Lab · v0.12 · Quantum probabilities, not a 3D density image. <a href="gpu.html">Open 3D lab →</a></footer>
   </main>
 </body>
 </html>

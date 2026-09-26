@@ -9,6 +9,8 @@ def main():
     out = Path("artifacts/coldatomlab-webgpu.zip")
     out.parent.mkdir(exist_ok=True)
     files = (
+        "echo.js",
+        "echo-ui.js",
         "preparation.js",
         "preparation-ui.js",
         "quantum-host.js",
@@ -53,7 +55,11 @@ def main():
             "The preparation variation panel compares independent phase and static "
             "bias offsets, individual coherence and ensemble coherence. Its JSON "
             "exports can be checked with the same replay command. Uniform ranges "
-            "are teaching choices, not calibrated laboratory noise.\n",
+            "are teaching choices, not calibrated laboratory noise.\n\n"
+            "The Spin echo comparison uses paired static offsets with and without "
+            "an ideal instantaneous midpoint L/R swap. J=0 during the holds; "
+            "no microwave field or finite pulse is modeled. Its JSON is also "
+            "supported by the repository replay command.\n",
         )
     print(out.resolve())
 

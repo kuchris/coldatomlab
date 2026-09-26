@@ -35,6 +35,14 @@ Use **Density / Phase** to switch the observation view. Parameter edits remain p
 
 The English interface provides density and masked phase maps, central density profiles, RMS width histories, norm, energy, and boundary population. It adapts to desktop and narrow mobile layouts.
 
+## Spin echo comparison (v0.12)
+
+Open **Quantum coherence → Spin echo comparison ↓ → Run comparison**. Both arms use identical seeded phase and static-bias offsets. One evolves freely; the other swaps the left/right modes halfway through. Use **Play timeline**, the slider and **Before pulse / After pulse** to inspect the actual coherence vectors and their ensemble averages.
+
+The default fixed-bias example returns echo coherence to 1 at 500 ms while no-echo coherence is about 0.2925 for its 64 draws. **Keep initial phase spread** shows that pre-existing phase differences remain; **Keep interactions** shows that a π swap does not reverse interaction dynamics. Presets stage settings until Run comparison. Pause/cancel retains completed pairs, and JSON/CSV exports preserve applied settings. Existing experiments and pins stay intact.
+
+This is an **ideal instantaneous spatial L/R swap with J=0 during the holds**, not a microwave or finite-pulse simulation. It runs locally and in the static ZIP without a GPU. See [echo formulas, classic papers, independent replay and validation](docs/ECHO.md).
+
 ## Preparation variation (v0.11)
 
 Open **Quantum coherence** at **http://127.0.0.1:8765/#quantum**, scroll to **What if each preparation is slightly different?**, then click **Run preparations**. Each run draws independent uniform initial-phase and constant-bias offsets. Compare individual coherence with the magnitude of their averaged signal, inspect the count-probability mixture, and separate within-preparation quantum variance from variation of preparation means.

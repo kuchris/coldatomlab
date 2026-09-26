@@ -151,3 +151,7 @@ conditional pure state; averaging makes a statistical mixture. The manual
 **Sample atom counts** panel instead draws quantum outcomes from one fixed
 state. The [3D scan](SCANS3D.md) repeats detector exposures on frozen fields.
 These three kinds of repetition answer different questions.
+
+The [spin echo comparison](ECHO.md) adds a paired ideal midpoint L/R swap to
+show which static-bias effects refocus and which initial-phase or interaction
+effects remain. It leaves this panel's recipes and results unchanged.
