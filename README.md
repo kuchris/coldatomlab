@@ -35,7 +35,7 @@ Use **Density / Phase** to switch the observation view. Parameter edits remain p
 
 The English interface provides density and masked phase maps, central density profiles, RMS width histories, norm, energy, and boundary population. It adapts to desktop and narrow mobile layouts.
 
-## Vortex Lab (v0.16)
+## Vortex Lab (v0.17)
 
 Open **Vortex Lab → Prepare experiment → Run** at `/#vortex`. Inspect a prepared
 positive/negative vortex or a vortex-free cloud, then try **Stir a cloud** to
@@ -48,9 +48,26 @@ the local dashboard and static ZIP. Leaving this experiment pauses it and retain
 its state. Hardware-accelerated Chrome/Edge on HTTPS or localhost is required;
 there is no CPU fallback inside this page. The independent Python reference can
 replay exports with `uv run python -m coldatomlab.replay path/to/coldatomlab-vortex.json`.
-The trap stays on; no damping, finite-temperature noise or real-time
-renormalization is applied. Winding-crossing counts depend on grid and masking.
+The trap stays on until **Release trap** removes both trap and beam; interactions
+remain active. No damping, finite-temperature noise or real-time renormalization
+is applied. Winding-crossing counts depend on grid and masking.
 See [vortex units, preparations, Madison reference and validation](docs/VORTEX.md).
+
+**Vortex imaging:** choose **Release & photograph → Prepare experiment → Release
+trap → Run**. At the endpoint, scroll to **Can the camera see the core? → Capture
+image**. Compare ideal optics with **Try 3 μm resolution**, capture again, and turn
+on photon/read noise. Pin an exposure to compare its image and radial profile.
+The recipe uses N=1000, g=0 and 6.366 ms of full 3D time of flight; it is an analytic
+teaching reference, not a reproduction of the Madison experiment. Side views
+remain available, but a core measurement requires an unstirred axial vortex
+viewed along z. A density dip is not proof of quantized circulation.
+
+Images freeze the source field and never advance the solver. **Export image JSON**
+includes the full protocol, field, camera settings, raw frames and measurements;
+verify it with `uv run python -m coldatomlab.replay path/to/coldatomlab-vortex-image.json`.
+**Export profile CSV** saves the current model/camera radial profiles. Captures
+and pins persist across reset, re-preparation and dashboard navigation until reload.
+See [TOF, optical assumptions, core estimator and validation](docs/VORTEX_IMAGING.md).
 Earlier experiments retain their existing export-format versions for compatibility.
 
 ## Phase precision benchmark (v0.15)

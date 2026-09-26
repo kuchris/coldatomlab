@@ -1,4 +1,4 @@
-# Vortex Lab (v0.16)
+# Vortex Lab (v0.17; trapped reference introduced in v0.16)
 
 Experiment 06 evolves a trapped three-dimensional condensate on hardware WebGPU.
 Open **Vortex Lab → Prepare experiment → Run**. The default is an analytic
@@ -15,12 +15,12 @@ The dimensionless equation is
 The mass is Rb-87, `ω₀=2π×50 s⁻¹`, `a₀=√(ℏ/mω₀)=1.525 μm`,
 `t₀=1/ω₀=3.183 ms`. Energy is in `ℏω₀`; `g=4π N aₛ/a₀` is the
 norm-one three-dimensional interaction coefficient. The numerical backend uses
-N=20,000 and derives aₛ from the selected g; this is a parameterization, not a
+the selected N (default 20,000) and derives aₛ from g/N; this is a parameterization, not a
 calibration of a particular experimental scattering-length control.
 
 `V=(x²+y²+4z²)/2 + H(t) exp(−[(x−R cos Ωt)²+(y−R sin Ωt)²]/(2σ²))`.
 
-The trap frequencies remain `(50,50,100) Hz`. The repulsive beam is uniform in z.
+Before release the trap frequencies are `(50,50,100) Hz`. The repulsive beam is uniform in z.
 With ramp length r and stirring duration T,
 `H(t)=Hmax sin²[π clamp(min(t/r,(T−t)/r),0,1)/2]`.
 Two ramps must fit within T. Potential values are evaluated at the physical
@@ -29,7 +29,9 @@ step midpoint, independently of browser rendering speed.
 There is no damping, thermal cloud, quantum depletion, loss or stochastic term.
 No vortices are inserted during real-time evolution. The beam can do work and
 supply angular momentum; energy conservation is expected only with static V.
-After the beam is off, the remaining trap is axially symmetric.
+After the programmed beam is off, the remaining trap is axially symmetric.
+Manual **Release trap** removes both potentials simultaneously; g stays unchanged.
+See [release and absorption imaging](VORTEX_IMAGING.md) for the v0.17 protocol.
 
 ## Preparations and what to compare
 

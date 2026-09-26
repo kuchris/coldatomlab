@@ -9,6 +9,8 @@ from .physical import HBAR, RB87_MASS
 from .solver3d import Config3D, Solver3D
 
 DEFAULTS = dict(
+    atoms=20000,
+    tof_duration=2,
     n=64,
     length=16,
     dt=0.004,
@@ -30,6 +32,8 @@ def validate(config):
     if set(c) != set(DEFAULTS) or c["n"] not in (32, 64, 128) or type(c["n"]) is not int:
         raise ValueError("Unknown vortex configuration or grid.")
     for k, lo, hi in [
+        ("atoms", 1000, 300000),
+        ("tof_duration", 0.1, 6),
         ("length", 16, 32),
         ("dt", 0.001, 0.008),
         ("g", 0, 1000),
@@ -51,6 +55,12 @@ def validate(config):
         raise ValueError("Resolve the cloud and stirrer: dx<=0.5 and width>=2dx.")
     if 2 * c["ramp"] > c["stir_time"]:
         raise ValueError("Two ramps must fit within the stirring time.")
+    if type(c["atoms"]) is not int:
+        raise ValueError("Atom number must be an integer.")
+    if c["g"] * scales()["length_um"] * 1000 / (4 * math.pi * c["atoms"]) > 10:
+        raise ValueError(
+            "g/N implies scattering length above 10 nm; increase atom number or reduce g."
+        )
     return c
 
 
@@ -70,8 +80,8 @@ def parent_config(c):
         n=c["n"],
         length=c["length"],
         dt=c["dt"],
-        atoms=20000,
-        scattering_nm=c["g"] * a / (4 * math.pi * 20000) * 1e9,
+        atoms=c["atoms"],
+        scattering_nm=c["g"] * a / (4 * math.pi * c["atoms"]) * 1e9,
         reference_hz=50,
         fx_hz=50,
         fy_hz=50,
@@ -197,8 +207,15 @@ class Vortex:
                 raise ValueError("Invalid prepared field; no real-time normalization is applied.")
         self.initial = self.psi.copy()
         self.steps = 0
+        self.release_step = None
+
+    def release(self):
+        if self.release_step is None:
+            self.release_step = self.steps
 
     def potential(self, t):
+        if self.release_step is not None and t >= self.release_step * self.config["dt"] - 1e-12:
+            return 0.0
         h, x, y = drive(self.config, t)
         return self.trap + h * np.exp(
             -0.5 * ((self.X - x) ** 2 + (self.Y - y) ** 2) / self.config["width"] ** 2
@@ -235,14 +252,27 @@ class Vortex:
             energy=energy,
             lz=lz,
             edge_probability=edge,
+            widths=[
+                float(
+                    np.sqrt(
+                        max(0, np.sum(p * a * a) * dv / norm - (np.sum(p * a) * dv / norm) ** 2)
+                    )
+                )
+                for a in (self.X, self.Y, self.Z)
+            ],
             **winding_diagnostics(self.psi, c, gx, gy),
         )
 
 
 def verify_export(data):
     """Independent preparation and float64 propagation check, not bitwise GPU replay."""
-    if data.get("schema") != "coldatomlab-vortex-v1" or data.get("version") != "0.16.0":
+    if (data.get("schema"), data.get("version")) not in (
+        ("coldatomlab-vortex-v1", "0.16.0"),
+        ("coldatomlab-vortex-v2", "0.17.0"),
+    ):
         raise ValueError("Unsupported vortex export.")
+    if data.get("schema") == "coldatomlab-vortex-v2" and "release_step" not in data:
+        raise ValueError("Missing release protocol.")
     c = validate(data["config"])
     if data.get("array_order") != "x,y,z interleaved real,imag":
         raise ValueError("Invalid array convention.")
@@ -252,7 +282,19 @@ def verify_export(data):
         ):
             raise ValueError("Physical scales do not match.")
     steps = data["steps"]
-    if type(steps) is not int or not 0 <= steps <= math.floor(c["duration"] / c["dt"] + 0.5):
+    release_step = data.get("release_step")
+    if release_step is not None and (
+        type(release_step) is not int
+        or not 0 <= release_step <= steps
+        or release_step > math.floor(c["duration"] / c["dt"] + 0.5)
+    ):
+        raise ValueError("Invalid release step.")
+    endpoint = (
+        math.floor(c["duration"] / c["dt"] + 0.5)
+        if release_step is None
+        else release_step + math.floor(c["tof_duration"] / c["dt"] + 0.5)
+    )
+    if type(steps) is not int or not 0 <= steps <= endpoint:
         raise ValueError("Invalid step count.")
 
     def field(key):
@@ -268,6 +310,7 @@ def verify_export(data):
     if preparation_error > 3e-4:
         raise ValueError("Initial field does not match the declared preparation.")
     sim = Vortex(c, initial)
+    sim.release_step = release_step
     rows = data["history"]
     if (
         not isinstance(rows, list)
@@ -296,6 +339,12 @@ def verify_export(data):
                 raise ValueError(f"CPU replay differs in {key}; refine before drawing conclusions.")
             if key in max_errors:
                 max_errors[key] = max(max_errors[key], abs(actual[key] - row[key]))
+        if data["schema"] == "coldatomlab-vortex-v2":
+            widths = np.asarray(row.get("widths"), dtype=float)
+            if widths.shape != (3,) or not np.allclose(
+                widths, actual["widths"], rtol=0.001, atol=1e-5
+            ):
+                raise ValueError("History widths differ from CPU replay.")
         # A threshold crossing can legitimately change between float32 and
         # float64. Reject an unconfirmed history instead of silently accepting
         # the saved classification; callers can refine or inspect the full field.

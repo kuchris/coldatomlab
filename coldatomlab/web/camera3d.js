@@ -298,7 +298,7 @@ window.AbsorptionCamera3D = {
       fit_profile: best.predicted.map((v) => v * scale),
     };
   },
-  acquire(snapshot, settings) {
+  acquire(snapshot, settings, fitFringes = true) {
     const c = { ...this.defaults, ...settings },
       n = snapshot.config.n;
     this.validate(c, n);
@@ -391,15 +391,31 @@ window.AbsorptionCamera3D = {
           strip.reduce((s, j) => s + truthPixels[j][i], 0) / strip.length,
       );
     const fitX = select.map((i) => x[i]),
-      measuredFit = this.fit(
-        fitX,
-        select.map((i) => profile[i]),
-        c.noise ? select.map((i) => err[i]) : null,
-      ),
-      truthFit = this.fit(
-        fitX,
-        select.map((i) => truthProfile[i]),
-      );
+      measuredFit = fitFringes
+        ? this.fit(
+            fitX,
+            select.map((i) => profile[i]),
+            c.noise ? select.map((i) => err[i]) : null,
+          )
+        : {
+            available: false,
+            reason: "Fringe analysis not requested.",
+            phase: null,
+            spacing: null,
+            contrast: null,
+          },
+      truthFit = fitFringes
+        ? this.fit(
+            fitX,
+            select.map((i) => truthProfile[i]),
+          )
+        : {
+            available: false,
+            reason: "Fringe analysis not requested.",
+            phase: null,
+            spacing: null,
+            contrast: null,
+          };
     let count = 0,
       truthCount = 0,
       countVariance = 0,
@@ -422,8 +438,8 @@ window.AbsorptionCamera3D = {
       warnings.push(
         `${invalid} invalid ROI pixels; atom count and image fit may be unavailable. Magenta pixels are invalid; negative estimates remain blue.`,
       );
-    if (!measuredFit.available) warnings.push(measuredFit.reason);
-    if (c.axis === "x")
+    if (fitFringes && !measuredFit.available) warnings.push(measuredFit.reason);
+    if (fitFringes && c.axis === "x")
       warnings.push(
         "Looking along the split direction integrates x-fringes away; no x phase can be recovered.",
       );
@@ -446,6 +462,7 @@ window.AbsorptionCamera3D = {
       pixel_um: pitch,
       truth_density: truthPixels,
       density,
+      ...(fitFringes ? {} : { density_variance: variance }),
       atoms_frame: atoms,
       reference_frame: ref,
       dark_frame: dark,

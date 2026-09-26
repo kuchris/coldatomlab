@@ -12,8 +12,8 @@ window.VortexGPU = class extends GPUCloud3D {
       n: c.n,
       length: c.length,
       dt: c.dt,
-      atoms: 20000,
-      scattering_nm: ((c.g * a) / (4 * Math.PI * 20000)) * 1e9,
+      atoms: c.atoms,
+      scattering_nm: ((c.g * a) / (4 * Math.PI * c.atoms)) * 1e9,
       reference_hz: 50,
       fx_hz: 50,
       fy_hz: 50,
@@ -138,6 +138,16 @@ window.VortexGPU = class extends GPUCloud3D {
     this.device.queue.submit([e.finish()]);
     return this.read(this.analysis[i]);
   }
+  async release() {
+    this.check();
+    if (this.warning)
+      throw Error("Resolve the stopping condition before release.");
+    if (this.releaseStep === null) {
+      this.releaseStep = this.steps;
+      this.complete = false;
+      await this.record();
+    }
+  }
   async advance(count = 20) {
     if (!Number.isInteger(count) || count < 1 || count > 20)
       throw Error("Step count must be 1–20.");
@@ -169,7 +179,11 @@ window.VortexGPU = class extends GPUCloud3D {
       else if (!Number.isFinite(edge) || edge > 0.001)
         this.warning =
           "Stopped: boundary probability exceeds 0.001. Increase box and grid together.";
-      this.complete = this.steps >= Math.round(c.duration / c.dt);
+      this.complete =
+        this.steps >=
+        (this.releaseStep === null
+          ? Math.round(c.duration / c.dt)
+          : this.releaseStep + Math.round(c.tof_duration / c.dt));
     }
     await this.record();
   }
@@ -182,6 +196,8 @@ window.VortexGPU = class extends GPUCloud3D {
       gy = await this.derivative(1),
       dv = this.dx ** 3,
       band = Math.max(2, n / 16);
+    const moment = [0, 0, 0],
+      square = [0, 0, 0];
     let norm = 0,
       energy = 0,
       lz = 0,
@@ -197,9 +213,16 @@ window.VortexGPU = class extends GPUCloud3D {
         im = field[2 * i + 1],
         p = re * re + im * im;
       const v =
-        this.trapAt(i) +
-        h * Math.exp((-0.5 * ((x - bx) ** 2 + (y - by) ** 2)) / c.width ** 2);
+        this.releaseStep !== null
+          ? 0
+          : this.trapAt(i) +
+            h *
+              Math.exp((-0.5 * ((x - bx) ** 2 + (y - by) ** 2)) / c.width ** 2);
       norm += p * dv;
+      [x, y, this.x[iz]].forEach((v, a) => {
+        moment[a] += v * p * dv;
+        square[a] += v * v * p * dv;
+      });
       energy +=
         (re * kin[2 * i] + im * kin[2 * i + 1] + v * p + 0.5 * c.g * p * p) *
         dv;
@@ -224,6 +247,9 @@ window.VortexGPU = class extends GPUCloud3D {
       energy,
       lz: lz / norm,
       edge_probability: edge,
+      widths: square.map((v, a) =>
+        Math.sqrt(Math.max(0, v / norm - (moment[a] / norm) ** 2)),
+      ),
       ...VortexModel.topology(field, c, gx, gy),
     };
     this.field = field;
@@ -259,8 +285,9 @@ window.VortexGPU = class extends GPUCloud3D {
         "The last GPU step has no verified readback. Reset or prepare again before exporting.",
       );
     return {
-      schema: "coldatomlab-vortex-v1",
-      version: "0.16.0",
+      schema: "coldatomlab-vortex-v2",
+      version: "0.17.0",
+      release_step: this.releaseStep,
       array_order: "x,y,z interleaved real,imag",
       config: { ...this.vortex },
       scales: { ...this.units },

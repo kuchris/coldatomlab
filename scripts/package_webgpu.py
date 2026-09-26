@@ -9,6 +9,8 @@ def main():
     out = Path("artifacts/coldatomlab-webgpu.zip")
     out.parent.mkdir(exist_ok=True)
     files = (
+        "vortex-imaging.js",
+        "vortex-imaging-ui.js",
         "vortex.html",
         "vortex.css",
         "vortex.js",

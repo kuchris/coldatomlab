@@ -415,6 +415,48 @@ earlier GPU protocols were checked. Time, 64³/128³ grid and doubled-box
 comparisons confirm emerging contour winding while exposing crossing-count
 resolution limits. See `docs/VORTEX.md` for tolerances and separate evidence.
 
+## v0.17: vortex release and absorption imaging
+
+Extend experiment 06 with manual simultaneous trap/beam release and full 3D
+TOF evolution, retaining g and the no-renormalization rule. Keep trapped v0.16
+recipes and old export replay. Add atom number (g=4pi N as/a0 stays explicit),
+a TOF endpoint, release-step metadata and RMS widths. Reset restores the trap.
+The single-vortex imaging recipe uses g=0, N=1000, 64³, box=24, dt=.004,
+TOF=2; longer/interacting expansion must respect the existing boundary stop.
+
+- Prepare / release / run / pause / step / reset; show hold and TOF time,
+  actual applied potential and exact rounded TOF endpoint. Preserve navigation,
+  camera captures and immutable pins. No automatic change to grid, g or N.
+- Freeze the actual 3D field for absorption imaging along x, y or z. Reuse the
+  saturation-corrected transmission, intensity PSF, pixel integration, seeded
+  photon/read noise and raw atom/reference/dark frames. No fringe fitting in
+  the vortex camera. Capture never changes or advances the numerical state.
+- Show model column density and recovered camera density on a shared scale,
+  physical coordinates, core position/contrast/apparent half-depth diameter,
+  invalid/low-signal states, and an image/profile pin. Estimate image core using
+  image pixels alone, with its search/averaging choices and noise bias stated.
+  Quantitative core extraction is restricted to an isolated axial vortex viewed
+  along z; side views and stirred multi-core states remain images, with no
+  invented core estimate. This is a density-dip estimate, not proof of winding.
+- Export source field/protocol plus camera frames/settings/measurements in JSON;
+  export camera profiles in CSV; independently replay propagation and imaging
+  in float64 Python. Preserve the original camera and 3D experiment behavior.
+- Validate released analytic charge ±1 Gaussian-polynomial fields and widths,
+  norm/free energy/angular momentum, dt/grid/box convergence, arbitrary release
+  timing, partial/complete replay, projection atom totals and axis orientation.
+  Validate ideal image inversion, blurred/binned contrast, seeded noise,
+  image-only position accuracy, invalid/side-view behavior and tampering.
+- Test actual hardware WebGPU, local/static controls, navigation, mobile layouts,
+  immutable captures and exports. Reference Madison (2000) for TOF absorption
+  imaging; do not claim its 27 ms apparatus or measured core size is reproduced.
+
+Status: implemented. Analytic/free-field, hold/release and interacting time
+refinement passed. Independent image/source replay, local/static hardware
+WebGPU controls and 1440/390/320 px layouts passed. Full suite: 375 passed;
+the final imaging test file (including three added axis-orientation cases):
+19 passed. Existing trapped-vortex and 3D-camera browser checks passed.
+See `docs/VORTEX_IMAGING.md` for measured errors and model limits.
+
 ## Later extensions
 
 Dashboard interface: implemented with a light navigation shell, searchable experiment cards, grid/list views and direct workspace/measurement/camera links. Template illustrations are explicitly labeled; selecting a template stages its experiment type for preparation. Navigation preserves the solver session, pending settings and pinned comparisons. Desktop and mobile browser evidence is recorded in `docs/VALIDATION.md`. The dashboard now also links to the independent three-dimensional single-cloud experiment.

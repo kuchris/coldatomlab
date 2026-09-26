@@ -23,7 +23,11 @@ def verify_run(data):
 
 
 def verify_export(data):
-    if data.get("schema") == "coldatomlab-vortex-v1":
+    if data.get("schema") == "coldatomlab-vortex-image-v1":
+        from .vortex_imaging import verify_export as verify_vortex_image
+
+        return verify_vortex_image(data)
+    if data.get("schema") in ("coldatomlab-vortex-v1", "coldatomlab-vortex-v2"):
         from .vortex import verify_export as verify_vortex
 
         return verify_vortex(data)

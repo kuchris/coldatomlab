@@ -44,6 +44,14 @@
           <b>04</b
           ><span>Stir a cloud<small>Vortex-free interacting start</small></span>
         </button>
+        <button data-vortex-preset="imaging">
+          <b>05</b
+          ><span
+            >Release &amp; photograph<small
+              >Single vortex · 1,000 atoms</small
+            ></span
+          >
+        </button>
       </nav>
       <p class="tm-lesson" id="v-lesson">
         The +1 recipe is a prepared oscillator eigenstate. Its phase winds once
@@ -67,6 +75,24 @@
                 <option value="-1">−1 · phase imprint</option>
               </select></label
             >
+            <label
+              >Atom number N<input
+                id="v-atoms"
+                type="number"
+                min="1000"
+                max="300000"
+                step="100"
+                value="20000"
+            /></label>
+            <label
+              >TOF duration / t₀<input
+                id="v-tof_duration"
+                type="number"
+                min="0.1"
+                max="6"
+                step="0.1"
+                value="2"
+            /></label>
             <label
               >Interaction g<input
                 id="v-g"
@@ -168,7 +194,8 @@
         </aside>
         <section class="v-results" aria-label="Vortex results">
           <div class="tm-actions">
-            <button id="v-run" disabled>Run</button
+            <button id="v-release" disabled>Release trap</button
+            ><button id="v-run" disabled>Run</button
             ><button id="v-pause" disabled>Pause</button
             ><button id="v-step" disabled>Step</button
             ><button id="v-reset" disabled>Reset</button
@@ -267,14 +294,163 @@
           </div>
         </section>
       </div>
+      <section id="v-camera" class="v-camera">
+        <p class="eyebrow">VORTEX IMAGING / FROZEN EXPOSURE</p>
+        <h2>Can the camera see the core?</h2>
+        <p>
+          Choose Release &amp; photograph, prepare, release the trap and run.
+          Pause at any time to capture the current field.
+        </p>
+        <form id="vi-form" class="vi-controls">
+          <label
+            >View along<select id="vi-axis">
+              <option value="z">z · along the vortex</option>
+              <option value="x">x · side view</option>
+              <option value="y">y · side view</option>
+            </select></label
+          >
+          <label
+            >Pixel binning<select id="vi-binning">
+              <option value="1">1 × 1</option>
+              <option value="2">2 × 2</option>
+              <option value="4">4 × 4</option>
+            </select></label
+          >
+          <label
+            >Optical FWHM / μm<input
+              id="vi-fwhm"
+              type="number"
+              min="0"
+              max="20"
+              step="0.1"
+              value="0"
+          /></label>
+          <label
+            >Photon &amp; read noise<select id="vi-noise">
+              <option value="off">Off · ideal counts</option>
+              <option value="on">On</option>
+            </select></label
+          >
+          <label
+            >Seed<input
+              id="vi-seed"
+              type="number"
+              min="0"
+              max="4294967295"
+              value="17"
+              step="1"
+          /></label>
+          <label
+            >ROI half-width / μm<input
+              id="vi-roi"
+              type="number"
+              min="1"
+              max="100"
+              step="0.5"
+              value="8"
+          /></label>
+          <label
+            >Saturation I/Iₛ<input
+              id="vi-saturation"
+              type="number"
+              min="0.001"
+              max="10"
+              step="0.001"
+              value="1"
+          /></label>
+          <label
+            >Exposure / μs<input
+              id="vi-exposure"
+              type="number"
+              min="0.1"
+              max="100"
+              step="0.1"
+              value="5"
+          /></label>
+          <button id="vi-capture" type="submit" class="primary" disabled>
+            Capture image
+          </button>
+        </form>
+        <div class="tm-actions">
+          <button id="vi-ideal">Ideal optics</button
+          ><button id="vi-blur">Try 3 μm resolution</button
+          ><button id="vi-pin" disabled>Pin image</button
+          ><button id="vi-json" disabled>Export image JSON ↓</button
+          ><button id="vi-csv" disabled>Export profile CSV ↓</button>
+        </div>
+        <p id="vi-status" role="status">
+          No image captured. An exposure freezes the current numerical state.
+        </p>
+        <p id="vi-applied"></p>
+        <div class="vi-plots">
+          <figure>
+            <figcaption>
+              Model column density <small>atoms / μm² · pixel averages</small>
+            </figcaption>
+            <canvas id="vi-model" width="480" height="430"></canvas>
+          </figure>
+          <figure>
+            <figcaption>
+              Reconstructed camera density
+              <small>atoms / μm² · same linear scale</small>
+            </figcaption>
+            <canvas id="vi-camera" width="480" height="430"></canvas>
+          </figure>
+        </div>
+        <p id="vi-scale"></p>
+        <div class="vi-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Measurement</th>
+                <th>Model image</th>
+                <th>Camera image</th>
+              </tr>
+            </thead>
+            <tbody id="vi-measurements"></tbody>
+          </table>
+        </div>
+        <figure>
+          <figcaption>
+            Radial density around each image's estimated dip
+            <small>Independent image-only extraction · radius / μm</small>
+          </figcaption>
+          <canvas id="vi-profile" width="1000" height="250"></canvas>
+        </figure>
+        <div id="vi-pinned" hidden>
+          <h3>Pinned exposure</h3>
+          <p id="vi-pin-label"></p>
+          <canvas id="vi-pin-image" width="480" height="430"></canvas
+          ><button id="vi-unpin">Clear pinned image</button>
+        </div>
+        <p class="v-caption">
+          White cross: independently estimated image dip. Core position,
+          contrast and apparent half-depth diameter are available only for an
+          isolated axial vortex viewed along z. Side views and stirred clouds
+          are shown without a single-core estimate. A density hole alone does
+          not prove phase winding. Negative estimates are blue; invalid pixels
+          are magenta. Core search and smoothing can bias noisy measurements; no
+          precision claim or fitted position uncertainty is implied.
+        </p>
+        <p class="v-caption">
+          The optical model applies saturation-corrected transmission, a
+          Gaussian intensity PSF, pixel integration, then independent photon and
+          read noise. Detector efficiency is 0.8 and read noise is 1 electron.
+          No recoil, optical pumping, motion blur or multiple scattering is
+          simulated. Camera edits apply at the next capture and leave the solver
+          unchanged.
+        </p>
+      </section>
       <section class="v-model" id="model">
         <h2>What this experiment models</h2>
         <p>
           Full 3D conservative Gross–Pitaevskii evolution, i∂ψ/∂t = [−∇²/2 + V +
           g|ψ|²]ψ, with ∫|ψ|²d³r = 1 and g = 4πNaₛ/a₀. The Rb-87 reference trap
           is (50, 50, 100) Hz. Length a₀ = √(ℏ/mω₀), time t₀ = 1/ω₀ and energy
-          ℏω₀. The harmonic trap stays on. No thermal cloud, loss, damping,
-          quantum depletion or measurement noise is included.
+          ℏω₀. The harmonic trap stays on until Release trap switches off both
+          trap and beam. Interactions remain on during TOF. No thermal cloud,
+          loss, damping, quantum depletion or noise in the field evolution is
+          included. Detector noise is applied only to captured images.
         </p>
         <p>
           The rotating repulsive Gaussian is uniform along z: V = (x²+y²+4z²)/2
@@ -321,8 +497,11 @@
             "interferometry3d.js",
             "gpu3d.js",
             "surface3d.js",
+            "camera3d.js",
             "vortex.js",
             "vortex-gpu.js",
+            "vortex-imaging.js",
+            "vortex-imaging-ui.js",
             "vortex-ui.js",
           ]) {
             await new Promise((resolve, reject) => {

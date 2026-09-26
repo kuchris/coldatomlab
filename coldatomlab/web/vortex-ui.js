@@ -33,6 +33,14 @@
         !!solver.lost ||
         solver.history.at(-1)?.steps !== solver.steps;
     $("v-pause").disabled = !running;
+    $("v-release").disabled =
+      !solver ||
+      busy ||
+      running ||
+      dirty ||
+      !!solver.warning ||
+      solver.releaseStep !== null;
+    window.VortexImagingUI?.updateControls();
     for (const el of document.querySelectorAll(
       "#v-form input,#v-form select,[data-vortex-preset]",
     ))
@@ -42,6 +50,16 @@
     const c = { ...VortexModel.defaults, stir_time: 4 };
     if (name === "negative") c.charge = -1;
     if (name === "ground") c.charge = 0;
+    if (name === "imaging")
+      Object.assign(c, {
+        atoms: 1000,
+        length: 24,
+        n: 64,
+        g: 0,
+        height: 0,
+        charge: 1,
+        tof_duration: 2,
+      });
     if (name === "stir")
       Object.assign(c, { g: 300, charge: 0, height: 12, duration: 5 });
     for (const k of keys) $("v-" + k).value = c[k];
@@ -51,6 +69,9 @@
         : name === "ground"
           ? "A vortex-free Gaussian has no phase winding. Compare it with a pinned vortex; a density hole alone would not prove circulation."
           : `This ${c.charge > 0 ? "+1" : "−1"} recipe is a prepared oscillator eigenstate. Its phase winds once ${c.charge > 0 ? "counterclockwise" : "clockwise"}; it is not a movie of vortex formation.`;
+    if (name === "imaging")
+      $("v-lesson").textContent =
+        "Prepare a single vortex, release all confinement, then run 2 t₀ of 3D expansion. Capture along z and compare ideal optics with blur and noise. g stays unchanged on release.";
     changed();
   }
   function changed() {
@@ -141,7 +162,7 @@
       ctx.fillText(v.charge > 0 ? "+" : "−", px(v.x), py(v.y) + 5);
     }
     const [height, x, y] = VortexModel.drive(c, d.time);
-    if (height > 1e-8) {
+    if (height > 1e-8 && s.releaseStep == null) {
       ctx.strokeStyle = "#f6b469";
       ctx.beginPath();
       ctx.arc(px(x), py(y), (c.width / c.length) * box, 0, 2 * Math.PI);
@@ -193,6 +214,22 @@
       c = solver.vortex;
     const metrics = [
       ["Time / ms", fmt(d.time * solver.units.time_ms)],
+      [
+        "TOF / ms",
+        fmt(
+          (solver.releaseStep === null
+            ? 0
+            : (solver.steps - solver.releaseStep) * c.dt) *
+            solver.units.time_ms,
+        ),
+      ],
+      ["RMS x / μm", fmt(d.widths[0] * solver.units.length_um)],
+      ["RMS y / μm", fmt(d.widths[1] * solver.units.length_um)],
+      ["RMS z / μm", fmt(d.widths[2] * solver.units.length_um)],
+      [
+        "Trapped time / ms",
+        fmt((solver.releaseStep ?? solver.steps) * c.dt * solver.units.time_ms),
+      ],
       ["Contour winding", d.winding ?? "Unresolved"],
       ["Flow circulation / (h/m)", fmt(d.flow_circulation_quanta)],
       ["Lz per particle / ℏ", fmt(d.lz)],
@@ -217,12 +254,16 @@
     slice($("v-phase"), solver, true);
     history();
     $("v-applied").textContent =
-      `Applied: ${c.n}³ · g = ${c.g} · charge ${c.charge} · dt = ${c.dt} t₀. ${solver.preparation.kind}.`;
+      `Applied: ${c.n}³ · N = ${c.atoms} · g = ${c.g} · aₛ = ${fmt(solver.config.scattering_nm)} nm · charge ${c.charge} · dt = ${c.dt} t₀. ${solver.preparation.kind}.`;
     $("v-units").textContent =
       `a₀ = ${fmt(solver.units.length_um)} μm · t₀ = ${fmt(solver.units.time_ms)} ms · h/m = ${fmt(solver.units.circulation_um2_ms)} μm²/ms.`;
     const [height] = VortexModel.drive(c, d.time);
+    const free = solver.releaseStep !== null,
+      endpoint = free
+        ? solver.releaseStep + Math.round(c.tof_duration / c.dt)
+        : Math.round(c.duration / c.dt);
     $("v-protocol").textContent =
-      `t = ${fmt(d.time)} t₀ · trap ON · beam height ${fmt(height)} ℏω₀ · beam off at ${c.stir_time} t₀ · ${Math.round(c.duration / c.dt)} total steps. Energy may change while the beam moves; it should remain approximately constant after turn-off.`;
+      `t = ${fmt(d.time)} t₀ · trap ${free ? "OFF" : "ON"} · beam height ${fmt(free ? 0 : height)} ℏω₀ · ${endpoint} total steps. ${free ? "Full 3D free expansion; interactions remain on. Energy excludes the removed potential." : "Release trap begins TOF from this state. Energy may change while the beam moves."}`;
     $("v-topology").textContent = d.loop_reliable
       ? "The contour is resolved. Its integer winding measures net enclosed circulation; positive and negative crossings can cancel."
       : "Contour unresolved: low density or a large phase jump prevents a reliable winding. Unresolved is not zero.";
@@ -275,6 +316,12 @@
     running = false;
     controls();
   }
+  $("v-release").addEventListener("click", () =>
+    guarded(async () => {
+      await solver.release();
+      render();
+    }),
+  );
   $("v-run").addEventListener("click", run);
   $("v-pause").addEventListener("click", () => {
     running = false;
@@ -305,6 +352,7 @@
   $("v-pin").addEventListener("click", () => {
     pin = {
       vortex: { ...solver.vortex },
+      releaseStep: solver.releaseStep,
       field: solver.field.slice(),
       history: [structuredClone(solver.history.at(-1))],
     };
@@ -377,5 +425,9 @@
     ),
   );
   resize.observe(document.body);
+  VortexImagingUI.attach(
+    () => solver,
+    () => busy || running,
+  );
   controls();
 })();

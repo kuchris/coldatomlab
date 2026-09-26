@@ -201,7 +201,7 @@ def validate_camera(c, n):
         raise ValueError("Invalid noise settings.")
 
 
-def acquire_projection(density, fine_x, axes, c, atom_number):
+def acquire_projection(density, fine_x, axes, c, atom_number, fit_fringes=True):
     """Independent optical acquisition from a verified physical column density."""
     b = c["binning"]
     n = len(fine_x)
@@ -271,6 +271,7 @@ def acquire_projection(density, fine_x, axes, c, atom_number):
         x_um=x,
         truth_density=truth,
         density=recovered,
+        **({} if fit_fringes else {"density_variance": variance}),
         atoms_frame=atoms,
         reference_frame=ref,
         dark_frame=dark,
@@ -281,10 +282,26 @@ def acquire_projection(density, fine_x, axes, c, atom_number):
         profile_error=errors,
         truth_profile=truth_profile,
         fit_x_um=x[selection],
-        measured=fit_profile(
-            x[selection], profile[selection], errors[selection] if c["noise"] else None
+        measured=(
+            fit_profile(x[selection], profile[selection], errors[selection] if c["noise"] else None)
+            if fit_fringes
+            else dict(
+                available=False,
+                reason="Fringe analysis not requested.",
+                phase=None,
+                spacing=None,
+                contrast=None,
+            )
         ),
-        truth=fit_profile(x[selection], truth_profile[selection]),
+        truth=fit_profile(x[selection], truth_profile[selection])
+        if fit_fringes
+        else dict(
+            available=False,
+            reason="Fringe analysis not requested.",
+            phase=None,
+            spacing=None,
+            contrast=None,
+        ),
         atoms_roi=None if invalid else recovered[roi].sum() * pitch**2,
         truth_atoms_roi=truth[roi].sum() * pitch**2,
         atom_standard_error=None if invalid else math.sqrt(variance[roi].sum()) * pitch**2,

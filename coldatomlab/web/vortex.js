@@ -2,6 +2,8 @@
 // Geometry and diagnostics only: no evolution or fabricated vortex graphics.
 window.VortexModel = (() => {
   const defaults = {
+    atoms: 20000,
+    tof_duration: 2,
     n: 64,
     length: 16,
     dt: 0.004,
@@ -24,6 +26,8 @@ window.VortexModel = (() => {
     )
       throw Error("Unknown configuration or grid.");
     const limits = {
+      atoms: [1000, 300000],
+      tof_duration: [0.1, 6],
       length: [16, 32],
       dt: [0.001, 0.008],
       g: [0, 1000],
@@ -52,6 +56,15 @@ window.VortexModel = (() => {
       );
     if (2 * c.ramp > c.stir_time)
       throw Error("Two ramps must fit within the stirring time.");
+    if (!Number.isInteger(c.atoms))
+      throw Error("Atom number must be an integer.");
+    const a = Math.sqrt(
+      6.62607015e-34 / (2 * Math.PI) / (1.443160895e-25 * 2 * Math.PI * 50),
+    );
+    if ((c.g * a * 1e9) / (4 * Math.PI * c.atoms) > 10)
+      throw Error(
+        "g/N implies scattering length above 10 nm; increase atom number or reduce g.",
+      );
     return c;
   }
   function drive(c, t) {
