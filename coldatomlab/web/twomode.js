@@ -110,11 +110,17 @@
       energy_hz: energy };
   }
   class Solver {
-    constructor(input) {
+    constructor(input, initialState = null) {
       this.config = validate(input);
       const n = this.config.atoms + 1;
       this.eigen = eigensystem(matrix(this.config), n);
-      this.initial = initial(this.config);
+      this.initial = initialState === null ? initial(this.config) : {
+        r: Float64Array.from(initialState.r), im: Float64Array.from(initialState.im),
+      };
+      if (this.initial.r.length !== n || this.initial.im.length !== n ||
+          [...this.initial.r, ...this.initial.im].some(x => !Number.isFinite(x)) ||
+          Math.abs(this.initial.r.reduce((s, x, k) => s + x*x + this.initial.im[k]**2, 0) - 1) > 1e-9)
+        throw new Error("Incoming state must be finite, normalized and have N + 1 amplitudes. It is not renormalized.");
       this.br = new Float64Array(n); this.bi = new Float64Array(n);
       for (let j = 0; j < n; j++) for (let k = 0; k < n; k++) {
         this.br[j] += this.eigen.vectors[k * n + j] * this.initial.r[k];

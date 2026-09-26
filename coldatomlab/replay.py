@@ -23,6 +23,10 @@ def verify_run(data):
 
 
 def verify_export(data):
+    if data.get("schema") == "coldatomlab-pulse-v1":
+        from .pulse import verify_export as verify_pulse
+
+        return verify_pulse(data)
     if data.get("schema") == "coldatomlab-echo-v1":
         from .echo import verify_export as verify_echo
 

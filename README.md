@@ -35,6 +35,14 @@ Use **Density / Phase** to switch the observation view. Parameter edits remain p
 
 The English interface provides density and masked phase maps, central density profiles, RMS width histories, norm, energy, and boundary population. It adapts to desktop and narrow mobile layouts.
 
+## Finite tunnelling pulses (v0.13)
+
+Open **Quantum coherence → Finite pulse comparison ↓ → Run finite-pulse comparison**. Compare no pulse, instantaneous exchange, and short/nominal/long rectangular tunnelling pulses using the same preparations and total elapsed time. Bias and interactions remain active during the finite pulse.
+
+Start with **Watch population transfer** to see atoms move between wells during the pulse. **Pulse midpoint**, the timeline and **Zoom around the pulse** expose the evolving population and phase. The nominal resonant pulse transfers all atoms in the ideal noninteracting, unbiased example; a ±20% duration error leaves about 9.55% in the starting well. Then **Compare echo recovery** shows the effect of static bias; **Keep interactions during pulse** retains the nonlinear dynamics. Edits and presets remain pending until Run.
+
+The final table separates ensemble coherence from phase-invariant fidelity to the paired ideal-swap state. Preparation selection, pause/resume/cancel, completed-prefix JSON/CSV and independent Python replay are included. Other panels and pins are preserved; the static ZIP supports this experiment without a GPU. This is a prescribed two-mode J(t), not a simulated barrier ramp or electromagnetic pulse. See [finite-pulse calibration, timing, papers and validation](docs/PULSE.md).
+
 ## Spin echo comparison (v0.12)
 
 Open **Quantum coherence → Spin echo comparison ↓ → Run comparison**. Both arms use identical seeded phase and static-bias offsets. One evolves freely; the other swaps the left/right modes halfway through. Use **Play timeline**, the slider and **Before pulse / After pulse** to inspect the actual coherence vectors and their ensemble averages.

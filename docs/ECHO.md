@@ -168,3 +168,7 @@ drive work, pulse error, higher orbital excitation or spatial motion is evolved.
 No thermalization, losses, detector noise or time-varying stochastic drive is
 included. The result demonstrates refocusing within the declared two-mode
 Hamiltonian; it is not experimental validation or reversal of all decoherence.
+
+The [finite tunnelling pulse comparison](PULSE.md) replaces the instantaneous
+swap with actual coupled evolution in a separate panel, retaining this ideal
+echo as one reference arm.

@@ -9,6 +9,8 @@ def main():
     out = Path("artifacts/coldatomlab-webgpu.zip")
     out.parent.mkdir(exist_ok=True)
     files = (
+        "pulse.js",
+        "pulse-ui.js",
         "echo.js",
         "echo-ui.js",
         "preparation.js",
@@ -59,7 +61,11 @@ def main():
             "The Spin echo comparison uses paired static offsets with and without "
             "an ideal instantaneous midpoint L/R swap. J=0 during the holds; "
             "no microwave field or finite pulse is modeled. Its JSON is also "
-            "supported by the repository replay command.\n",
+            "supported by the repository replay command.\n\n"
+            "Finite pulse comparison evolves short/nominal/long rectangular "
+            "tunnelling pulses alongside no-pulse and instantaneous references. "
+            "Bias and interactions remain active during the pulse. Its full "
+            "JSON export is supported by the same replay command.\n",
         )
     print(out.resolve())
 

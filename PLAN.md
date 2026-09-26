@@ -249,6 +249,50 @@ Local and extracted-static browser checks passed for controls, both pulse
 snapshots, timeline, exports/replay, preservation of existing experiments,
 dashboard navigation and desktop/mobile layouts. See `docs/ECHO.md`.
 
+## v0.13: finite tunnelling pulse
+
+Extend experiment 05 with a separate paired comparison of no pulse, ideal
+instantaneous swap, short finite pulse, nominal pi pulse and long finite pulse.
+Use the same initial state and seeded static offsets in all five arms. Total
+wall-clock duration T is identical: each rectangular finite pulse is centered
+on T/2, with J=0 before and after it. Bias and U remain active during the pulse.
+The Hamiltonian and Hz/ms conventions stay unchanged. The nominal resonant
+noninteracting pi width is tau_pi=1/(4J) seconds, and the pulse propagator at
+that width is i^N S. Keep its actual global phase; compare to ideal S using
+phase-invariant fidelity rather than comparing raw amplitudes across arms.
+
+- Controls: N, initial left fraction and phase, U, base bias, total duration,
+  pulse J in [0.5,20] Hz, fractional duration error in [0,0.5], phase/bias
+  spread, preparation count/seed. Widths are (1-error), 1 and (1+error) times
+  tau_pi. Reject settings whose longest pulse is not shorter than T.
+- Default balanced coherent N=40, U=base phase=base bias=phase spread=0,
+  T=500 ms, pulse J=10 Hz, duration error=20%, bias spread=2 Hz, 32 preparations.
+  Add a zero-bias all-left population-transfer preset and an interacting preset.
+- Evolve arbitrary incoming normalized amplitudes with the existing float64
+  spectral propagator. Do not normalize real-time states. Preserve legacy
+  solver initialization and exports. Independent Python spectral replay must
+  verify both finite and ideal paths, boundary states and all aggregates.
+- Show actual population transfer and phase during the pulse, per-preparation
+  vectors, ensemble coherence, and final mean fidelity against the ideal arm.
+  Label conditional versus ensemble measurements. Sample the common time axis
+  and every pulse boundary, including one-sided Hamiltonian/energy snapshots;
+  retain both sides of the ideal discontinuity. Playback only inspects states.
+- Verify arbitrary-state propagation, norm, piecewise energy, boundary
+  continuity, rectangular-pulse Rabi transfer, pi global phase, finite-width
+  errors, detuning, retained interactions, short-pulse trend, exact stage timing,
+  zero duration error, seeded repeatability, invalid input and tampered exports.
+- Preserve older panels and dashboard navigation; support pause/resume/cancel,
+  completed-prefix JSON/CSV exports, static packaging, mobile and live browser
+  controls. Keep fixed-orbital and finite-basis limits explicit; changing J is
+  a prescribed two-mode control, not a simulated barrier ramp or microwave drive.
+- Cite Gross (2012) for the coupled two-mode/spin framework and Hahn (1950)
+  for echo context; derive the pulse calibration from this project's convention.
+
+Status: implemented. All 270 repository tests passed, including 40 finite-pulse
+tests. Local and extracted-static browser checks passed for five-arm controls,
+timeline/zoom, actual pulse population transfer, exports/replay, preservation of
+all earlier panels, navigation and desktop/mobile layouts. See `docs/PULSE.md`.
+
 ## Later extensions
 
 Dashboard interface: implemented with a light navigation shell, searchable experiment cards, grid/list views and direct workspace/measurement/camera links. Template illustrations are explicitly labeled; selecting a template stages its experiment type for preparation. Navigation preserves the solver session, pending settings and pinned comparisons. Desktop and mobile browser evidence is recorded in `docs/VALIDATION.md`. The dashboard now also links to the independent three-dimensional single-cloud experiment.
