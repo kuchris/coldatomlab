@@ -35,6 +35,20 @@ Use **Density / Phase** to switch the observation view. Parameter edits remain p
 
 The English interface provides density and masked phase maps, central density profiles, RMS width histories, norm, energy, and boundary population. It adapts to desktop and narrow mobile layouts.
 
+## Phase precision benchmark (v0.15)
+
+Open **Quantum coherence → Precision benchmark ↓ → Run precision benchmark**.
+Repeat full scans with fresh counts, comparing baseline, more atoms and more
+shots. Inspect phase-error histograms, circular bias/scatter, reported uncertainty
+and RMSE. The default compares N=20/80 and 64/256 shots across 100 scans.
+
+Try **Precise but biased** to see why more measurements do not remove pulse
+bias, or **No identifiable phase** to inspect unresolved outcomes. Pause/cancel
+retains completed paired repetitions. Applied settings, model states, count
+histograms and estimates export to independently replayable JSON; CSV summarizes
+each trial. This works inside the dashboard and static ZIP without a GPU.
+See [precision statistics, resource scaling and validation](docs/PRECISION.md).
+
 ## Phase readout (v0.14)
 
 Open **Quantum coherence → Phase readout ↓ → Run phase readout**. Compare direct

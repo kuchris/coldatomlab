@@ -36,13 +36,19 @@
     const residual_rms=Math.sqrt(rows.reduce((s,r)=>s+(r.z-offset-a*Math.cos(r.alpha)-b*Math.sin(r.alpha))**2,0)/K);
     return {offset,cosine:a,sine:b,contrast:C,phase,phase_se,residual_rms,covariance,resolved};
   }
-  function point(p,source,index){if(!Number.isInteger(index)||index<0||index>=p.points)throw new Error("Invalid scan index.");
+  function states(p,source,index){if(!Number.isInteger(index)||index<0||index>=p.points)throw new Error("Invalid scan index.");
     const alpha=2*Math.PI*index/p.points,s=shifted(source,alpha),result={index,alpha,arms:{}};
-    for(const [ai,arm] of arms.entries()){
+    for(const arm of arms){
       const ideal=arm==="ideal",c={...p.base,tunnelling_hz:p.pulse_j_hz,duration_ms:1000,...(ideal?{interaction_hz:0,bias_hz:0}:{})};
       let state;
       if(arm==="direct")state=source;
       else {state=new TwoMode.Solver(c,s).at(ideal?125/p.pulse_j_hz:width(p));state.time_ms=p.hold_ms+(ideal?0:width(p));}
+      result.arms[arm]=state;
+    }return result;
+  }
+  function point(p,source,index){const values=states(p,source,index),result={index,alpha:values.alpha,arms:{}};
+    for(const [ai,arm] of arms.entries()){
+      const state=values.arms[arm];
       // Non-overlapping blocks in one LCG stream, one block per setting and arm.
       let seed=p.seed>>>0;for(let k=0;k<(index*3+ai)*p.shots;k++)seed=(Math.imul(1664525,seed)+1013904223)>>>0;
       const measurement=TwoMode.sample(state,p.shots,seed);
@@ -54,6 +60,6 @@
       measured:fit(records.map(r=>({alpha:r.alpha,...r.arms[arm].statistics}))),
       model:fit(records.map(r=>({alpha:r.alpha,z:2*r.arms[arm].state.mean_left/p.base.atoms-1,variance_z_mean:0})))
     }])):null;
-    return {schema:"coldatomlab-readout-v1",version:"0.14.0",convention,plan:p,status,finite_width_ms:width(p),source,records,fits};}
-  globalThis.Readout={arms,convention,defaults,validate,width,incoming,shifted,statistics,fit,point,report};
+    return {schema:"coldatomlab-readout-v1",version:"0.15.0",convention,plan:p,status,finite_width_ms:width(p),source,records,fits};}
+  globalThis.Readout={arms,convention,defaults,validate,width,incoming,shifted,statistics,fit,states,point,report};
 })();

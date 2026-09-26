@@ -45,6 +45,8 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         files = {
+            "/precision.js": ("precision.js", "text/javascript; charset=utf-8"),
+            "/precision-ui.js": ("precision-ui.js", "text/javascript; charset=utf-8"),
             "/readout.js": ("readout.js", "text/javascript; charset=utf-8"),
             "/readout-ui.js": ("readout-ui.js", "text/javascript; charset=utf-8"),
             "/pulse.js": ("pulse.js", "text/javascript; charset=utf-8"),

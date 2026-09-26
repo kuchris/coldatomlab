@@ -51,7 +51,7 @@
     return { count, history, probability };
   }
   function report(plan, reference, records, status) {
-    return { schema: "coldatomlab-preparation-v1", version: "0.14.0",
+    return { schema: "coldatomlab-preparation-v1", version: "0.15.0",
       convention: "fixed-N density mixture; independent uniform offsets; bias constant per realization",
       plan, status, ideal: reference, records, aggregate: aggregate(plan, reference, records) };
   }

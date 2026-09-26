@@ -113,13 +113,13 @@ def fit(rows):
     )
 
 
-def point(p, source, index):
+def states(p, source, index):
     n = p["base"]["atoms"]
     alpha = 2 * math.pi * index / p["points"]
     psi = np.asarray(source["real"]) + 1j * np.asarray(source["imag"])
     shifted = psi * np.exp(-1j * (n - np.arange(n + 1)) * (alpha + math.pi / 2))
     result = dict(index=index, alpha=alpha, arms={})
-    for ai, arm in enumerate(ARMS):
+    for arm in ARMS:
         c = p["base"] | dict(tunnelling_hz=p["pulse_j_hz"], duration_ms=1000)
         ideal = arm == "ideal"
         if ideal:
@@ -131,6 +131,16 @@ def point(p, source, index):
             state = observe(
                 c, advance(c, shifted, duration), p["hold_ms"] + (0 if ideal else width(p))
             )
+        result["arms"][arm] = state
+    return result
+
+
+def point(p, source, index):
+    values = states(p, source, index)
+    n = p["base"]["atoms"]
+    result = dict(index=index, alpha=values["alpha"], arms={})
+    for ai, arm in enumerate(ARMS):
+        state = values["arms"][arm]
         seed = p["seed"]
         for _ in range((index * 3 + ai) * p["shots"]):
             seed = (1664525 * seed + 1013904223) % 2**32
@@ -163,7 +173,7 @@ def report(p, source, records, status):
             )
     return dict(
         schema="coldatomlab-readout-v1",
-        version="0.14.0",
+        version="0.15.0",
         convention=CONVENTION,
         plan=p,
         status=status,
@@ -186,6 +196,9 @@ def verify_export(data):
     source = incoming(p)
     records = [point(p, source, i) for i in range(count)]
     expected = report(p, source, records, data["status"])
+    if data.get("version") not in ("0.14.0", "0.15.0"):
+        raise ValueError("Unknown readout version.")
+    expected["version"] = data["version"]
     compare_tree(data, expected, "Readout")
     errors, drift = [], []
     saved_states = [data["source"]] + [r["arms"][a]["state"] for r in data["records"] for a in ARMS]

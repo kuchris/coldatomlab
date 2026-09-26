@@ -9,6 +9,8 @@ def main():
     out = Path("artifacts/coldatomlab-webgpu.zip")
     out.parent.mkdir(exist_ok=True)
     files = (
+        "precision.js",
+        "precision-ui.js",
         "readout.js",
         "readout-ui.js",
         "pulse.js",

@@ -813,7 +813,7 @@ fn normalize(@builtin(global_invocation_id) id:vec3u){if(id.x<TOTAL){dst[id.x]=s
     }
     return {
       schema: "coldatomlab-webgpu-3d-v1",
-      version: "0.14.0",
+      version: "0.15.0",
       config: this.config,
       array_order: "x,y,z",
       wavefunction_normalization: "integral |psi|^2 dX dY dZ = 1",

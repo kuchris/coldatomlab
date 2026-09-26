@@ -23,6 +23,10 @@ def verify_run(data):
 
 
 def verify_export(data):
+    if data.get("schema") == "coldatomlab-precision-v1":
+        from .precision import verify_export as verify_precision
+
+        return verify_precision(data)
     if data.get("schema") == "coldatomlab-readout-v1":
         from .readout import verify_export as verify_readout
 

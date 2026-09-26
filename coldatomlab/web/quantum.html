@@ -5,7 +5,7 @@
   <title>Quantum coherence · Cold Atom Lab</title>
   <script>if (window.self === window.top) location.replace("./#quantum");</script>
   <link rel="stylesheet" href="twomode.css">
-  <script src="twomode.js" defer></script><script src="preparation.js" defer></script><script src="preparation-ui.js" defer></script><script src="echo.js" defer></script><script src="echo-ui.js" defer></script><script src="pulse.js" defer></script><script src="pulse-ui.js" defer></script><script src="readout.js" defer></script><script src="readout-ui.js" defer></script><script src="twomode-ui.js" defer></script>
+  <script src="twomode.js" defer></script><script src="preparation.js" defer></script><script src="preparation-ui.js" defer></script><script src="echo.js" defer></script><script src="echo-ui.js" defer></script><script src="pulse.js" defer></script><script src="pulse-ui.js" defer></script><script src="readout.js" defer></script><script src="readout-ui.js" defer></script><script src="precision.js" defer></script><script src="precision-ui.js" defer></script><script src="twomode-ui.js" defer></script>
   <style>
     .tm-header {display:none}
     body {background:transparent}
@@ -17,7 +17,7 @@
   <header class="tm-header"><a href="./#experiments" aria-label="Cold Atom Lab home">✳ Cold Atom <b>Lab</b></a><span>05 / TWO-MODE QUANTUM LAB</span><a href="#model">Model &amp; papers ↓</a></header>
   <main>
     <div class="tm-title"><div><p class="eyebrow">FROM ONE CLOUD TO MANY POSSIBLE COUNTS</p><h1>Same preparation.<br>Different possible outcomes.</h1><p>Follow a quantum state through two wells. See how its average motion differs from the uncertainty of a single measurement.</p></div><div class="tm-engine">BROWSER · FLOAT64<br><strong>Two spatial modes<br>N + 1 amplitudes</strong><span>No GPU or simulation API needed</span></div></div>
-    <nav class="tm-actions tm-section-links" aria-label="Quantum lab sections"><button data-scroll-to="ensemble-lab">Preparation variation ↓</button><button data-scroll-to="echo-lab">Spin echo comparison ↓</button><button data-scroll-to="pulse-lab">Finite pulse comparison ↓</button><button data-scroll-to="readout-lab">Phase readout ↓</button></nav>
+    <nav class="tm-actions tm-section-links" aria-label="Quantum lab sections"><button data-scroll-to="ensemble-lab">Preparation variation ↓</button><button data-scroll-to="echo-lab">Spin echo comparison ↓</button><button data-scroll-to="pulse-lab">Finite pulse comparison ↓</button><button data-scroll-to="readout-lab">Phase readout ↓</button><button data-scroll-to="precision-lab">Precision benchmark ↓</button></nav>
     <nav class="tm-recipes" aria-label="Guided experiments">
       <button data-preset="tunnelling"><b>01</b><span>Watch atoms tunnel<small>All left → all right → back</small></span></button>
       <button data-preset="diffusion"><b>02</b><span>Let coherence evolve<small>Isolated wells · interactions on</small></span></button>
@@ -77,6 +77,7 @@
     <section id="echo-lab" class="tm-panel tm-model" aria-label="Spin echo comparison"></section>
     <section id="pulse-lab" class="tm-panel tm-model" aria-label="Finite pulse comparison"></section>
     <section id="readout-lab" class="tm-panel tm-model" aria-label="Phase readout"></section>
+    <section id="precision-lab" class="tm-panel tm-model" aria-label="Precision benchmark"></section>
     <section id="model" class="tm-panel tm-model">
       <p class="eyebrow">MODEL / ASSUMPTIONS / SOURCES</p><h2>A small quantum system, solved in its full occupation basis.</h2>
       <p>The state is Σ c<sub>n</sub>|n, N − n⟩, with Σ|c<sub>n</sub>|² = 1. The two <em>spatial</em> modes are left and right; the many-body state has N + 1 amplitudes. Probabilities and all plots come from those amplitudes.</p>

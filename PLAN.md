@@ -332,6 +332,46 @@ tests. Local and extracted-static browser checks passed for count inference,
 controls, exports/replay, prior-panel isolation, navigation and desktop/mobile
 layouts. See `docs/READOUT.md` for conventions, uncertainty limits and evidence.
 
+## v0.15: repeated phase precision benchmark
+
+Repeat complete v0.14 readout scans, drawing new ideal number measurements for
+every setting, arm and repetition. Compare baseline, more atoms and more shots
+with a common reference-phase grid and initial-state recipe. Reuse deterministic
+output states only; every trial draws new counts and independently fits a phase.
+All Hamiltonian, normalization, phase-gate and finite-pulse conventions stay as
+in v0.14. This is an estimator benchmark, not new squeezing physics.
+
+- Default balanced coherent N=20 versus 80, 64 versus 256 shots per setting,
+  12 reference phases, 100 full-scan repetitions, phase=0.7 rad, zero hold/U/bias,
+  readout J=10 Hz and zero duration error. Compare ideal and finite readout in
+  all three cases. Offer a biased-pulse example and a zero-coherence example.
+- Report per-case atom/shot budgets, resolved/attempted scans, circular bias and
+  scatter, wrapped RMSE, RMS reported local phase SE, scatter/SE and the fraction
+  within one SE of true phase. Label all phase statistics as conditional on
+  resolved fits; never turn missing phase into zero. Separate noiseless readout
+  bias from random counting variation. Plot repeated-estimate error histograms.
+- For balanced coherent, noninteracting ideal readout only, show the large-shot
+  prediction sqrt[3/(2 N K S)] for this full-period unweighted harmonic estimator.
+  Validate N and S scaling. Do not label it the optimal local SQL or claim
+  squeezing/quantum advantage. Pulse errors can leave narrow but biased estimates.
+- Support 8–32 settings, 20–300 repetitions, 16–4096 shots, N up to 100 and an
+  explicit 16-million-draw workload limit. Use deterministic non-overlapping LCG
+  blocks across every case, arm and trial. Pause/cancel between complete paired
+  repetitions; preserve completed prefixes and earlier experiment results.
+- Export model states once plus every trial's count histograms, block seeds and
+  fitted statistics in versioned JSON; CSV includes per-trial estimates and case
+  settings. Independent Python replay checks propagation, RNG, fits and summary.
+- Test statistical calibration across repeated scans, bias/RMSE separation,
+  wrapping near pi, unresolved states, analytic scaling, reproducibility, invalid
+  workloads and tampering. Verify live local/static controls, all-panel isolation,
+  navigation and mobile layouts. Reference Gross et al. (2010) as motivation for
+  later metrology comparisons, not an experimental result reproduced here.
+
+Status: implemented. All 333 repository tests passed, including 30 precision
+tests and 33 readout regression tests. Local and extracted-static browser
+checks passed for repeated scans, independent replay, resource comparisons,
+controls, prior-panel isolation and desktop/mobile layouts. See `docs/PRECISION.md`.
+
 ## Later extensions
 
 Dashboard interface: implemented with a light navigation shell, searchable experiment cards, grid/list views and direct workspace/measurement/camera links. Template illustrations are explicitly labeled; selecting a template stages its experiment type for preparation. Navigation preserves the solver session, pending settings and pinned comparisons. Desktop and mobile browser evidence is recorded in `docs/VALIDATION.md`. The dashboard now also links to the independent three-dimensional single-cloud experiment.

@@ -87,6 +87,6 @@
       return [arm,result];
     }));
   }
-  function report(p,ref,records,status){return {schema:"coldatomlab-pulse-v1",version:"0.14.0",convention,plan:p,status,windows:windows(p),checkpoints:checkpoints(p),reference:ref,records,aggregate:aggregate(p,ref,records)};}
+  function report(p,ref,records,status){return {schema:"coldatomlab-pulse-v1",version:"0.15.0",convention,plan:p,status,windows:windows(p),checkpoints:checkpoints(p),reference:ref,records,aggregate:aggregate(p,ref,records)};}
   globalThis.FinitePulse={arms,convention,defaults,ensemble,validate,windows,checkpoints,components,fidelity,evolve,reference,aggregate,report};
 })();
