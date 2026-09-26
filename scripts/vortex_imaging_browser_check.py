@@ -20,6 +20,8 @@ def exercise(browser, url, name):
     page.on("pageerror", lambda e: errors.append(str(e)))
     page.goto(url + "/#vortex", wait_until="networkidle")
     f = page.frame_locator("#vortex-frame")
+    f.locator("#v-manual-prepare summary").click()
+    f.locator("#v-manual summary").click()
     f.locator('[data-vortex-preset="imaging"]').click()
     f.locator("#v-prepare").click()
     expect(f.locator("#v-release")).to_be_enabled(timeout=30000)

@@ -5,7 +5,9 @@ window.VortexGPU = class extends GPUCloud3D {
       s = new VortexGPU();
     s.vortex = c;
     const a = Math.sqrt(
-      6.62607015e-34 / (2 * Math.PI) / (1.443160895e-25 * 2 * Math.PI * 50),
+      6.62607015e-34 /
+        (2 * Math.PI) /
+        (1.443160895e-25 * 2 * Math.PI * c.radial_hz),
     );
     s.config = {
       ...Interferometry3D.defaults,
@@ -14,10 +16,10 @@ window.VortexGPU = class extends GPUCloud3D {
       dt: c.dt,
       atoms: c.atoms,
       scattering_nm: ((c.g * a) / (4 * Math.PI * c.atoms)) * 1e9,
-      reference_hz: 50,
-      fx_hz: 50,
-      fy_hz: 50,
-      fz_hz: 100,
+      reference_hz: c.radial_hz,
+      fx_hz: c.radial_hz,
+      fy_hz: c.radial_hz,
+      fz_hz: c.axial_hz,
       duration: Math.min(c.duration, 4),
       preparation_dt: 0.002,
       experiment: "single",
@@ -25,9 +27,10 @@ window.VortexGPU = class extends GPUCloud3D {
     s.scales = GPUCloud3D.validate(s.config);
     s.units = {
       length_um: a * 1e6,
-      time_ms: 1000 / (2 * Math.PI * 50),
-      energy_hz: 50,
-      circulation_um2_ms: 2 * Math.PI * a * a * (2 * Math.PI * 50) * 1e9,
+      time_ms: 1000 / (2 * Math.PI * c.radial_hz),
+      energy_hz: c.radial_hz,
+      circulation_um2_ms:
+        2 * Math.PI * a * a * (2 * Math.PI * c.radial_hz) * 1e9,
     };
     try {
       if (!navigator.gpu)
@@ -55,9 +58,27 @@ window.VortexGPU = class extends GPUCloud3D {
         s.lost = event.error.message;
       });
       await s.initialize();
+      if (c.stationary && c.charge) {
+        const seed = await s.readField();
+        let norm = 0;
+        for (let i = 0; i < s.count; i++) {
+          const x = s.x[Math.floor(i / s.n ** 2)],
+            y = s.x[Math.floor(i / s.n) % s.n];
+          const re = seed[2 * i],
+            im = seed[2 * i + 1];
+          seed[2 * i] = re * x - im * c.charge * y;
+          seed[2 * i + 1] = im * x + re * c.charge * y;
+          norm += (seed[2 * i] ** 2 + seed[2 * i + 1] ** 2) * s.dx ** 3;
+        }
+        for (let i = 0; i < seed.length; i++) seed[i] /= Math.sqrt(norm);
+        s.device.queue.writeBuffer(s.fields[s.index], 0, seed);
+      }
       await s.prepare(progress);
+      if (c.stationary && c.charge)
+        s.preparation.kind =
+          "WebGPU stationary centered C4 charge-sector vortex";
       const field = await s.readField();
-      if (c.charge) {
+      if (c.charge && !c.stationary) {
         let peak = 0,
           norm = 0;
         for (let i = 0; i < s.count; i++)
@@ -76,12 +97,16 @@ window.VortexGPU = class extends GPUCloud3D {
         for (let i = 0; i < field.length; i++) field[i] /= Math.sqrt(norm); // preparation only
       }
       s.preparation = {
-        ground_state: s.preparation,
-        kind: c.charge
-          ? c.g
-            ? "Prescribed interacting vortex imprint (not stationary)"
-            : "Analytic oscillator vortex"
-          : "Vortex-free oscillator / interacting ground state",
+        prepared_state: s.preparation,
+        ground_state: c.stationary && c.charge ? null : s.preparation,
+        kind:
+          c.stationary && c.charge
+            ? "Stationary centered C4 charge-sector vortex"
+            : c.charge
+              ? c.g
+                ? "Prescribed interacting vortex imprint (not stationary)"
+                : "Analytic oscillator vortex"
+              : "Vortex-free oscillator / interacting ground state",
       };
       s.initial = field;
       await s.reset();
@@ -114,6 +139,30 @@ window.VortexGPU = class extends GPUCloud3D {
       }),
       compute: { module, entryPoint: "derivative" },
     });
+    const projection = this.device.createShaderModule({
+      code: `
+      @group(0) @binding(0) var<storage,read> src:array<vec2f>;
+      @group(0) @binding(1) var<storage,read_write> dst:array<vec2f>;
+      @compute @workgroup_size(256) fn project(@builtin(global_invocation_id) id:vec3u){
+        let at=id.x; if(at>=${this.count}u){return;}
+        let n=${this.n}u; let x=at/(n*n); let y=(at/n)%n; let z=at%n;
+        let nx=(n-x)%n; let ny=(n-y)%n;
+        let a=src[at]; let b=src[(ny*n+x)*n+z];
+        let c=src[(nx*n+ny)*n+z]; let d=src[(y*n+nx)*n+z];
+        dst[at]=(a-c+${Number(this.vortex.charge).toFixed(1)}*vec2f(b.y-d.y,d.x-b.x))*.25;
+      }`,
+    });
+    this.pipelines.project = await this.device.createComputePipelineAsync({
+      layout: this.device.createPipelineLayout({
+        bindGroupLayouts: [this.layout],
+      }),
+      compute: { module: projection, entryPoint: "project" },
+    });
+  }
+  projectPreparation(encoder, pair, index, mode, groups) {
+    if (!this.vortex.stationary || !this.vortex.charge) return index;
+    this.dispatch(encoder, "project", pair, index, mode, groups);
+    return 1 - index;
   }
   async derivative(axis) {
     const e = this.device.createCommandEncoder();
@@ -247,6 +296,10 @@ window.VortexGPU = class extends GPUCloud3D {
       energy,
       lz: lz / norm,
       edge_probability: edge,
+      paper_core:
+        c.stationary && c.charge && c.height === 0
+          ? VortexModel.core(field, c)
+          : null,
       widths: square.map((v, a) =>
         Math.sqrt(Math.max(0, v / norm - (moment[a] / norm) ** 2)),
       ),
@@ -285,8 +338,8 @@ window.VortexGPU = class extends GPUCloud3D {
         "The last GPU step has no verified readback. Reset or prepare again before exporting.",
       );
     return {
-      schema: "coldatomlab-vortex-v2",
-      version: "0.17.0",
+      schema: "coldatomlab-vortex-v3",
+      version: "0.18.0",
       release_step: this.releaseStep,
       array_order: "x,y,z interleaved real,imag",
       config: { ...this.vortex },

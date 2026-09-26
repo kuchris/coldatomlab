@@ -1,6 +1,9 @@
 # Vortex release and absorption imaging (v0.17)
 
 Experiment 06 now connects the complex 3D field to a simulated photograph.
+For one-button preparation through imaging, use the
+[automatic experiment](VORTEX_RESEARCH.md). The manual workflow below remains
+available after expanding **Manual preparation** and **Manual controls**.
 Choose **Release & photograph → Prepare experiment → Release trap → Run**,
 then **Capture image** in the imaging panel. Pin that exposure, stage
 **Try 3 μm resolution**, and capture again. Enable noise to inspect a seeded

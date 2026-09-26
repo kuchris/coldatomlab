@@ -276,6 +276,12 @@ window.VortexImagingUI = (() => {
     );
   });
   return {
+    settings,
+    capture: (source, camera = settings()) => {
+      captured = VortexImaging.acquire(source, camera);
+      render();
+      return captured;
+    },
     attach: (getter, busy) => {
       getSolver = getter;
       isBusy = busy;

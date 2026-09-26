@@ -7,8 +7,12 @@ from scipy.fft import fftn, ifftn
 
 from .physical import HBAR, RB87_MASS
 from .solver3d import Config3D, Solver3D
+from .vortex_observables import core_from_field
 
 DEFAULTS = dict(
+    stationary=0,
+    radial_hz=50,
+    axial_hz=100,
     atoms=20000,
     tof_duration=2,
     n=64,
@@ -32,6 +36,8 @@ def validate(config):
     if set(c) != set(DEFAULTS) or c["n"] not in (32, 64, 128) or type(c["n"]) is not int:
         raise ValueError("Unknown vortex configuration or grid.")
     for k, lo, hi in [
+        ("radial_hz", 10, 100),
+        ("axial_hz", 5, 200),
         ("atoms", 1000, 300000),
         ("tof_duration", 0.1, 6),
         ("length", 16, 32),
@@ -51,41 +57,46 @@ def validate(config):
             raise ValueError(f"Invalid {k}.")
     if type(c["charge"]) is not int or c["charge"] not in (-1, 0, 1):
         raise ValueError("Charge must be -1, 0 or 1.")
+    if type(c["stationary"]) is not int or c["stationary"] not in (0, 1):
+        raise ValueError("Stationary preparation must be 0 or 1.")
+    if not 0.5 <= c["axial_hz"] / c["radial_hz"] <= 2:
+        raise ValueError("Axial frequency must be 0.5–2 times the radial frequency.")
     if c["length"] / c["n"] > 0.5 or c["width"] < 2 * c["length"] / c["n"]:
         raise ValueError("Resolve the cloud and stirrer: dx<=0.5 and width>=2dx.")
     if 2 * c["ramp"] > c["stir_time"]:
         raise ValueError("Two ramps must fit within the stirring time.")
     if type(c["atoms"]) is not int:
         raise ValueError("Atom number must be an integer.")
-    if c["g"] * scales()["length_um"] * 1000 / (4 * math.pi * c["atoms"]) > 10:
+    if c["g"] * scales(c)["length_um"] * 1000 / (4 * math.pi * c["atoms"]) > 10:
         raise ValueError(
             "g/N implies scattering length above 10 nm; increase atom number or reduce g."
         )
     return c
 
 
-def scales():
-    a = math.sqrt(HBAR / (RB87_MASS * 2 * math.pi * 50))
+def scales(config=None):
+    f = (config or DEFAULTS)["radial_hz"]
+    a = math.sqrt(HBAR / (RB87_MASS * 2 * math.pi * f))
     return dict(
         length_um=a * 1e6,
-        time_ms=1000 / (2 * math.pi * 50),
-        energy_hz=50,
-        circulation_um2_ms=2 * math.pi * a * a / (1 / (2 * math.pi * 50)) * 1e9,
+        time_ms=1000 / (2 * math.pi * f),
+        energy_hz=f,
+        circulation_um2_ms=2 * math.pi * a * a * (2 * math.pi * f) * 1e9,
     )
 
 
 def parent_config(c):
-    a = scales()["length_um"] * 1e-6
+    a = scales(c)["length_um"] * 1e-6
     return Config3D(
         n=c["n"],
         length=c["length"],
         dt=c["dt"],
         atoms=c["atoms"],
         scattering_nm=c["g"] * a / (4 * math.pi * c["atoms"]) * 1e9,
-        reference_hz=50,
-        fx_hz=50,
-        fy_hz=50,
-        fz_hz=100,
+        reference_hz=c["radial_hz"],
+        fx_hz=c["radial_hz"],
+        fy_hz=c["radial_hz"],
+        fz_hz=c["axial_hz"],
         duration=min(c["duration"], 4),
         preparation_dt=0.002,
     )
@@ -179,13 +190,19 @@ class Vortex:
         self.dx = c["length"] / n
         self.x = (np.arange(n) - n / 2) * self.dx
         self.X, self.Y, self.Z = np.meshgrid(self.x, self.x, self.x, indexing="ij", sparse=True)
-        self.trap = 0.5 * (self.X**2 + self.Y**2 + 4 * self.Z**2)
+        self.trap = 0.5 * (
+            self.X**2 + self.Y**2 + (c["axial_hz"] / c["radial_hz"]) ** 2 * self.Z**2
+        )
         self.k = 2 * np.pi * np.fft.fftfreq(n, self.dx)
         self.k2 = (
             self.k[:, None, None] ** 2 + self.k[None, :, None] ** 2 + self.k[None, None, :] ** 2
         )
         self.kinetic = np.exp(-0.5j * c["dt"] * self.k2)
-        if initial is None:
+        if initial is None and c["stationary"] and c["charge"]:
+            from .vortex_stationary import prepare
+
+            self.psi, self.preparation = prepare(self)
+        elif initial is None:
             solver = Solver3D(parent_config(c))
             self.psi = solver.psi.copy()
             self.preparation = solver.preparation
@@ -252,6 +269,9 @@ class Vortex:
             energy=energy,
             lz=lz,
             edge_probability=edge,
+            paper_core=core_from_field(self.psi, self.dx)
+            if c["stationary"] and c["charge"] and c["height"] == 0
+            else None,
             widths=[
                 float(
                     np.sqrt(
@@ -269,16 +289,17 @@ def verify_export(data):
     if (data.get("schema"), data.get("version")) not in (
         ("coldatomlab-vortex-v1", "0.16.0"),
         ("coldatomlab-vortex-v2", "0.17.0"),
+        ("coldatomlab-vortex-v3", "0.18.0"),
     ):
         raise ValueError("Unsupported vortex export.")
-    if data.get("schema") == "coldatomlab-vortex-v2" and "release_step" not in data:
+    if data.get("schema") != "coldatomlab-vortex-v1" and "release_step" not in data:
         raise ValueError("Missing release protocol.")
     c = validate(data["config"])
     if data.get("array_order") != "x,y,z interleaved real,imag":
         raise ValueError("Invalid array convention.")
-    if data.get("scales") != scales():
-        if set(data.get("scales", {})) != set(scales()) or any(
-            not math.isclose(data["scales"][k], v, rel_tol=2e-12) for k, v in scales().items()
+    if data.get("scales") != scales(c):
+        if set(data.get("scales", {})) != set(scales(c)) or any(
+            not math.isclose(data["scales"][k], v, rel_tol=2e-12) for k, v in scales(c).items()
         ):
             raise ValueError("Physical scales do not match.")
     steps = data["steps"]
@@ -310,6 +331,17 @@ def verify_export(data):
     if preparation_error > 3e-4:
         raise ValueError("Initial field does not match the declared preparation.")
     sim = Vortex(c, initial)
+    if data["schema"] == "coldatomlab-vortex-v3" and c["stationary"]:
+        from .vortex_stationary import residual
+
+        mu, error = residual(sim, initial)
+        saved_prep = data["preparation"]["prepared_state"]
+        if (
+            error > 5e-4
+            or not math.isclose(saved_prep["chemical_potential"], mu, abs_tol=1e-4, rel_tol=1e-5)
+            or not math.isclose(saved_prep["relative_stationary_residual"], error, abs_tol=2e-5)
+        ):
+            raise ValueError("Stationary preparation metadata differs from its field.")
     sim.release_step = release_step
     rows = data["history"]
     if (
@@ -329,6 +361,17 @@ def verify_export(data):
             raise ValueError("History time does not match the physical steps.")
         sim.advance(step - sim.steps)
         actual = sim.diagnostics()
+        if data["schema"] == "coldatomlab-vortex-v3":
+            core, expected = row.get("paper_core"), actual["paper_core"]
+            if (core is None) != (expected is None):
+                raise ValueError("Paper core availability differs.")
+            if expected is not None:
+                for key, value in expected.items():
+                    if (core[key] is None) != (value is None) or (
+                        value is not None
+                        and not math.isclose(core[key], value, abs_tol=1e-4, rel_tol=0.001)
+                    ):
+                        raise ValueError("Paper core differs from independent field projection.")
         for key, tol in [
             ("norm", 0.001),
             ("energy", 0.005),
@@ -339,7 +382,7 @@ def verify_export(data):
                 raise ValueError(f"CPU replay differs in {key}; refine before drawing conclusions.")
             if key in max_errors:
                 max_errors[key] = max(max_errors[key], abs(actual[key] - row[key]))
-        if data["schema"] == "coldatomlab-vortex-v2":
+        if data["schema"] != "coldatomlab-vortex-v1":
             widths = np.asarray(row.get("widths"), dtype=float)
             if widths.shape != (3,) or not np.allclose(
                 widths, actual["widths"], rtol=0.001, atol=1e-5

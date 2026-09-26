@@ -11,6 +11,8 @@ def main():
     files = (
         "vortex-imaging.js",
         "vortex-imaging-ui.js",
+        "vortex-sequence.js",
+        "vortex-paper.js",
         "vortex.html",
         "vortex.css",
         "vortex.js",
@@ -57,7 +59,7 @@ def main():
         )
         archive.writestr(
             "VORTEX.txt",
-            "Open /#vortex for experiment 06. Hardware WebGPU required. Full 3D trapped conservative GPE; units, preparation, masking limits and Madison (2000) reference are stated in the page. JSON exports include full initial/final fields and can be checked with uv run python -m coldatomlab.replay path/to/coldatomlab-vortex.json in the full repository. This is a toleranced float64 comparison, not bitwise replay.\n",
+            "Open /#vortex for experiment 06. Run experiment prepares a stationary interacting vortex, holds, releases, expands and captures automatically. Hardware WebGPU required. Full 3D conservative GPE; units, numerical limits and the Lundh-Pethick-Smith (1998) reduced-model comparison are stated in the page. Manual controls and the Madison-motivated stirring recipe remain available. JSON exports include full initial/final fields and can be checked with uv run python -m coldatomlab.replay path/to/coldatomlab-run-1.json in the full repository. This is a toleranced float64 comparison, not bitwise replay.\n",
         )
         archive.writestr(
             "QUANTUM.txt",

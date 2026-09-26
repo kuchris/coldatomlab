@@ -288,3 +288,41 @@ button:disabled {
     padding: 10px 6px;
   }
 }
+.v-sequence {
+  margin: 1.5rem 0;
+  padding: 1.5rem;
+  border: 1px solid #aecdc9;
+  background: #edf5f3;
+}
+.v-sequence h2 {
+  margin-top: 0.3rem;
+}
+#v-paper-plot {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  margin-top: 1rem;
+}
+.v-sequence p {
+  line-height: 1.6;
+}
+#v-run-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 1rem;
+}
+#v-run-list article {
+  padding: 1rem;
+  border: 1px solid #d5e4e1;
+  background: #fff;
+}
+#v-manual,
+#v-manual-prepare {
+  margin: 0.8rem 0;
+}
+#v-manual summary,
+#v-manual-prepare summary {
+  cursor: pointer;
+  margin-bottom: 0.6rem;
+}

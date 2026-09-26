@@ -2,6 +2,9 @@
 // Geometry and diagnostics only: no evolution or fabricated vortex graphics.
 window.VortexModel = (() => {
   const defaults = {
+    stationary: 0,
+    radial_hz: 50,
+    axial_hz: 100,
     atoms: 20000,
     tof_duration: 2,
     n: 64,
@@ -26,6 +29,8 @@ window.VortexModel = (() => {
     )
       throw Error("Unknown configuration or grid.");
     const limits = {
+      radial_hz: [10, 100],
+      axial_hz: [5, 200],
       atoms: [1000, 300000],
       tof_duration: [0.1, 6],
       length: [16, 32],
@@ -50,6 +55,10 @@ window.VortexModel = (() => {
         throw Error(`Invalid ${k}: expected ${lo}–${hi}.`);
     if (![-1, 0, 1].includes(c.charge))
       throw Error("Charge must be −1, 0 or 1.");
+    if (c.axial_hz / c.radial_hz < 0.5 || c.axial_hz / c.radial_hz > 2)
+      throw Error("Axial frequency must be 0.5–2 times the radial frequency.");
+    if (![0, 1].includes(c.stationary))
+      throw Error("Choose an initial-state preparation.");
     if (c.length / c.n > 0.5 || c.width < (2 * c.length) / c.n)
       throw Error(
         "Resolve the cloud and stirrer: dx ≤ 0.5 and width ≥ 2 dx. Increase the grid.",
@@ -59,7 +68,9 @@ window.VortexModel = (() => {
     if (!Number.isInteger(c.atoms))
       throw Error("Atom number must be an integer.");
     const a = Math.sqrt(
-      6.62607015e-34 / (2 * Math.PI) / (1.443160895e-25 * 2 * Math.PI * 50),
+      6.62607015e-34 /
+        (2 * Math.PI) /
+        (1.443160895e-25 * 2 * Math.PI * c.radial_hz),
     );
     if ((c.g * a * 1e9) / (4 * Math.PI * c.atoms) > 10)
       throw Error(
@@ -176,5 +187,64 @@ window.VortexModel = (() => {
       negative: crossings.filter((p) => p.charge === -1).length,
     };
   }
-  return { defaults, validate, drive, density, at, sample, topology };
+  function core(field, c) {
+    const n = c.n,
+      dx = c.length / n,
+      col = new Float64Array(n * n);
+    let total = 0,
+      square = 0;
+    for (let i = 0; i < n; i++)
+      for (let j = 0; j < n; j++)
+        for (let k = 0; k < n; k++) {
+          const at = 2 * ((i * n + j) * n + k),
+            p = field[at] ** 2 + field[at + 1] ** 2;
+          col[i * n + j] += p * dx;
+          total += p;
+          square += p * ((i - n / 2) ** 2 + (j - n / 2) ** 2) * dx * dx;
+        }
+    const weight = (d) => {
+      d = Math.abs(d);
+      return d <= 1
+        ? 1.5 * d ** 3 - 2.5 * d * d + 1
+        : d < 2
+          ? -0.5 * d ** 3 + 2.5 * d * d - 4 * d + 2
+          : 0;
+    };
+    const profile = [],
+      radius = [];
+    for (let r = 0; r < 2 * n - 7; r++) {
+      let sum = 0;
+      radius.push((r * dx) / 4);
+      for (let angle = 0; angle < 32; angle++) {
+        const x = n / 2 + (r / 4) * Math.cos((angle * 2 * Math.PI) / 32),
+          y = n / 2 + (r / 4) * Math.sin((angle * 2 * Math.PI) / 32),
+          i = Math.floor(x),
+          j = Math.floor(y);
+        let value = 0;
+        for (let a = -1; a <= 2; a++)
+          for (let b = -1; b <= 2; b++)
+            value +=
+              col[
+                Math.max(0, Math.min(n - 1, i + a)) * n +
+                  Math.max(0, Math.min(n - 1, j + b))
+              ] *
+              weight(x - i - a) *
+              weight(y - j - b);
+        sum += Math.max(0, value);
+      }
+      profile.push(sum / 32);
+    }
+    const rms = Math.sqrt(square / total),
+      peak = profile.indexOf(Math.max(...profile)),
+      threshold = profile[peak] / Math.E;
+    if (peak < 2 || profile[0] >= threshold)
+      return { core_radius: null, radial_rms: rms, core_ratio: null };
+    const high = profile.findIndex((v) => v >= threshold);
+    const inner =
+      radius[high - 1] +
+      ((radius[high] - radius[high - 1]) * (threshold - profile[high - 1])) /
+        (profile[high] - profile[high - 1]);
+    return { core_radius: inner, radial_rms: rms, core_ratio: inner / rms };
+  }
+  return { defaults, validate, drive, density, at, sample, topology, core };
 })();

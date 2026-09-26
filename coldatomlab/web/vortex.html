@@ -23,10 +23,14 @@
         </div>
         <div class="tm-engine">
           FULL 3D · WEBGPU<strong>Density / phase / flow</strong
-          ><span>Trapped, zero-temperature condensate</span>
+          ><span>Prepare, hold and release · zero temperature</span>
         </div>
       </div>
       <nav class="tm-recipes" aria-label="Vortex recipes">
+        <button data-vortex-preset="stationary">
+          <b>★</b
+          ><span>Interacting vortex<small>Stationary · Na/a₀ = 20</small></span>
+        </button>
         <button data-vortex-preset="positive">
           <b>01</b
           ><span>One positive vortex<small>Analytic +1 reference</small></span>
@@ -57,10 +61,110 @@
         The +1 recipe is a prepared oscillator eigenstate. Its phase winds once
         counterclockwise; it is not a movie of vortex formation.
       </p>
+      <section class="v-sequence" aria-label="Automatic experiment">
+        <p class="eyebrow">AUTOMATIC EXPERIMENT</p>
+        <h2>Set the timing. Run the whole experiment.</h2>
+        <p>
+          Prepare → hold → release → expand → photograph. Times refer to
+          simulated physics, not the time spent calculating.
+        </p>
+        <form id="v-sequence-form" class="vi-controls">
+          <label
+            >Hold / ms<input
+              id="v-hold-ms"
+              type="number"
+              min="0"
+              step="any"
+              value="0"
+              required
+          /></label>
+          <label
+            >Time of flight / ms<input
+              id="v-tof-ms"
+              type="number"
+              min="0"
+              step="any"
+              value="6.366197723675814"
+              required
+          /></label>
+          <button id="v-sequence-run" type="submit" class="primary">
+            Run experiment
+          </button>
+          <button id="v-sequence-stop" type="button" disabled>Stop</button>
+        </form>
+        <p id="v-sequence-status" role="status">
+          Ready. Uses the experiment and camera settings below.
+        </p>
+        <button id="v-compare-runs" disabled>Compare runs</button>
+        <div id="v-run-comparison" hidden>
+          <h3>Saved runs</h3>
+          <p>
+            The latest three runs remain in this page until reload. Export each
+            run to keep it.
+          </p>
+          <div id="v-run-list"></div>
+          <label
+            >Compare quantity<select id="v-paper-quantity">
+              <option value="core_ratio">Core radius / radial RMS</option>
+              <option value="core_radius">Core radius / a₀</option>
+              <option value="radial_rms">Radial RMS / a₀</option>
+            </select></label
+          >
+          <canvas
+            id="v-paper-plot"
+            width="1000"
+            height="320"
+            role="img"
+            aria-label="Full three-dimensional core expansion compared with the paper approximation"
+          ></canvas>
+          <p id="v-paper-caption"></p>
+          <p>
+            Solid: full 3D numerical state. Dashed: independently calculated
+            Lundh–Pethick–Smith radial + axial Gaussian approximation, through
+            ωt = 2. This is a comparison between models, not experimental data.
+            Core radius uses the first 1/e-of-peak crossing of azimuthally
+            averaged column density; it is different from the camera half-depth
+            diameter. Refine the grid before interpreting small differences.
+          </p>
+        </div>
+      </section>
       <div class="v-layout">
         <aside class="v-controls">
-          <h2>Prepare the cloud</h2>
+          <h2>Experiment settings</h2>
           <form id="v-form">
+            <label
+              >Scattering length / nm<input
+                id="v-scattering"
+                type="number"
+                min="0"
+                max="10"
+                step="any"
+                value="0"
+            /></label>
+            <label
+              >Preparation<select id="v-stationary">
+                <option value="0">Analytic / prescribed imprint</option>
+                <option value="1">Stationary interacting state</option>
+              </select></label
+            >
+            <label
+              >Radial trap / Hz<input
+                id="v-radial_hz"
+                type="number"
+                min="10"
+                max="100"
+                step="1"
+                value="50"
+            /></label>
+            <label
+              >Axial trap / Hz<input
+                id="v-axial_hz"
+                type="number"
+                min="5"
+                max="200"
+                step="1"
+                value="100"
+            /></label>
             <label
               >Grid<select id="v-n">
                 <option value="32">32³ · coarse reference</option>
@@ -81,38 +185,40 @@
                 type="number"
                 min="1000"
                 max="300000"
-                step="100"
+                step="1"
                 value="20000"
             /></label>
-            <label
-              >TOF duration / t₀<input
-                id="v-tof_duration"
-                type="number"
-                min="0.1"
-                max="6"
-                step="0.1"
-                value="2"
-            /></label>
+
             <label
               >Interaction g<input
                 id="v-g"
                 type="number"
                 min="0"
                 max="1000"
-                step="10"
+                step="any"
                 value="0"
             /></label>
-            <label
-              >Duration / t₀<input
-                id="v-duration"
-                type="number"
-                min="0.1"
-                max="16"
-                step="0.1"
-                value="2"
-            /></label>
+
             <details>
-              <summary>Stirrer &amp; numerical settings</summary>
+              <summary>Manual timing &amp; numerical settings</summary>
+              <label
+                >TOF duration / t₀<input
+                  id="v-tof_duration"
+                  type="number"
+                  min="0.1"
+                  max="6"
+                  step="any"
+                  value="2"
+              /></label>
+              <label
+                >Duration / t₀<input
+                  id="v-duration"
+                  type="number"
+                  min="0.1"
+                  max="16"
+                  step="any"
+                  value="2"
+              /></label>
               <label
                 >Box side / a₀<input
                   id="v-length"
@@ -185,24 +291,30 @@
                   value="1.5"
               /></label>
             </details>
-            <button id="v-prepare" type="submit" class="primary">
-              Prepare experiment
-            </button>
+            <details id="v-manual-prepare">
+              <summary>Manual preparation</summary>
+              <button id="v-prepare" type="submit" class="primary">
+                Prepare experiment
+              </button>
+            </details>
           </form>
           <p id="v-applied">Choose a recipe, then prepare.</p>
           <p id="v-units"></p>
         </aside>
         <section class="v-results" aria-label="Vortex results">
-          <div class="tm-actions">
-            <button id="v-release" disabled>Release trap</button
-            ><button id="v-run" disabled>Run</button
-            ><button id="v-pause" disabled>Pause</button
-            ><button id="v-step" disabled>Step</button
-            ><button id="v-reset" disabled>Reset</button
-            ><button id="v-pin" disabled>Pin comparison</button
-            ><button id="v-json" disabled>Export JSON ↓</button
-            ><button id="v-csv" disabled>Export CSV ↓</button>
-          </div>
+          <details id="v-manual">
+            <summary>Manual controls</summary>
+            <div class="tm-actions">
+              <button id="v-release" disabled>Release trap</button
+              ><button id="v-run" disabled>Run</button
+              ><button id="v-pause" disabled>Pause</button
+              ><button id="v-step" disabled>Step</button
+              ><button id="v-reset" disabled>Reset</button
+              ><button id="v-pin" disabled>Pin comparison</button
+              ><button id="v-json" disabled>Export JSON ↓</button
+              ><button id="v-csv" disabled>Export CSV ↓</button>
+            </div>
+          </details>
           <p class="tm-status" id="v-status" role="status">
             Ready to prepare · a hardware WebGPU browser is required.
           </p>
@@ -298,8 +410,9 @@
         <p class="eyebrow">VORTEX IMAGING / FROZEN EXPOSURE</p>
         <h2>Can the camera see the core?</h2>
         <p>
-          Choose Release &amp; photograph, prepare, release the trap and run.
-          Pause at any time to capture the current field.
+          Run experiment captures the endpoint automatically. These settings
+          apply when the next run starts. Use Manual controls to pause and
+          capture an intermediate state.
         </p>
         <form id="vi-form" class="vi-controls">
           <label
@@ -444,20 +557,38 @@
       <section class="v-model" id="model">
         <h2>What this experiment models</h2>
         <p>
-          Full 3D conservative Gross–Pitaevskii evolution, i∂ψ/∂t = [−∇²/2 + V +
-          g|ψ|²]ψ, with ∫|ψ|²d³r = 1 and g = 4πNaₛ/a₀. The Rb-87 reference trap
-          is (50, 50, 100) Hz. Length a₀ = √(ℏ/mω₀), time t₀ = 1/ω₀ and energy
-          ℏω₀. The harmonic trap stays on until Release trap switches off both
-          trap and beam. Interactions remain on during TOF. No thermal cloud,
-          loss, damping, quantum depletion or noise in the field evolution is
-          included. Detector noise is applied only to captured images.
+          The default stationary-vortex experiment compares core expansion with
+          <a
+            href="https://arxiv.org/abs/cond-mat/9805351"
+            target="_blank"
+            rel="noopener"
+            >Lundh, Pethick &amp; Smith (1998), Vortices in
+            Bose-Einstein-Condensed Atomic Clouds</a
+          >. Its equations 36–39 and figure 5 use a radial wavefunction with a
+          Gaussian axial profile. Our full 3D state does not impose that
+          factorization. The dashed reference is computed from those reduced
+          equations, not measured data. Finite grid resolution particularly
+          affects the small initial core; the comparison is not a precision
+          claim for arbitrary settings.
         </p>
         <p>
-          The rotating repulsive Gaussian is uniform along z: V = (x²+y²+4z²)/2
+          Full 3D conservative Gross–Pitaevskii evolution, i∂ψ/∂t = [−∇²/2 + V +
+          g|ψ|²]ψ, with ∫|ψ|²d³r = 1 and g = 4πNaₛ/a₀. The selected Rb-87 trap
+          has equal x/y frequencies; ω₀ is its radial angular frequency. Length
+          a₀ = √(ℏ/mω₀), time t₀ = 1/ω₀ and energy ℏω₀. The harmonic trap stays
+          on until Release trap switches off both trap and beam. Interactions
+          remain on during TOF. No thermal cloud, loss, damping, quantum
+          depletion or noise in the field evolution is included. Detector noise
+          is applied only to captured images.
+        </p>
+        <p>
+          The rotating repulsive Gaussian is uniform along z: V = (x²+y²+λ²z²)/2
           + H(t) exp[−((x−R cos Ωt)²+(y−R sin Ωt)²)/(2σ²)]. Its sin² ramps turn
-          it on and off smoothly. No vortices are inserted during real-time
-          evolution. The interacting imprint is a prescribed initial state, not
-          a stationary solution.
+          it on and off smoothly; λ is axial/radial trap frequency. No vortices
+          are inserted during real-time evolution. Stationary preparation solves
+          the centered charge sector and reports the full GPE residual. The
+          optional legacy interacting imprint remains a prescribed initial
+          state.
         </p>
         <p>
           Phase winding is measured from the complex field around the declared
@@ -502,6 +633,8 @@
             "vortex-gpu.js",
             "vortex-imaging.js",
             "vortex-imaging-ui.js",
+            "vortex-sequence.js",
+            "vortex-paper.js",
             "vortex-ui.js",
           ]) {
             await new Promise((resolve, reject) => {

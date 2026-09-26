@@ -457,6 +457,54 @@ the final imaging test file (including three added axis-orientation cases):
 19 passed. Existing trapped-vortex and 3D-camera browser checks passed.
 See `docs/VORTEX_IMAGING.md` for measured errors and model limits.
 
+## v0.18: reproducible interacting vortex experiments
+
+Status: implemented and verified. This milestone combines the one-button workflow
+with a quantitatively checked stationary interacting initial state and a first
+literature comparison with explicitly bounded numerical accuracy.
+
+- Keep experiment 06 and hardware WebGPU. Add centered stationary charge ±1
+  preparation, chemical potential and full GPE residual. Preserve old imprints
+  and export replay as explicitly different preparations. Preparation may
+  normalize; real-time evolution must never normalize.
+- Expose N, scattering length and radial/axial trap frequencies in physical
+  units. Derive g=4pi N as/a0 with norm-one 3D wavefunctions. Initial stationary
+  preparation is in the axially symmetric harmonic trap before any stirrer.
+- One Run experiment executes prepare -> hold -> release -> TOF -> capture ->
+  analyse at exact rounded simulation steps. Stop works during preparation and
+  evolution; retain partial state/results with an explicit stopped status.
+  Hide step-by-step controls in Manual controls. Save completed runs for
+  comparison without requiring Pin, including source/camera settings and times.
+- First paper case: Lundh, Pethick & Smith, PRA 58, 4816 (1998), isotropic trap,
+  Na/a0=20, with zero-coupling reference. Compare the core radius at 1/e of peak
+  radial density, radial RMS size and their ratio during TOF. These definitions
+  are separate from the camera half-depth diameter. Compute the paper's
+  radial-plus-Gaussian equations as a labeled approximation and compare with the
+  full 3D calculation on a declared, boundary-safe time interval (initially
+  omega*t=0..2). Do not label the approximation as exact full-3D or experimental
+  data. Document equations, normalization and parameter/source provenance.
+- Validate stationary residual, fixed-trap stability, chemical potential,
+  winding, norm, real-time energy, dt/grid/box convergence and float64/GPU
+  agreement. Report numerical error separately from paper-model discrepancy.
+  Export reproducible full configurations, protocol, states and comparisons;
+  independently replay in Python and reject altered metadata/results.
+- Verify one-click local and static operation, stop/restart, navigation,
+  automatically retained comparison results, mobile layouts, original manual
+  controls and existing experiments. Update runnable README/docs and version.
+
+Validation (2026-09-26): 384 numerical tests plus 14 automatic-protocol/tamper
+checks passed. Local/static browser workflows cover complete/partial sequences,
+frozen acquisitions, saved comparisons, navigation, mobile and retained manual
+controls. The full default 128³/L=32 GPU experiment and its camera/reference
+were independently replayed in Python: preparation L² 1.64e-5, propagation L²
+2.14e-4. Float64 norm drift is below 3.6e-13; time-step refinement L² is 3.37e-6.
+Fixed-box spatial refinement, fixed-spacing box comparison and the paper's
+256/512/1024-cell reference are recorded in `docs/VORTEX_RESEARCH.md`. The
+initial core remains resolution dependent (default vs finest tested ratio
+change .000626); the small L=16 box is explicitly unsuitable at omega*t=2.
+The computed reduced-model comparison is not experimental data or a claim of
+full apparatus reconstruction.
+
 ## Later extensions
 
 Dashboard interface: implemented with a light navigation shell, searchable experiment cards, grid/list views and direct workspace/measurement/camera links. Template illustrations are explicitly labeled; selecting a template stages its experiment type for preparation. Navigation preserves the solver session, pending settings and pinned comparisons. Desktop and mobile browser evidence is recorded in `docs/VALIDATION.md`. The dashboard now also links to the independent three-dimensional single-cloud experiment.

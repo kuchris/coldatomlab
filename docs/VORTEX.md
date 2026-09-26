@@ -1,8 +1,10 @@
 # Vortex Lab (v0.17; trapped reference introduced in v0.16)
 
-Experiment 06 evolves a trapped three-dimensional condensate on hardware WebGPU.
-Open **Vortex Lab → Prepare experiment → Run**. The default is an analytic
-single-vortex reference. The **Stir a cloud** recipe starts with zero winding;
+Experiment 06 evolves a three-dimensional condensate on hardware WebGPU.
+The current default is the [automatic interacting experiment](VORTEX_RESEARCH.md).
+For the original analytic reference, select **One positive vortex**, expand
+**Manual preparation** and **Manual controls**, then **Prepare experiment → Run**.
+The **Stir a cloud** recipe starts with zero winding;
 its moving Gaussian switches off at t=4 and evolution continues to t=5.
 All times in those controls use the oscillator time t₀.
 

@@ -443,6 +443,8 @@ fn normalize(@builtin(global_invocation_id) id:vec3u){if(id.x<TOTAL){dst[id.x]=s
     this.dispatch(encoder, "local", pair, index, mode, groups);
     index = 1 - index;
     if (imaginary) {
+      if (this.projectPreparation)
+        index = this.projectPreparation(encoder, pair, index, mode, groups);
       this.dispatch(encoder, "partial", pair, index, mode, groups);
       this.dispatch(encoder, "total", pair, index, mode, 1);
       this.dispatch(encoder, "normalize", pair, index, mode, groups);

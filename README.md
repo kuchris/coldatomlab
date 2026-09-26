@@ -35,9 +35,34 @@ Use **Density / Phase** to switch the observation view. Parameter edits remain p
 
 The English interface provides density and masked phase maps, central density profiles, RMS width histories, norm, energy, and boundary population. It adapts to desktop and narrow mobile layouts.
 
-## Vortex Lab (v0.17)
+## Automatic interacting vortex experiment (v0.18)
 
-Open **Vortex Lab → Prepare experiment → Run** at `/#vortex`. Inspect a prepared
+Open **Vortex Lab** (Interacting vortex is selected by default), set **Hold / ms** and **Time of flight /
+ms**, then press **Run experiment**. It prepares the stationary interacting state,
+evolves the hold, releases all confinement at the rounded physical step, expands,
+calculates the applicable paper reference, and captures an absorption image.
+**Stop** retains a partial evolved run; stopping during preparation retains the
+previous verified state. **Compare runs** shows the latest three saved runs,
+core/cloud curves and JSON exports. Reload clears this in-page history.
+
+N, scattering length and radial/axial trap frequencies determine g. Editing the
+advanced g field updates its equivalent scattering length. The interacting
+recipe uses the dimensionless paper coupling Na/a₀=20 in an isotropic trap;
+the selected Rb-87 scale is a parameter mapping, not an apparatus calibration.
+The independent reference implements the radial-plus-Gaussian approximation
+of Lundh, Pethick & Smith (1998). Solid lines are full 3D state measurements;
+dashed lines are the reduced-model calculation through ωt=2. Differences between
+those models are reported separately from grid/time/box errors.
+
+Manual preparation and step-by-step controls remain in collapsed sections.
+Standalone state and camera exports still work there. Sequence exports can be
+checked with `uv run python -m coldatomlab.replay path/to/coldatomlab-run-1.json`.
+See [stationary preparation, protocol, paper model and validation](docs/VORTEX_RESEARCH.md).
+
+## Manual vortex experiments
+
+At `/#vortex`, choose a recipe, expand **Manual preparation** and **Manual controls**,
+then use **Prepare experiment → Run**. Inspect a prepared
 positive/negative vortex or a vortex-free cloud, then try **Stir a cloud** to
 create circulation through a moving repulsive beam. The full 3D WebGPU field
 drives the rotatable density surface, central density/phase, current arrows,

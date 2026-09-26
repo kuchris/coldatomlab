@@ -23,11 +23,19 @@ def verify_run(data):
 
 
 def verify_export(data):
+    if data.get("schema") == "coldatomlab-vortex-sequence-v1":
+        from .vortex_sequence import verify_export as verify_sequence
+
+        return verify_sequence(data)
     if data.get("schema") == "coldatomlab-vortex-image-v1":
         from .vortex_imaging import verify_export as verify_vortex_image
 
         return verify_vortex_image(data)
-    if data.get("schema") in ("coldatomlab-vortex-v1", "coldatomlab-vortex-v2"):
+    if data.get("schema") in (
+        "coldatomlab-vortex-v1",
+        "coldatomlab-vortex-v2",
+        "coldatomlab-vortex-v3",
+    ):
         from .vortex import verify_export as verify_vortex
 
         return verify_vortex(data)

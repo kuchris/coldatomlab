@@ -57,6 +57,8 @@ class Handler(BaseHTTPRequestHandler):
             "/preparation-ui.js": ("preparation-ui.js", "text/javascript; charset=utf-8"),
             "/vortex-imaging.js": ("vortex-imaging.js", "text/javascript; charset=utf-8"),
             "/vortex-imaging-ui.js": ("vortex-imaging-ui.js", "text/javascript; charset=utf-8"),
+            "/vortex-sequence.js": ("vortex-sequence.js", "text/javascript; charset=utf-8"),
+            "/vortex-paper.js": ("vortex-paper.js", "text/javascript; charset=utf-8"),
             "/vortex.html": ("vortex.html", "text/html; charset=utf-8"),
             "/vortex.css": ("vortex.css", "text/css; charset=utf-8"),
             "/vortex.js": ("vortex.js", "text/javascript; charset=utf-8"),
